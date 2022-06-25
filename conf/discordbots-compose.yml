@@ -1,0 +1,33 @@
+version: "3"
+
+services:
+
+  mongodatabases:
+    image: mongo:4.4.4
+    container_name: mongo_database
+    restart: unless-stopped
+    networks:
+      - dbNet
+    volumes:
+      - dbVolume:/var/lib/mongodb
+    ports:
+      - 27017:27017
+  statisticsbot:
+    image: 405934267152.dkr.ecr.ca-central-1.amazonaws.com/discordbots:statisticsbot
+    container_name: statisticsBot
+    depends_on:
+      - mongodatabases
+    restart: unless-stopped
+    networks:
+      - dbNet
+    expose:
+      - 3000
+networks:
+  dbNet:
+    external:
+      name: dbNet
+
+volumes:
+  dbVolume:
+    external:
+      name: databases
