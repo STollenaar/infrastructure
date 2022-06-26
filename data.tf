@@ -57,6 +57,16 @@ data "aws_iam_policy_document" "spices_role_policy_document" {
     ]
     resources = ["*"]
   }
+  statement {
+    sid    = "SSMAccess"
+    effect = "Allow"
+    actions = [
+      "ssm:DescribeParameters",
+      "ssm:GetParameters",
+      "ssm:GetParametersByPath",
+    ]
+    resources = ["*"]
+  }
 }
 
 data "awsprofiler_list" "list_profiles" {}

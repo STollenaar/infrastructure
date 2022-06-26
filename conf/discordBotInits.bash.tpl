@@ -21,6 +21,7 @@ docker volume create databases
 
 aws ecr get-login-password --region ca-central-1 | docker login --username AWS --password-stdin 405934267152.dkr.ecr.ca-central-1.amazonaws.com
 
-echo "${dockerCompose}" | base64 -d - >docker-compose.yml
+echo "${dockerCompose}" | base64 -d - > /home/ec2-user/docker-compose.yml
+chown ec2-user /home/ec2-user/docker-compose.yml
 
 docker-compose up -d
