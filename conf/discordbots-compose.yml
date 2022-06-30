@@ -1,7 +1,6 @@
 version: "3"
 
 services:
-
   mongodatabases:
     image: mongo:4.4.4
     container_name: mongo_database
@@ -16,9 +15,9 @@ services:
     image: 405934267152.dkr.ecr.ca-central-1.amazonaws.com/discordbots:statisticsbot
     container_name: statisticsBot
     environment:
-    - AWS_REGION=ca-central-1
-    - AWS_PARAMETER_NAME=/discord_tokens/statisticsbot
-    - DATABASE_HOST=mongo_database
+      - AWS_REGION=ca-central-1
+      - AWS_PARAMETER_NAME=/discord_tokens/statisticsbot
+      - DATABASE_HOST=mongo_database
     depends_on:
       - mongodatabases
     restart: unless-stopped
@@ -28,10 +27,8 @@ services:
       - 3000
 networks:
   dbNet:
-    external:
-      name: dbNet
+    external: true
 
 volumes:
   dbVolume:
-    external:
-      name: databases
+    external: true
