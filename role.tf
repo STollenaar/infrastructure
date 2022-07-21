@@ -20,6 +20,11 @@ resource "aws_iam_role_policy_attachment" "spices_role_core_attachment" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+resource "aws_iam_role_policy_attachment" "spices_role_cloudwatch_attachment" {
+  role       = aws_iam_role.spices_role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
 resource "aws_iam_role_policy_attachment" "spices_role_patch_attachment" {
   role       = aws_iam_role.spices_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMPatchAssociation"
