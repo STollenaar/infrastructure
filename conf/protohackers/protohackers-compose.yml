@@ -1,0 +1,9 @@
+version: "3"
+
+services:
+  protohackers:
+    image: 405934267152.dkr.ecr.ca-central-1.amazonaws.com/protohackers:latest
+    container_name: protohackers
+    restart: unless-stopped
+    ports:
+      - 69420:69420

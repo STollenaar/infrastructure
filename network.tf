@@ -60,3 +60,40 @@ resource "aws_security_group_rule" "current_ip_ssh_rule" {
   description       = "Current IP"
   cidr_blocks       = ["${chomp(data.http.myip.body)}/32"]
 }
+
+resource "aws_security_group" "protohackers" {
+  description = "protohackers security group"
+  egress = [
+    {
+      cidr_blocks = [
+        "0.0.0.0/0",
+      ]
+      description      = "Internet Access"
+      from_port        = 0
+      ipv6_cidr_blocks = []
+      prefix_list_ids  = []
+      protocol         = "-1"
+      security_groups  = []
+      self             = false
+      to_port          = 0
+    },
+  ]
+  ingress = [
+    {
+      cidr_blocks = [
+        "0.0.0.0/0",
+      ]
+      description      = "Internet Access"
+      from_port        = 69420
+      ipv6_cidr_blocks = []
+      prefix_list_ids  = []
+      protocol         = "-1"
+      security_groups  = []
+      self             = false
+      to_port          = 69420
+    },
+  ]
+  revoke_rules_on_delete = true
+  name                   = "protohacks"
+  vpc_id                 = aws_vpc.main_vpc.id
+}
