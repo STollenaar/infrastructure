@@ -84,13 +84,13 @@ resource "aws_security_group" "protohackers" {
         "0.0.0.0/0",
       ]
       description      = "Internet Access"
-      from_port        = 69420
+      from_port        = 4269
       ipv6_cidr_blocks = []
       prefix_list_ids  = []
-      protocol         = "-1"
+      protocol         = "6"
       security_groups  = []
       self             = false
-      to_port          = 69420
+      to_port          = 4269
     },
   ]
   revoke_rules_on_delete = true

@@ -5,5 +5,8 @@ services:
     image: 405934267152.dkr.ecr.ca-central-1.amazonaws.com/protohackers:latest
     container_name: protohackers
     restart: unless-stopped
+    env:
+      - name: PORT
+        value: 4269
     ports:
-      - 69420:69420
+      - 4269:4269
