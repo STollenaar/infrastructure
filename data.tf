@@ -7,8 +7,11 @@ data "aws_iam_policy_document" "assume_policy_document" {
   statement {
     effect = "Allow"
     principals {
-      identifiers = ["ec2.amazonaws.com"]
-      type        = "Service"
+      identifiers = [
+        "ec2.amazonaws.com",
+        "ecs-tasks.amazonaws.com"
+      ]
+      type = "Service"
     }
     actions = ["sts:AssumeRole"]
   }
