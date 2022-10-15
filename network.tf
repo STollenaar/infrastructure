@@ -51,16 +51,6 @@ resource "aws_security_group" "main_sc" {
 
 }
 
-resource "aws_security_group_rule" "allow_self_rule" {
-  type                     = "ingress"
-  security_group_id        = aws_security_group.main_sc.id
-  from_port                = 0
-  to_port                  = 65535
-  protocol                 = "tcp"
-  description              = "Allow Self"
-  source_security_group_id = aws_security_group.main_sc.id
-}
-
 resource "aws_security_group_rule" "current_ip_ssh_rule" {
   type              = "ingress"
   security_group_id = aws_security_group.main_sc.id
