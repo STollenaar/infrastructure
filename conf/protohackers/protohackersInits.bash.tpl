@@ -6,8 +6,8 @@ yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/li
 yum install -y yum-utils jq git amazon-cloudwatch-agent
 
 # Configuring and running cloudwatch-agent
-echo "${cloudwatchAgentSchema}" | base64 -d - > /opt/aws/amazon-cloudwatch-agent/bin/config.json
-/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json
+# echo "${cloudwatchAgentSchema}" | base64 -d - > /opt/aws/amazon-cloudwatch-agent/bin/config.json
+# /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json
 
 # Installing docker
 amazon-linux-extras install docker
