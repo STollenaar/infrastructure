@@ -32,11 +32,11 @@ services:
       - AWS_REGION=ca-central-1
       - AWS_PARAMETER_NAME=/discord_tokens/copypastabot
       - STATSBOT_URL=statisticsBot
-      - REDDIT_USER_AGENT_PARAMETER=/reddit/user_agent
-      - REDDIT_CLIENT_ID_PARAMETER=/reddit/client_id
-      - REDDIT_CLIENT_SECRET_PARAMETER=/reddit/client_secret
-      - REDDIT_USERNAME_PARAMETER=/reddit/username
-      - REDDIT_PASSWORD_PARAMETER=/reddit/password
+      - AWS_PARAMETER_REDDIT_USER_AGENT=/reddit/user_agent
+      - AWS_PARAMETER_REDDIT_CLIENT_ID=/reddit/client_id
+      - AWS_PARAMETER_REDDIT_CLIENT_SECRET=/reddit/client_secret
+      - AWS_PARAMETER_REDDIT_USERNAME=/reddit/username
+      - AWS_PARAMETER_REDDIT_PASSWORD=/reddit/password
     depends_on:
       - statisticsbot
     restart: unless-stopped
