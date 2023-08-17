@@ -33,7 +33,7 @@ resource "aws_instance" "bot_instance" {
     tags = {
       "Name" = "Spices"
     }
-    volume_size = 40
+    volume_size = 15
     volume_type = "gp3"
   }
 
@@ -85,7 +85,7 @@ resource "aws_instance" "proto_instance" {
     tags = {
       "Name" = "Spices"
     }
-    volume_size = 40
+    volume_size = 10
     volume_type = "gp3"
   }
 
