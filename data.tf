@@ -7,7 +7,7 @@ data "aws_iam_policy_document" "assume_policy_document" {
   statement {
     effect = "Allow"
     principals {
-      identifiers = ["ec2.amazonaws.com"]
+      identifiers = ["ec2.amazonaws.com", "ecs.amazonaws.com","ecs-tasks.amazonaws.com"]
       type        = "Service"
     }
     actions = ["sts:AssumeRole"]
@@ -67,8 +67,35 @@ data "aws_iam_policy_document" "spices_role_policy_document" {
     ]
     resources = ["*"]
   }
+  statement {
+    sid    = "ECSRegistration"
+    effect = "Allow"
+    actions = [
+      "ecs:RegisterContainerInstance",
+      "ecs:CreateCluster",
+      "ecs:DeregisterContainerInstance",
+      "ecs:DiscoverPollEndpoint",
+      "ecs:Poll",
+      "ecs:StartTelemetrySession",
+      "ecs:UpdateContainerInstancesState",
+      "ecs:SubmitAttachmentStateChange",
+      "ecs:SubmitContainerStateChange",
+      "ecs:SubmitTaskStateChange"
+    ]
+    resources = ["*"]
+  }
 }
 
 data "awsprofiler_list" "list_profiles" {}
 
 data "aws_caller_identity" "current" {}
+
+data "aws_ami" "ecs_ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-ecs-hvm-*-arm64-ebs"]
+  }
+}

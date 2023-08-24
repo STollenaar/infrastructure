@@ -11,7 +11,7 @@ resource "aws_vpc" "main_vpc" {
   }
 }
 
-resource "aws_subnet" "main_public_subnet" {
+resource "aws_subnet" "main_public_subnet_a" {
   availability_zone                              = "ca-central-1a"
   assign_ipv6_address_on_creation                = false
   cidr_block                                     = "10.0.0.0/20"
@@ -23,6 +23,38 @@ resource "aws_subnet" "main_public_subnet" {
   private_dns_hostname_type_on_launch            = "ip-name"
   tags = {
     "Name" = "main-subnet-public-ca-central-1a"
+  }
+
+  vpc_id = aws_vpc.main_vpc.id
+}
+resource "aws_subnet" "main_public_subnet_b" {
+  availability_zone                              = "ca-central-1b"
+  assign_ipv6_address_on_creation                = false
+  cidr_block                                     = "10.0.16.0/20"
+  enable_dns64                                   = false
+  enable_resource_name_dns_a_record_on_launch    = false
+  enable_resource_name_dns_aaaa_record_on_launch = false
+  ipv6_native                                    = false
+  map_public_ip_on_launch                        = false
+  private_dns_hostname_type_on_launch            = "ip-name"
+  tags = {
+    "Name" = "main-subnet-public-ca-central-1b"
+  }
+
+  vpc_id = aws_vpc.main_vpc.id
+}
+resource "aws_subnet" "main_public_subnet_d" {
+  availability_zone                              = "ca-central-1d"
+  assign_ipv6_address_on_creation                = false
+  cidr_block                                     = "10.0.32.0/20"
+  enable_dns64                                   = false
+  enable_resource_name_dns_a_record_on_launch    = false
+  enable_resource_name_dns_aaaa_record_on_launch = false
+  ipv6_native                                    = false
+  map_public_ip_on_launch                        = false
+  private_dns_hostname_type_on_launch            = "ip-name"
+  tags = {
+    "Name" = "main-subnet-public-ca-central-1d"
   }
 
   vpc_id = aws_vpc.main_vpc.id

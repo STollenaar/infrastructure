@@ -11,7 +11,7 @@ resource "aws_instance" "bot_instance" {
   key_name                             = "stollenaar"
   monitoring                           = false
   source_dest_check                    = true
-  subnet_id                            = aws_subnet.main_public_subnet.id
+  subnet_id                            = aws_subnet.main_public_subnet_a.id
   tags = {
     "Name" = "Spices"
   }
@@ -62,7 +62,7 @@ resource "aws_instance" "proto_instance" {
   key_name                             = "stollenaar"
   monitoring                           = false
   source_dest_check                    = true
-  subnet_id                            = aws_subnet.main_public_subnet.id
+  subnet_id                            = aws_subnet.main_public_subnet_a.id
   tags = {
     "Name" = "ProtoSpices"
   }
@@ -100,4 +100,3 @@ resource "aws_eip" "proto_ip" {
   instance = aws_instance.proto_instance.id
   vpc      = true
 }
-
