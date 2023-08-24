@@ -3,6 +3,13 @@ output "discord_bots_cluster" {
   sensitive = true
 }
 
+output "discord_bots_capacity_providers" {
+    value = [
+        aws_ecs_capacity_provider.nano_provider
+    ]
+    sensitive = true
+}
+
 output "discord_bots_repo" {
   value     = aws_ecr_repository.discord_bots
   sensitive = true
