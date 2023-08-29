@@ -90,7 +90,7 @@ resource "aws_security_group_rule" "current_ip_ssh_rule" {
   to_port           = 22
   protocol          = "tcp"
   description       = "Current IP"
-  cidr_blocks       = ["${chomp(data.http.myip.body)}/32"]
+  cidr_blocks       = ["${chomp(data.http.myip.response_body)}/32"]
 }
 
 resource "aws_security_group" "protohackers" {

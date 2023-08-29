@@ -8,12 +8,6 @@ resource "aws_ecs_cluster_capacity_providers" "discord_bots_capacity_providers" 
   cluster_name = aws_ecs_cluster.discord_bots_cluster.name
 
   capacity_providers = ["FARGATE_SPOT", aws_ecs_capacity_provider.nano_provider.name]
-
-  #   default_capacity_provider_strategy {
-  #     base              = 1
-  #     weight            = 100
-  #     capacity_provider = "FARGATE_SPOT"
-  #   }
 }
 
 resource "aws_ecr_repository" "discord_bots" {
@@ -29,6 +23,13 @@ resource "aws_launch_template" "nano_template" {
       cluster_name = aws_ecs_cluster.discord_bots_cluster.name
     }
   ))
+
+  block_device_mappings {
+    device_name = "/dev/xvdas"
+    ebs {
+      volume_type = "gp3"
+    }
+  }
   instance_market_options {
     market_type = "spot"
     spot_options {
@@ -47,7 +48,6 @@ resource "aws_launch_template" "nano_template" {
 }
 
 resource "aws_autoscaling_group" "nano_scaler" {
-  # ... other configuration, including potentially other tags ...
   vpc_zone_identifier = [
     aws_subnet.main_public_subnet_a.id,
     aws_subnet.main_public_subnet_b.id,
