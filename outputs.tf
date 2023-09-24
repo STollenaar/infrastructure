@@ -10,6 +10,11 @@ output "discord_bots_capacity_providers" {
     sensitive = true
 }
 
+output "discord_bots_namespace" {
+  value = aws_service_discovery_http_namespace.discord_bots_namespace
+  sensitive = true
+}
+
 output "discord_bots_repo" {
   value     = aws_ecr_repository.discord_bots
   sensitive = true

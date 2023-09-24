@@ -18,14 +18,10 @@ resource "aws_launch_template" "nano_template" {
   name_prefix = "nano-template"
   image_id    = data.aws_ami.ecs_ami.id
 
-  user_data = base64encode(templatefile("${path.module}/conf/userdata.bash",
-    {
-      cluster_name = aws_ecs_cluster.discord_bots_cluster.name
-    }
-  ))
+  user_data = data.template_cloudinit_config.config.rendered
 
   block_device_mappings {
-    device_name = "/dev/xvdas"
+    device_name = "/dev/xvda"
     ebs {
       volume_type = "gp3"
     }
@@ -82,4 +78,9 @@ resource "aws_ecs_capacity_provider" "nano_provider" {
       maximum_scaling_step_size = 100
     }
   }
+}
+
+resource "aws_service_discovery_http_namespace" "discord_bots_namespace" {
+  name        = "discord-bots"
+  description = "discord bots namespace"
 }
