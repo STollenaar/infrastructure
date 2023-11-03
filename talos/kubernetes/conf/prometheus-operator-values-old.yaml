@@ -1,0 +1,286 @@
+prometheusOperator:
+  podAnnotations:
+    sidecar.istio.io/rewriteAppHTTPProbers: "true"
+    # sidecar.istio.io/inject: 'false'
+
+  serviceAccount:
+    name: "prometheus-operator-sa"
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 3Gi
+    requests:
+      cpu: 300m
+      memory: 2Gi
+  admissionWebhooks:
+    enabled: false
+  tls:
+    enabled: false
+
+coreDns:
+  enabled: true
+  service:
+    selector:
+      k8s-app: kube-dns
+
+commonLabels:
+  purpose: ${purpose}
+
+# Not monitoring etcd, kube-scheduler, or kube-controller-manager because it is managed by EKS
+defaultRules:
+  disabled:
+    KubeCPUOvercommit: true
+    KubeMemoryOvercommit: true
+    AlertmanagerClusterDown: true
+    AlertmanagerClusterFailedToSendAlerts: true
+  rules:
+    etcd: false
+    kubeScheduler: false
+    kubernetesApps: false
+    kubeleft: false
+kubeControllerManager:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubeDns:
+  enabled: false
+
+alertmanager:
+  enabled: false
+
+prometheus:
+  serviceAccount:
+    name: "prometheus-sa"
+  prometheusSpec:
+    podMetadata:
+      # Write Istio certificates to a volume accessible by Prometheus:
+      annotations:
+        {}
+        # traffic.sidecar.istio.io/includeInboundPorts: "" # do not intercept any inbound ports
+        # traffic.sidecar.istio.io/includeOutboundIPRanges: "" # do not intercept any outbound traffic
+        # sidecar.istio.io/rewriteAppHTTPProbers: "true"
+        # sidecar.istio.io/userVolume: '[{"name": "istio-certs", "emptyDir": {"medium": "Memory"}}]'
+        # sidecar.istio.io/userVolumeMount: '[{"name": "istio-certs", "mountPath": "/etc/istio-certs/"}]'
+        # proxy.istio.io/config: |-
+        #   proxyMetadata:
+        #     OUTPUT_CERTS: /etc/istio-certs/
+    serviceMonitorSelectorNilUsesHelmValues: false
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 100Gi
+    resources:
+      limits:
+        memory: 5Gi
+      requests:
+        memory: 1Gi
+    # volumes:
+    #   - emptyDir:
+    #       medium: Memory
+    #     name: istio-certs
+    # volumeMounts:
+    #   - name: istio-certs
+    #     mountPath: /etc/istio-certs/
+    #     readOnly: true
+    additionalScrapeConfigs:
+      - job_name: "istiod"
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+                - istio-system
+        scheme: http
+        # tls_config:
+        #   ca_file: /etc/istio-certs/root-cert.pem
+        #   cert_file: /etc/istio-certs/cert-chain.pem
+        #   key_file: /etc/istio-certs/key.pem
+        #   insecure_skip_verify: true
+        relabel_configs:
+          - source_labels:
+              [
+                __meta_kubernetes_service_name,
+                __meta_kubernetes_endpoint_port_name,
+              ]
+            action: keep
+            regex: istiod;http-monitoring
+      - job_name: "envoy-stats"
+        metrics_path: /stats/prometheus
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_container_port_name]
+            action: keep
+            regex: ".*-envoy-prom"
+          - source_labels: [__meta_kubernetes_pod_phase]
+            action: drop
+            regex: Succeeded
+        scheme: http
+        # tls_config:
+        #   ca_file: /etc/istio-certs/root-cert.pem
+        #   cert_file: /etc/istio-certs/cert-chain.pem
+        #   key_file: /etc/istio-certs/key.pem
+        #   insecure_skip_verify: true
+
+grafana:
+  serviceAccount: {}
+  podAnnotations:
+    sidecar.istio.io/rewriteAppHTTPProbers: "true"
+    # proxy.istio.io/config: |  # configure an env variable `OUTPUT_CERTS` to write certificates to the given folder
+    #   proxyMetadata:
+    #     OUTPUT_CERTS: /etc/istio-output-certs
+    # sidecar.istio.io/userVolumeMount: '[{"name": "istio-certs", "mountPath": "/etc/istio-output-certs"}]' # mount the shared volume at sidecar proxy
+
+  initChownData:
+    securityContext:
+      readOnlyRootFilesystem: true
+
+  ingress:
+    enabled: false
+  persistence:
+    enabled: false
+    accessModes: ["ReadWriteOnce"]
+    # size: 100Gi
+    storageClassName: default
+  # All settings from https://github.com/helm/charts/tree/master/stable/grafana are applicable here!
+  # plugins:
+  # NEED THE GRAFANA ENTERPRISE SUBSCRIPTION FOR THIS PLUGIN
+  #   - grafana-datadog-datasource
+  # extraVolumeMounts:
+  #   - name: istio-certs
+  #     mountPath: /etc/istio-certs
+  #     emptyDir:
+  #       medium: Memory
+  grafana.ini:
+    auth.anonymous:
+      enabled: true
+    auth.proxy:
+      enabled: true
+      header_name: X-WEBAUTH-USER
+      header_property: username
+      auto_sign_up: true
+      whitelist: 172.16.0.0/12, 10.0.0.0/8, 192.168.0.0/16, 127.0.0.0/8
+    auth.google:
+      enabled: false
+      scopes: https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email
+      auth_url: https://accounts.google.com/o/oauth2/auth
+      token_url: https://accounts.google.com/o/oauth2/token
+      allowed_domains: ""
+      allow_sign_up: true
+    users:
+      allow_sign_up: false
+      auto_assign_org: true
+      auto_assign_org_role: Admin
+    analytics:
+      check_for_updates: false
+      check_for_plugin_updates: false
+    security:
+      disable_gravatar: true
+  ## Configure additional grafana datasources
+  additionalDataSources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus-operator-kube-p-prometheus.${monitoring_namespace}.svc.cluster.local:9090/
+      # jsonData:
+      #   tlsAuth: true
+      #   tlsAuthWithCACert: true
+      #   tlsSkipVerify: true
+      # secureJsonData:
+      #     tlsCACert: $__file{/etc/istio-certs/root-cert.pem}
+      #     tlsClientCert: $__file{/etc/istio-certs/cert-chain.pem}
+      #     tlsClientKey: $__file{/etc/istio-certs/key.pem}
+    # - name: loki
+    #   access: proxy
+    #   type: loki
+    #   url: http://loki.${monitoring_namespace}.svc.cluster.local:3100/
+      # jsonData:
+      #   tlsAuth: true
+      #   tlsAuthWithCACert: true
+      #   tlsSkipVerify: true
+      # secureJsonData:
+      #     tlsCACert: $__file{/etc/istio-certs/root-cert.pem}
+      #     tlsClientCert: $__file{/etc/istio-certs/cert-chain.pem}
+      #     tlsClientKey: $__file{/etc/istio-certs/key.pem}
+prometheus-node-exporter:
+  extraArgs:
+    - --collector.tcpstat
+
+kube-state-metrics:
+  podAnnotations:
+    sidecar.istio.io/rewriteAppHTTPProbers: "true"
+  extraArgs:
+    - --metric-labels-allowlist=pods=[app,purpose],jobs=[app,purpose]
+
+additionalPrometheusRules:
+  - name: "kubernetesrule"
+    groups:
+      - name: "basicgroup"
+        rules:
+          - alert: KubernetesNodeReady
+            expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Kubernetes Node ready (instance {{ $labels.instance }})"
+              description: "Node {{ $labels.node }} has been unready for a long time\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+          - alert: KubernetesMemoryPressure
+            expr: kube_node_status_condition{condition="MemoryPressure",status="true"} == 1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Kubernetes memory pressure (instance {{ $labels.instance }})"
+              description: "{{ $labels.node }} has MemoryPressure condition\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+          - alert: KubernetesOutOfDiskSpace
+            expr: kube_node_status_condition{condition="OutOfDisk",status="true"} == 1
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Kubernetes out of disk (instance {{ $labels.instance }})"
+              description: "{{ $labels.node }} has OutOfDisk condition\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+          - alert: KubernetesVolumeRunningOutOfDiskSpace
+            expr: kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes * 100 < 10
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Kubernetes Volume is running out of disk space (instance {{ $labels.instance }})"
+              description: "Volume is almost full (< 10% left)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+          - alert: KubePodCrashLooping
+            expr: (rate(kube_pod_container_status_restarts_total[5m]) * 60 * 5 > 1) * on(namespace,pod) group_left(label_purpose) (kube_pod_labels{pod_label_app_kubernetes_io_instance!="prometheus-operator",label_purpose=~"alerttest|prod",pod!~".*backup.*"})
+            for: 5s
+            labels:
+              severity: critical
+            annotations:
+              summary: "Kubernetes pod crash looping (instance {{ $labels.instance }})"
+              description: "Pod {{ $labels.pod }} is crash looping\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+          - alert: KubePodNotReady
+            expr: |
+              sum by (namespace, pod, cluster) (
+                max by(namespace, pod, cluster) (
+                  kube_pod_status_phase{job="kube-state-metrics", namespace=~"{{ $targetNamespace }}", phase=~"Pending|Unknown|Failed"}
+                ) * on(namespace, pod, cluster) group_left(owner_kind) topk by(namespace, pod, cluster) (
+                  1, max by(namespace, pod, owner_kind, cluster) (kube_pod_owner{owner_kind!="Job"} and kube_pod_labels{pod_label_app_kubernetes_io_instance!="prometheus-operator",label_purpose=~"alerttest|prod",namespace!="ci",pod!~".*backup.*"})
+                )
+              ) > 0
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Kubernetes pod not loading (instance {{ $labels.instance }})"
+              description: "Pod {{ $labels.pod }} is not loading, could be a configuration issue\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+          - alert: KubeJobFailed
+            annotations:
+              message: Job {{ $labels.namespace }} {{ $labels.job_name }} failed to complete.
+            expr: (kube_job_status_failed{job="kube-state-metrics"}  > 0) * on(namespace,job,job_name) group_left(label_purpose) (kube_job_labels{label_purpose=~"alerttest|prod"})
+            for: 5m
+            labels:
+              severity: warning

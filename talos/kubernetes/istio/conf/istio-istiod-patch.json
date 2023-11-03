@@ -1,0 +1,64 @@
+[
+    {
+        "op": "add",
+        "path": "/spec/template/spec/containers/0/args/-",
+        "value": "--tlsCertFile=/etc/cert-manager/tls/tls.crt"
+    },
+    {
+        "op": "add",
+        "path": "/spec/template/spec/containers/0/args/-",
+        "value": "--tlsKeyFile=/etc/cert-manager/tls/tls.key"
+    },
+    {
+        "op": "add",
+        "path": "/spec/template/spec/containers/0/args/-",
+        "value": "--caCertFile=/etc/cert-manager/ca/root-cert.pem"
+    },
+    {
+        "op": "add",
+        "path": "/spec/template/spec/containers/0/env/-",
+        "value": {
+            "name": "ENABLE_CA_SERVER",
+            "value": "false"
+        }
+    },
+    {
+        "op": "add",
+        "path": "/spec/template/spec/containers/0/volumeMounts/-",
+        "value": {
+            "name": "cert-manager",
+            "mountPath": "/etc/cert-manager/tls",
+            "readOnly": true
+        }
+    },
+    {
+        "op": "add",
+        "path": "/spec/template/spec/containers/0/volumeMounts/-",
+        "value": {
+            "name": "ca-root-cert",
+            "mountPath": "/etc/cert-manager/ca",
+            "readOnly": true
+        }
+    },
+    {
+        "op": "add",
+        "path": "/spec/template/spec/volumes/-",
+        "value": {
+            "name": "cert-manager",
+            "secret": {
+                "secretName": "istiod-tls"
+            }
+        }
+    },
+    {
+        "op": "add",
+        "path": "/spec/template/spec/volumes/-",
+        "value": {
+            "name": "ca-root-cert",
+            "configMap": {
+                "defaultMode": 420,
+                "name": "istio-ca-root-cert"
+            }
+        }
+    }
+]
