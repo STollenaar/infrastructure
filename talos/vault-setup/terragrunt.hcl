@@ -15,3 +15,9 @@ terraform {
     run_on_error = true
   }
 }
+
+dependency "kubernetes" {
+  config_path  = "../kubernetes"
+  skip_outputs = true
+}
+

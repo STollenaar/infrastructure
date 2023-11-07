@@ -21,11 +21,11 @@ data "hcp_vault_secrets_secret" "aws_user_secret_access_key" {
   secret_name = "secret_access_key"
 }
 
-data "terraform_remote_state" "talos_state" {
+data "terraform_remote_state" "kubernetes_state" {
   backend = "s3"
   config = {
     bucket  = "stollenaar-terraform-states"
-    key     = "infrastructure/proxmox_terraform.tfstate"
+    key     = "infrastructure/kubernetes/terraform.tfstate"
     region  = "ca-central-1"
     profile = "personal"
   }

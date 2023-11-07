@@ -5,9 +5,9 @@ resource "vault_aws_secret_backend" "aws_client" {
 
 resource "vault_aws_secret_backend_role" "vault_ecr" {
   backend         = vault_aws_secret_backend.aws_client.path
-  name            = data.terraform_remote_state.talos_state.outputs.vault_ecr_role.id
+  name            = data.terraform_remote_state.kubernetes_state.outputs.vault_ecr_role.id
   credential_type = "assumed_role"
-  role_arns       = [data.terraform_remote_state.talos_state.outputs.vault_ecr_role.arn] #TODO: fetch dynamically
+  role_arns       = [data.terraform_remote_state.kubernetes_state.outputs.vault_ecr_role.arn] #TODO: fetch dynamically
 }
 
 resource "vault_kubernetes_secret_backend" "kubernetes" {
@@ -53,6 +53,7 @@ resource "vault_kubernetes_auth_backend_role" "external_secrets" {
 resource "vault_kubernetes_auth_backend_config" "kubernetes_auth_config" {
   backend         = vault_auth_backend.kubernetes.path
   kubernetes_host = "https://kubernetes.default.svc:443"
+  disable_iss_validation = "true"
 
   issuer = "https://kubernetes.default.svc"
 }
