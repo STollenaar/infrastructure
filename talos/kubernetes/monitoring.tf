@@ -33,18 +33,6 @@ resource "null_resource" "prometheus_operator_crd_install" {
   }
 }
 
-# resource "helm_release" "prometheus_operator_crds" {
-#   name       = "prometheus-crds"
-#   depends_on = [null_resource.prometheus_operator_crd_install]
-
-#   chart       = "crds"
-#   repository  = "https://prometheus-community.github.io/helm-charts"
-#   version     = "0.0.0"
-#   namespace   = kubernetes_namespace.monitoring.metadata.0.name
-#   wait        = true
-#   max_history = 50
-# }
-
 resource "helm_release" "prometheus_operator" {
   name       = "prometheus-operator"
   depends_on = [null_resource.prometheus_operator_crd_install]
