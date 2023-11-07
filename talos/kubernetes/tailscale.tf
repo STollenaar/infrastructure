@@ -73,7 +73,6 @@ resource "kubernetes_manifest" "hcp_vault_tailscale_auth" {
   }
 }
 
-
 resource "kubernetes_manifest" "tailscale_keys" {
   manifest = {
     apiVersion = "secrets.hashicorp.com/v1beta1"
