@@ -1,3 +1,17 @@
+## VAULT UNSEAL USER ##
+data "aws_iam_policy_document" "hashicorp_vault_unseal_document" {
+  statement {
+    sid    = "VaultKMSUnseal"
+    effect = "Allow"
+    actions = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:DescribeKey",
+    ]
+    resources = ["*"]
+  }
+}
+
 ## VAULT USER ###
 data "aws_iam_policy_document" "hashicorp_vault_document" {
   statement {
@@ -5,19 +19,19 @@ data "aws_iam_policy_document" "hashicorp_vault_document" {
     effect    = "Allow"
     resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/vault-*"]
     actions = [
-      "iam:AttachUserPolicy",
+      #   "iam:AttachUserPolicy",
       "iam:CreateAccessKey",
-      "iam:CreateUser",
+      #   "iam:CreateUser",
       "iam:DeleteAccessKey",
-      "iam:DeleteUser",
-      "iam:DeleteUserPolicy",
-      "iam:DetachUserPolicy",
+      #   "iam:DeleteUser",
+      #   "iam:DeleteUserPolicy",
+      #   "iam:DetachUserPolicy",
       "iam:ListAccessKeys",
       "iam:ListAttachedUserPolicies",
       "iam:ListGroupsForUser",
       "iam:ListUserPolicies",
-      "iam:PutUserPolicy",
-      "iam:RemoveUserFromGroup"
+      #   "iam:PutUserPolicy",
+      #   "iam:RemoveUserFromGroup"
     ]
   }
   statement {
@@ -26,20 +40,44 @@ data "aws_iam_policy_document" "hashicorp_vault_document" {
     resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*"]
     actions   = ["sts:AssumeRole"]
   }
+  #   statement {
+  #     sid    = "VaultKMSUnseal"
+  #     effect = "Allow"
+  #     actions = [
+  #       "kms:Encrypt",
+  #       "kms:Decrypt",
+  #       "kms:DescribeKey",
+  #     ]
+  #     resources = ["*"]
+  #   }
 }
 
 resource "aws_iam_user" "vault_user" {
   name = "vault"
 }
 
+resource "aws_iam_user" "vault_unseal_user" {
+  name = "vault-unseal"
+}
+
 resource "aws_iam_access_key" "vault_user_key" {
   user = aws_iam_user.vault_user.name
+}
+
+resource "aws_iam_access_key" "vault_unseal_user_key" {
+  user = aws_iam_user.vault_unseal_user.name
 }
 
 resource "aws_iam_user_policy" "vault_user_policy" {
   name   = "hashicorp-vault"
   user   = aws_iam_user.vault_user.name
   policy = data.aws_iam_policy_document.hashicorp_vault_document.json
+}
+
+resource "aws_iam_user_policy" "vault_unseal_user_policy" {
+  name   = "hashicorp-vault"
+  user   = aws_iam_user.vault_unseal_user.name
+  policy = data.aws_iam_policy_document.hashicorp_vault_unseal_document.json
 }
 
 resource "hcp_vault_secrets_app" "aws" {

@@ -1,3 +1,27 @@
+resource "kubernetes_secret" "vault_unseal_user" {
+  metadata {
+    name      = "vault-unseal"
+    namespace = kubernetes_namespace.vault.metadata.0.name
+  }
+  data = {
+    AWS_ACCESS_KEY_ID     = aws_iam_access_key.vault_unseal_user_key.id
+    AWS_SECRET_ACCESS_KEY = aws_iam_access_key.vault_unseal_user_key.secret
+  }
+}
+
+resource "helm_release" "vault" {
+  name       = "vault"
+  version    = "0.26.0"
+  namespace  = kubernetes_namespace.vault.metadata.0.name
+  repository = "https://helm.releases.hashicorp.com"
+  chart      = "vault"
+
+  values = [templatefile("${path.module}/conf/values.yaml", {
+    kms_key_id          = aws_kms_key.vault.key_id,
+    vault_unseal_secret = kubernetes_secret.vault_unseal_user.metadata.0.name
+  })]
+}
+
 resource "kubernetes_job_v1" "vault_init" {
   depends_on = [helm_release.vault]
   metadata {
@@ -21,7 +45,7 @@ resource "kubernetes_job_v1" "vault_init" {
           image   = "hashicorp/vault:1.15.1"
           command = ["sh", "-c", file("${path.module}/conf/vault-init.sh")]
           env {
-            name = "VAULT_ENDPOINT"
+            name  = "VAULT_ENDPOINT"
             value = "vault.${kubernetes_namespace.vault.metadata.0.name}.svc.cluster.local"
           }
           env {
@@ -62,6 +86,20 @@ resource "kubernetes_job_v1" "vault_init" {
       }
     }
   }
+}
+
+resource "aws_kms_key" "vault" {
+  description             = "Vault unseal key"
+  deletion_window_in_days = 7
+
+  tags = {
+    Name = "vault-kms-unseal-key"
+  }
+}
+
+resource "aws_kms_alias" "vault" {
+  name          = "alias/vault-kms-unseal-key"
+  target_key_id = aws_kms_key.vault.key_id
 }
 
 resource "kubernetes_config_map" "vault_agent_config" {

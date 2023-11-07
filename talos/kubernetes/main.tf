@@ -14,16 +14,6 @@ resource "helm_release" "vault_secrets_operator" {
   values = [file("${path.module}/conf/vault-secrets-operator-values.yaml")]
 }
 
-resource "helm_release" "vault" {
-  name       = "vault"
-  version    = "0.26.0"
-  namespace  = kubernetes_namespace.vault.metadata.0.name
-  repository = "https://helm.releases.hashicorp.com"
-  chart      = "vault"
-
-  values = [file("${path.module}/conf/values.yaml")]
-}
-
 resource "helm_release" "external_secrets" {
   name       = "external-secrets"
   version    = "0.9.7"
@@ -64,9 +54,12 @@ resource "kubernetes_manifest" "hcp_vault_auth" {
   }
 }
 
-# module "istio" {
-#   source = "./istio"
 
-#   kubeconfig_file      = var.kubeconfig_file
-#   monitoring_namespace = kubernetes_namespace.monitoring.metadata.0.name
-# }
+module "jellyfin" {
+  source = "./jellyfin"
+
+  hcp_client = {
+    client_id     = data.aws_ssm_parameter.vault_client_id.value
+    client_secret = data.aws_ssm_parameter.vault_client_secret.value
+  }
+}
