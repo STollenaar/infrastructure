@@ -166,6 +166,27 @@ resource "kubernetes_service" "jellyfin_web" {
   ]
 }
 
+resource "kubernetes_service" "jellyfin_web_node" {
+  metadata {
+    name      = "jellyfin-web-node"
+    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+  }
+  spec {
+    type = "NodePort"
+    selector = {
+      "app" = "jellyfin"
+    }
+    port {
+      name        = "web"
+      port        = 8096
+      target_port = "web"
+    }
+  }
+  depends_on = [
+    kubernetes_deployment.jellyfin
+  ]
+}
+
 resource "kubernetes_service" "jellyfin_discovery" {
   metadata {
     name      = "jellyfin-local-discovery"
