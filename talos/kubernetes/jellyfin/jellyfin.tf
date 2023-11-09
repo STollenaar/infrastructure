@@ -120,7 +120,7 @@ resource "kubernetes_persistent_volume_claim" "jellyfin_movies" {
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
-    storage_class_name = "nfs-client"
+    storage_class_name = "nfs-client-movies"
     resources {
       requests = {
         storage = "200Gi"
@@ -136,10 +136,10 @@ resource "kubernetes_persistent_volume_claim" "jellyfin_shows" {
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
-    storage_class_name = "nfs-client"
+    storage_class_name = "nfs-client-other"
     resources {
       requests = {
-        storage = "300Gi"
+        storage = "800Gi"
       }
     }
   }
@@ -231,10 +231,10 @@ resource "kubernetes_persistent_volume_claim" "downloads" {
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
-    storage_class_name = "nfs-client"
+    storage_class_name = "nfs-client-other"
     resources {
       requests = {
-        storage = "200Gi"
+        storage = "800Gi"
       }
     }
   }

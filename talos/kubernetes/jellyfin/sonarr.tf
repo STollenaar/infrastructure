@@ -118,10 +118,10 @@ resource "kubernetes_persistent_volume_claim" "sonarr_import" {
   }
   spec {
     access_modes = ["ReadWriteOnce"]
-    storage_class_name = "nfs-client"
+    storage_class_name = "nfs-client-other"
     resources {
       requests = {
-        storage = "50Gi"
+        storage = "200Gi"
       }
     }
   }
