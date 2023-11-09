@@ -8,8 +8,8 @@ image:
 imagePullSecrets: []
 
 nfs:
-  server: 192.168.2.111
-  path: /mnt/storage/kubernetes
+  server: 192.168.2.113
+  path: ${nfs_path}
   mountOptions:
     - vers=3
   volumeName: nfs-subdir-external-provisioner-root
@@ -29,7 +29,7 @@ storageClass:
 
   # Set a StorageClass name
   # Ignored if storageClass.create is false
-  name: nfs-client
+  name: ${storage_class_name}
 
   # Allow volume to be expanded dynamically
   allowVolumeExpansion: true
