@@ -156,7 +156,7 @@ resource "kubernetes_cron_job_v1" "vault_ecr_token" {
             }
           }
           spec {
-            service_account_name = "internal-app"
+            service_account_name = kubernetes_service_account_v1.internal_app_sa.metadata.0.name
             container {
               name    = "ecr-refresher"
               image   = "amazon/aws-cli"
