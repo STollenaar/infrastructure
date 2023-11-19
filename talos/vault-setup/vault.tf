@@ -35,7 +35,7 @@ resource "vault_auth_backend" "kubernetes" {
 resource "vault_kubernetes_auth_backend_role" "internal_app" {
   backend                          = vault_auth_backend.kubernetes.path
   role_name                        = vault_kubernetes_secret_backend_role.internal_app.name
-  bound_service_account_names      = [vault_kubernetes_secret_backend_role.internal_app.name]
+  bound_service_account_names      = ["*"]
   bound_service_account_namespaces = vault_kubernetes_secret_backend_role.internal_app.allowed_kubernetes_namespaces
   token_ttl                        = 3600
   token_policies                   = [vault_policy.internal_app.name]
