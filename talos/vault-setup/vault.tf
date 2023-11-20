@@ -51,8 +51,8 @@ resource "vault_kubernetes_auth_backend_role" "external_secrets" {
 }
 
 resource "vault_kubernetes_auth_backend_config" "kubernetes_auth_config" {
-  backend         = vault_auth_backend.kubernetes.path
-  kubernetes_host = "https://kubernetes.default.svc:443"
+  backend                = vault_auth_backend.kubernetes.path
+  kubernetes_host        = "https://kubernetes.default.svc:443"
   disable_iss_validation = "true"
 
   issuer = "https://kubernetes.default.svc"
@@ -87,4 +87,27 @@ data "vault_policy_document" "external_secrets" {
 resource "vault_policy" "external_secrets" {
   name   = "external-secrets"
   policy = data.vault_policy_document.external_secrets.hcl
+}
+
+resource "vault_mount" "secrets" {
+  path = "secret"
+  type = "kv-v2"
+  options = {
+    version = "2"
+    type    = "kv-v2"
+  }
+  description = "kv secrets manager"
+}
+
+resource "vault_kv_secret_v2" "secret" {
+  mount = vault_mount.secrets.path
+  name = "ecr-auth"
+  data_json = jsonencode(
+    {
+      ".dockerconfigjson" = "foo",
+    }
+  )
+  lifecycle {
+    ignore_changes = [data_json]
+  }
 }
