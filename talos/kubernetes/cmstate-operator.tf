@@ -20,23 +20,12 @@ resource "kubernetes_labels" "kube_system_label" {
 
 resource "helm_release" "cmstate_operator" {
   name       = "cmstate-operator"
-  version    = "0.1.0"
+  version    = "0.2.2"
   namespace  = kubernetes_namespace.cmstate_operator.metadata.0.name
   repository = "https://stollenaar.github.io/cmstate-injector-operator"
   chart      = "cmstate-operator"
 
-  values = [file("${path.module}/conf/cmstate-operator-values.yaml")]
-}
-
-resource "helm_release" "cmstate_operator_webhook" {
-  depends_on = [helm_release.cmstate_operator]
-  name       = "cmstate-operator-webhook"
-  version    = "0.1.0"
-  namespace  = kubernetes_namespace.cmstate_operator.metadata.0.name
-  repository = "https://stollenaar.github.io/cmstate-webhook"
-  chart      = "cmstate-operator-webhook"
-
-  values = [templatefile("${path.module}/conf/cmstate-operator-webhook-values.yaml", {
+  values = [templatefile("${path.module}/conf/cmstate-operator-values.yaml", {
     ca_secret   = "${kubernetes_namespace.cmstate_operator.metadata.0.name}/${kubernetes_secret.vault_cert_issuer.metadata.0.name}"
     cert_secret = kubernetes_secret.vault_cert_issuer.metadata.0.name
   })]
@@ -137,13 +126,39 @@ resource "kubernetes_manifest" "cert_certificate" {
         name = kubernetes_manifest.vault_cert_issuer.manifest.metadata.name
       }
       dnsNames = [
-        "cmstate-operator-webhook-service.${kubernetes_namespace.cmstate_operator.metadata.0.name}.svc"
+        "cmstate-operator-service.${kubernetes_namespace.cmstate_operator.metadata.0.name}.svc"
       ]
-      commonName = "cmstate-operator-webhook-service.${kubernetes_namespace.cmstate_operator.metadata.0.name}.svc"
+      commonName = "cmstate-operator-service.${kubernetes_namespace.cmstate_operator.metadata.0.name}.svc"
       privateKey = {
         algorithm = "RSA"
         encoding  = "PKCS1"
         size      = 4096
+      }
+    }
+  }
+}
+
+resource "kubernetes_manifest" "cm_vault_template" {
+  manifest = {
+    apiVersion = "cache.spices.dev/v1alpha1"
+    kind       = "CMTemplate"
+    metadata = {
+      name = "vault-aws-agent"
+    }
+    spec = {
+      template = {
+        annotationreplace = {
+          "vault.hashicorp.com/agent-aws-role"      = "{aws_role_name}"
+          "vault.hashicorp.com/agent-internal-role" = "{internal_role_name}"
+        }
+        cmtemplate = {
+          "config.hcl" = templatefile("${path.module}/conf/vault-agent.hcl.tpl", {
+            exit_after_auth = false
+          })
+          "config-init.hcl" = templatefile("${path.module}/conf/vault-agent.hcl.tpl", {
+            exit_after_auth = true
+          })
+        }
       }
     }
   }

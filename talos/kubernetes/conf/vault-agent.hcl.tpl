@@ -4,7 +4,7 @@ pid_file        = "/home/vault/.pid"
 auto_auth = {
   method = {
     config = {
-      role = "internal-app"
+      role = "{internal_role_name}"
     }
     type = "kubernetes"
   }
@@ -18,7 +18,7 @@ auto_auth = {
 
 template = {
   contents         = <<EOF
-        {{- with secret "aws/creds/${aws_role_name}" -}}
+        {{- with secret "aws/creds/{aws_role_name}" -}}
         [default]
         aws_access_key_id = {{ .Data.access_key }}
         aws_secret_access_key = {{ .Data.secret_key }}

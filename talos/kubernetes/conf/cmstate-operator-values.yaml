@@ -8,6 +8,11 @@ deployment:
   pod:
     labels: {}
     annotations: {}
+    volumes:
+      - name: ${cert_secret}
+        secret:
+          secretName: ${cert_secret}
+        mountPath: /tmp/k8s-webhook-server/serving-certs
 
 service:
   labels: {}
@@ -16,7 +21,7 @@ service:
 replicaCount: 1
 image:
   repository: public.ecr.aws/x4a1o1q2/cmstate-operator
-  tag: latest
+  tag: cmstate-operator-0.2.2
   pullPolicy: IfNotPresent
 
 nameOverride: ""
@@ -45,3 +50,14 @@ rbac:
       - apiGroups: ["cache.spices.dev"]
         resources: ["cmstates/status"]
         verbs: ["get", "patch", "update"]
+      - apiGroups: ["cache.spices.dev"]
+        resources: ["cmtemplates"]
+        verbs: ["get","list","watch"]
+      - apiGroups: ["cache.spices.dev"]
+        resources: ["cmtemplates/status"]
+        verbs: ["get"]
+
+webhook:
+  labels: {}
+  annotations:
+    "cert-manager.io/inject-ca-from-secret": "${ca_secret}"

@@ -10,7 +10,7 @@ resource "vault_mount" "pki" {
 resource "vault_pki_secret_backend_root_cert" "root" {
   backend     = vault_mount.pki.path
   type        = "internal"
-  common_name = "cmstate-operator-webhook-service.cmstate-operator.svc"
+  common_name = "cmstate-operator-service.cmstate-operator.svc"
   ttl         = 315360000
   issuer_name = "root"
 }
@@ -33,12 +33,12 @@ resource "vault_mount" "pki_int" {
 resource "vault_pki_secret_backend_intermediate_cert_request" "csr_request" {
    backend     = vault_mount.pki_int.path
    type        = "internal"
-   common_name = "cmstate-operator-webhook-service.cmstate-operator.svc Intermediate Authority"
+   common_name = "cmstate-operator-service.cmstate-operator.svc Intermediate Authority"
 }
 
 resource "vault_pki_secret_backend_root_sign_intermediate" "intermediate" {
    backend     = vault_mount.pki.path
-   common_name = "cmstate-operator-webhook-service.cmstate-operator.svc"
+   common_name = "cmstate-operator-service.cmstate-operator.svc"
    csr         = vault_pki_secret_backend_intermediate_cert_request.csr_request.csr
    format      = "pem_bundle"
    ttl         = 15480000
@@ -57,7 +57,7 @@ resource "vault_pki_secret_backend_role" "role" {
   allow_ip_sans    = true
   key_type         = "rsa"
   key_bits         = 4096
-  allowed_domains  = ["cmstate-operator-webhook-service.cmstate-operator.svc"]
+  allowed_domains  = ["cmstate-operator-service.cmstate-operator.svc"]
   allow_subdomains = true
   allow_any_name   = true
 }

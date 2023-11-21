@@ -102,24 +102,6 @@ resource "aws_kms_alias" "vault" {
   target_key_id = aws_kms_key.vault.key_id
 }
 
-resource "kubernetes_config_map" "vault_agent_config" {
-  metadata {
-    name      = "vault-ecr-role"
-    namespace = kubernetes_namespace.vault.metadata.0.name
-  }
-
-  data = {
-    "config.hcl" = templatefile("${path.module}/conf/vault-agent.hcl.tpl", {
-      exit_after_auth = false,
-      aws_role_name   = aws_iam_role.vault_ecr.name
-    })
-    "config-init.hcl" = templatefile("${path.module}/conf/vault-agent.hcl.tpl", {
-      exit_after_auth = true,
-      aws_role_name   = aws_iam_role.vault_ecr.name
-    })
-  }
-}
-
 resource "kubernetes_service_account_v1" "internal_app_sa" {
   metadata {
     name      = "internal-app"
@@ -146,10 +128,10 @@ resource "kubernetes_cron_job_v1" "vault_ecr_token" {
         template {
           metadata {
             annotations = {
-              "vault.hashicorp.com/agent-inject"            = "true"
-              "vault.hashicorp.com/agent-cache-enable"      = "true"
-              "vault.hashicorp.com/agent-pre-populate-only" = "true"
-              "vault.hashicorp.com/agent-configmap"         = kubernetes_config_map.vault_agent_config.metadata.0.name
+              "vault.hashicorp.com/agent-inject"        = "true"
+              "vault.hashicorp.com/agent-internal-role" = "internal-app"
+              "vault.hashicorp.com/agent-aws-role"      = aws_iam_role.vault_ecr.name
+              "cache.spices.dev/cmtemplate"             = "vault-aws-agent"
             }
             labels = {
               app = "vault-ecr-refresh"
