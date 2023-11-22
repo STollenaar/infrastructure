@@ -128,10 +128,12 @@ resource "kubernetes_cron_job_v1" "vault_ecr_token" {
         template {
           metadata {
             annotations = {
-              "vault.hashicorp.com/agent-inject"        = "true"
-              "vault.hashicorp.com/agent-internal-role" = "internal-app"
-              "vault.hashicorp.com/agent-aws-role"      = aws_iam_role.vault_ecr.name
-              "cache.spices.dev/cmtemplate"             = "vault-aws-agent"
+              "vault.hashicorp.com/agent-inject"            = "true"
+              "vault.hashicorp.com/agent-internal-role"     = "internal-app"
+              "vault.hashicorp.com/agent-aws-role"          = aws_iam_role.vault_ecr.name
+              "vault.hashicorp.com/agent-cache-enable"      = "true"
+              "vault.hashicorp.com/agent-pre-populate-only" = "true"
+              "cache.spices.dev/cmtemplate"                 = "vault-aws-agent"
             }
             labels = {
               app = "vault-ecr-refresh"

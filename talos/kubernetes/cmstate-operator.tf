@@ -20,7 +20,7 @@ resource "kubernetes_labels" "kube_system_label" {
 
 resource "helm_release" "cmstate_operator" {
   name       = "cmstate-operator"
-  version    = "0.2.2"
+  version    = "0.2.3"
   namespace  = kubernetes_namespace.cmstate_operator.metadata.0.name
   repository = "https://stollenaar.github.io/cmstate-injector-operator"
   chart      = "cmstate-operator"
@@ -147,6 +147,7 @@ resource "kubernetes_manifest" "cm_vault_template" {
     }
     spec = {
       template = {
+        targetAnnotation = "vault.hashicorp.com/agent-configmap"
         annotationreplace = {
           "vault.hashicorp.com/agent-aws-role"      = "{aws_role_name}"
           "vault.hashicorp.com/agent-internal-role" = "{internal_role_name}"
