@@ -108,6 +108,9 @@ resource "kubernetes_deployment" "qflood" {
       }
     }
   }
+  lifecycle {
+    ignore_changes = [spec.0.replicas]
+  }
 }
 
 resource "kubernetes_service" "qbittorrent" {

@@ -49,6 +49,9 @@ resource "kubernetes_deployment" "prowlarr" {
       }
     }
   }
+  lifecycle {
+    ignore_changes = [spec.0.replicas]
+  }
 }
 
 resource "kubernetes_persistent_volume_claim" "prowlarr_data" {

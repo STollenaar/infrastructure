@@ -148,3 +148,19 @@ resource "aws_iam_role_policy" "vault_ecr_role_policy" {
   role   = aws_iam_role.vault_ecr.id
   policy = data.aws_iam_policy_document.vault_ecr_role_policy.json
 }
+
+# locals {
+#   kubeconfig = yamldecode(file(var.kubeconfig_file))
+#   server     = local.kubeconfig.clusters[index(local.kubeconfig.clusters.*.name, local.kubeconfig["current-context"])].cluster.server
+# }
+
+# data "tls_certificate" "oidc" {
+#   url          = local.server
+#   verify_chain = false
+# }
+
+# resource "aws_iam_openid_connect_provider" "oidc" {
+#   url             = local.server
+#   client_id_list  = ["sts.amazonaws.com"]
+#   thumbprint_list = ["${data.tls_certificate.oidc.certificates.0.sha1_fingerprint}"]
+# }

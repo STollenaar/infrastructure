@@ -94,6 +94,9 @@ resource "kubernetes_deployment" "radarr" {
       }
     }
   }
+  lifecycle {
+    ignore_changes = [spec.0.replicas]
+  }
 }
 
 resource "kubernetes_persistent_volume_claim" "radarr_data" {

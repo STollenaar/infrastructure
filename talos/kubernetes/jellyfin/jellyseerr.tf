@@ -50,6 +50,9 @@ resource "kubernetes_deployment" "jellyseerr" {
       }
     }
   }
+  lifecycle {
+    ignore_changes = [spec.0.replicas]
+  }
 }
 
 resource "kubernetes_persistent_volume_claim" "jellyseerr_data" {

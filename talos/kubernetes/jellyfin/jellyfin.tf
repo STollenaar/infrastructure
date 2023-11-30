@@ -96,6 +96,9 @@ resource "kubernetes_deployment" "jellyfin" {
       }
     }
   }
+  lifecycle {
+    ignore_changes = [ spec.0.replicas ]
+  }
 }
 
 resource "kubernetes_persistent_volume_claim" "jellyfin_data" {

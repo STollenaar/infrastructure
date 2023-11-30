@@ -94,6 +94,9 @@ resource "kubernetes_deployment" "sonarr" {
       }
     }
   }
+  lifecycle {
+    ignore_changes = [spec.0.replicas]
+  }
 }
 
 resource "kubernetes_persistent_volume_claim" "sonarr_data" {
@@ -117,7 +120,7 @@ resource "kubernetes_persistent_volume_claim" "sonarr_import" {
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   spec {
-    access_modes = ["ReadWriteOnce"]
+    access_modes       = ["ReadWriteOnce"]
     storage_class_name = "nfs-client-other"
     resources {
       requests = {

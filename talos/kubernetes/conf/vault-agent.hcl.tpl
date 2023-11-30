@@ -27,7 +27,7 @@ template = {
         output = json
         {{- end }}
         EOF
-  destination      = "/vault/secrets/aws/credentials"
+  destination      = "/vault/secrets/.aws/credentials"
   create_dest_dirs = true
 }
 
