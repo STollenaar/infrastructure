@@ -36,6 +36,9 @@ generate "provider" {
   path      = "grunt_providers.tf"
   if_exists = "overwrite"
   contents  = <<EOF
+        provider "aws" {
+            region = "ca-central-1"
+        }
         provider "kubernetes" {
             config_path = "${local.kubeconfig_file}"
         }
