@@ -10,10 +10,6 @@ resource "aws_ecs_cluster_capacity_providers" "discord_bots_capacity_providers" 
   capacity_providers = ["FARGATE_SPOT", aws_ecs_capacity_provider.nano_provider.name]
 }
 
-resource "aws_ecr_repository" "discord_bots" {
-  name = "discordbots"
-}
-
 resource "aws_launch_template" "nano_template" {
   name_prefix = "nano-template"
   image_id    = data.aws_ami.ecs_ami.id
@@ -35,20 +31,16 @@ resource "aws_launch_template" "nano_template" {
 
   network_interfaces {
     associate_public_ip_address = true
-    security_groups             = [aws_security_group.main_sc.id]
+    security_groups             = [data.terraform_remote_state.vpc.outputs.main_security_groups[0]]
   }
   iam_instance_profile {
-    name = aws_iam_role.spices_role.name
+    name = data.terraform_remote_state.iam.outputs.spices_role.id
   }
   instance_type = "t4g.nano"
 }
 
 resource "aws_autoscaling_group" "nano_scaler" {
-  vpc_zone_identifier = [
-    aws_subnet.main_public_subnet_a.id,
-    aws_subnet.main_public_subnet_b.id,
-    aws_subnet.main_public_subnet_d.id,
-  ]
+  vpc_zone_identifier = data.terraform_remote_state.vpc.outputs.main_subnets
   protect_from_scale_in = true
 
   launch_template {
