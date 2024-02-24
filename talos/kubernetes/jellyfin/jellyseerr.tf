@@ -91,6 +91,41 @@ resource "kubernetes_service" "jellyseerr" {
   ]
 }
 
+
+resource "kubernetes_ingress_v1" "jellyseer" {
+  metadata {
+    name      = "jellyseer"
+    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+
+    annotations = {
+      "kubernetes.io/ingress.class"    = "nginx"
+    #   "cert-manager.io/cluster-issuer" = local.letsencrypt_type
+    }
+  }
+  spec {
+    rule {
+      host = "jellyseer.home.spicedelver.me"
+      http {
+        path {
+          path = "/"
+          backend {
+            service {
+              name = kubernetes_service.jellyseerr.metadata.0.name
+              port {
+                number = 5055
+              }
+            }
+          }
+        }
+      }
+    }
+    # tls {
+    #   hosts       = [local.domain]
+    #   secret_name = local.letsencrypt_type
+    # }
+  }
+}
+
 resource "kubernetes_config_map" "jellyseerr" {
   metadata {
     name      = "jellyseerr"

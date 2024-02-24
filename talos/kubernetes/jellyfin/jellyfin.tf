@@ -169,27 +169,6 @@ resource "kubernetes_service" "jellyfin_web" {
   ]
 }
 
-resource "kubernetes_service" "jellyfin_web_node" {
-  metadata {
-    name      = "jellyfin-web-node"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
-  }
-  spec {
-    type = "NodePort"
-    selector = {
-      "app" = "jellyfin"
-    }
-    port {
-      name        = "web"
-      port        = 8096
-      target_port = "web"
-    }
-  }
-  depends_on = [
-    kubernetes_deployment.jellyfin
-  ]
-}
-
 resource "kubernetes_service" "jellyfin_discovery" {
   metadata {
     name      = "jellyfin-local-discovery"
@@ -210,6 +189,40 @@ resource "kubernetes_service" "jellyfin_discovery" {
       port        = 1900
       target_port = "dlna"
     }
+  }
+}
+
+resource "kubernetes_ingress_v1" "jellyfin" {
+  metadata {
+    name      = "jellyfin"
+    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+
+    annotations = {
+      "kubernetes.io/ingress.class"    = "nginx"
+    #   "cert-manager.io/cluster-issuer" = local.letsencrypt_type
+    }
+  }
+  spec {
+    rule {
+      host = "jellyfin.home.spicedelver.me"
+      http {
+        path {
+          path = "/"
+          backend {
+            service {
+              name = kubernetes_service.jellyfin_web.metadata.0.name
+              port {
+                number = 8096
+              }
+            }
+          }
+        }
+      }
+    }
+    # tls {
+    #   hosts       = [local.domain]
+    #   secret_name = local.letsencrypt_type
+    # }
   }
 }
 

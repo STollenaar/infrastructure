@@ -1,0 +1,56 @@
+controller:
+  # image:
+  #   chroot: true
+  # containerSecurityContext:
+    # runAsUser: 101
+    # allowPrivilegeEscalation: true
+    # readOnlyRootFilesystem: false
+    # capabilities:
+    #   drop:
+    #     - ALL
+    #   add:
+    #     - NET_BIND_SERVICE
+    #     - SYS_CHROOT
+  config:
+    ssl-protocols: TLSv1.3 TLSv1.2
+    load-balance: ewma
+    # disable-access-log: "true"
+    enable-vts-status: "true"
+    error-log-level: "error"
+    hsts: "false"
+    # large-client-header-buffers: "4 8K"
+    # log-format-upstream: "$status $body_bytes_sent $http_referer"
+    # server-name-hash-bucket-size: "1024"
+    # server-name-hash-max-size: "1024"
+    server-tokens: "false"
+    worker-processes: "auto"
+    proxy-buffering: "on"
+    multi-accept: "off"
+    proxy-buffer-size: "16k"
+    keep-alive: "1"
+    keep-alive-requests: "20000"
+    # enable-underscores-in-headers: ""
+    # proxy-buffers-size: ""
+    # proxy-buffers: ""
+  admissionWebhooks:
+    patch:
+      podAnnotations:
+        sidecar.istio.io/inject: "false"
+  podAnnotations: {}
+  service:
+    annotations: {}
+      # If you want NLB instead of ELB, enable this!
+    externalTrafficPolicy: Local
+    loadBalancerIP: ${cluster_ip}
+  replicaCount: 1
+  stats:
+    enabled: true
+  metrics:
+    enabled: true
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+defaultBackend:
+  replicaCount: 3
