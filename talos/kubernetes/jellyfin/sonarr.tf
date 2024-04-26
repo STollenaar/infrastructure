@@ -25,9 +25,6 @@ resource "kubernetes_deployment" "sonarr" {
       }
 
       spec {
-        security_context {
-          fs_group = 1000
-        }
         container {
           image = "lscr.io/linuxserver/sonarr:latest"
           name  = "sonarr"
@@ -38,11 +35,6 @@ resource "kubernetes_deployment" "sonarr" {
           }
           port {
             container_port = 8989
-          }
-          volume_mount {
-            name       = "config"
-            mount_path = "/config/config.xml"
-            sub_path   = "config.xml"
           }
           volume_mount {
             name       = "data"
@@ -59,12 +51,6 @@ resource "kubernetes_deployment" "sonarr" {
           volume_mount {
             name       = "downloads"
             mount_path = "/downloads"
-          }
-        }
-        volume {
-          name = "config"
-          config_map {
-            name = kubernetes_config_map.sonarr_cm.metadata.0.name
           }
         }
         volume {

@@ -4,24 +4,13 @@ resource "kubernetes_namespace" "tailscale" {
   }
 }
 
-
-# The suffering of needing to clone and use a local helm chart
-resource "null_resource" "tailscale" {
-  provisioner "local-exec" {
-    working_dir = "${path.module}/conf"
-    command     = <<EOT
-      rm -r tailscale
-      git clone https://github.com/tailscale/tailscale
-      cd tailscale
-      EOT
-  }
-}
-
 resource "helm_release" "tailscale" {
-  depends_on = [kubernetes_manifest.tailscale_keys, null_resource.tailscale]
+  depends_on = [kubernetes_manifest.tailscale_keys]
   name       = "tailscale"
+  version    = "1.64.2"
   namespace  = kubernetes_namespace.tailscale.metadata.0.name
-  chart      = "${path.module}/conf/tailscale/cmd/k8s-operator/deploy/chart"
+  chart      = "tailscale-operator"
+  repository = "https://pkgs.tailscale.com/helmcharts"
   values     = [file("${path.module}/conf/tailscale-values.yaml")]
 }
 
@@ -43,13 +32,13 @@ resource "kubernetes_cluster_role_binding_v1" "tailscale_auth_binding" {
   }
   role_ref {
     api_group = "rbac.authorization.k8s.io"
-    kind = "ClusterRole"
-    name = "cluster-admin"
+    kind      = "ClusterRole"
+    name      = "cluster-admin"
   }
   subject {
     api_group = "rbac.authorization.k8s.io"
-    kind = "User"
-    name = "1guitargun1@gmail.com"
+    kind      = "User"
+    name      = "1guitargun1@gmail.com"
   }
 }
 

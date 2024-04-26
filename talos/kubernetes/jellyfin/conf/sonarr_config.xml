@@ -1,17 +1,17 @@
 <Config>
-    <LogLevel>info</LogLevel>
-    <EnableSsl>False</EnableSsl>
+    <BindAddress>*</BindAddress>
     <Port>8989</Port>
     <SslPort>9898</SslPort>
-    <UrlBase></UrlBase>
-    <BindAddress>*</BindAddress>
-    <ApiKey>109463c92e3042b78f6a94dadc8ddffd</ApiKey>
-    <AuthenticationMethod>None</AuthenticationMethod>
-    <UpdateMechanism>Docker</UpdateMechanism>
+    <EnableSsl>False</EnableSsl>
     <LaunchBrowser>True</LaunchBrowser>
+    <ApiKey>12f9f7355eb74ec0956077c054bc9145</ApiKey>
+    <AuthenticationMethod>Basic</AuthenticationMethod>
+    <AuthenticationRequired>Enabled</AuthenticationRequired>
     <Branch>main</Branch>
-    <SslCertHash></SslCertHash>
+    <LogLevel>info</LogLevel>
+    <SslCertPath></SslCertPath>
+    <SslCertPassword></SslCertPassword>
+    <UrlBase></UrlBase>
     <InstanceName>Sonarr</InstanceName>
-    <SyslogPort>514</SyslogPort>
-    <AnalyticsEnabled>False</AnalyticsEnabled>
+    <UpdateMechanism>Docker</UpdateMechanism>
 </Config>
