@@ -2,7 +2,7 @@ resource "kubernetes_namespace" "cert_manager" {
   metadata {
     name = "cert-manager"
     labels = {
-      "cmstate.spices.dev" = "opt-out"
+      "cmstate.spicedelver.me" = "opt-out"
     }
   }
 }

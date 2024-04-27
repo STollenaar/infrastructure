@@ -133,7 +133,7 @@ resource "kubernetes_cron_job_v1" "vault_ecr_token" {
               "vault.hashicorp.com/agent-aws-role"          = aws_iam_role.vault_ecr.name
               "vault.hashicorp.com/agent-cache-enable"      = "true"
               "vault.hashicorp.com/agent-pre-populate-only" = "true"
-              "cache.spices.dev/cmtemplate"                 = "vault-aws-agent"
+              "cache.spicedelver.me/cmtemplate"                 = "vault-aws-agent"
             }
             labels = {
               app = "vault-ecr-refresh"

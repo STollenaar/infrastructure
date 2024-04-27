@@ -2,7 +2,7 @@ resource "kubernetes_namespace" "cmstate_operator" {
   metadata {
     name = "cmstate-operator"
     labels = {
-      "cmstate.spices.dev" = "opt-out"
+      "cmstate.spicedelver.me" = "opt-out"
     }
   }
 }
@@ -14,13 +14,13 @@ resource "kubernetes_labels" "kube_system_label" {
     name = "kube-system"
   }
   labels = {
-    "cmstate.spices.dev" = "opt-out"
+    "cmstate.spicedelver.me" = "opt-out"
   }
 }
 
 resource "helm_release" "cmstate_operator" {
   name       = "cmstate-operator"
-  version    = "0.2.3"
+  version    = "0.3.0"
   namespace  = kubernetes_namespace.cmstate_operator.metadata.0.name
   repository = "https://stollenaar.github.io/cmstate-injector-operator"
   chart      = "cmstate-operator"
@@ -140,7 +140,7 @@ resource "kubernetes_manifest" "cert_certificate" {
 
 resource "kubernetes_manifest" "cm_vault_template" {
   manifest = {
-    apiVersion = "cache.spices.dev/v1alpha1"
+    apiVersion = "cache.spicedelver.me/v1alpha1"
     kind       = "CMTemplate"
     metadata = {
       name = "vault-aws-agent"
