@@ -68,7 +68,7 @@ injector:
   # image sets the repo and tag of the vault-k8s image to use for the injector.
   image:
     repository: "hashicorp/vault-k8s"
-    tag: "1.3.1"
+    tag: "1.4.1"
     pullPolicy: IfNotPresent
 
   # agentImage sets the repo and tag of the Vault image to use for the Vault Agent
@@ -76,7 +76,7 @@ injector:
   # required.
   agentImage:
     repository: "hashicorp/vault"
-    tag: "1.15.1"
+    tag: "1.16.1"
 
   # The default values for the injected Vault Agent containers.
   agentDefaults:
@@ -140,7 +140,7 @@ injector:
 
   # Configures the log verbosity of the injector.
   # Supported log levels include: trace, debug, info, warn, error
-  logLevel: "info"
+  logLevel: "trace"
 
   # Configures the log format of the injector. Supported log formats: "standard", "json".
   logFormat: "standard"
@@ -388,11 +388,11 @@ server:
 
   # Configure the logging verbosity for the Vault server.
   # Supported log levels include: trace, debug, info, warn, error
-  logLevel: ""
+  logLevel: "trace"
 
   # Configure the logging format for the Vault server.
   # Supported log formats include: standard, json
-  logFormat: ""
+  logFormat: "standard"
 
   resources: {}
   # resources:

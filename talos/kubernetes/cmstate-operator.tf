@@ -149,8 +149,8 @@ resource "kubernetes_manifest" "cm_vault_template" {
       template = {
         targetAnnotation = "vault.hashicorp.com/agent-configmap"
         annotationreplace = {
-          "vault.hashicorp.com/agent-aws-role"      = "{aws_role_name}"
-          "vault.hashicorp.com/agent-internal-role" = "{internal_role_name}"
+          "vault.hashicorp.com/aws-role" = "{aws_role_name}"
+          "vault.hashicorp.com/role"     = "{internal_role_name}"
         }
         cmtemplate = {
           "config.hcl" = templatefile("${path.module}/conf/vault-agent.hcl.tpl", {

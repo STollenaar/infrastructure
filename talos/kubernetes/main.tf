@@ -5,8 +5,8 @@ resource "kubernetes_namespace" "vault" {
 }
 
 resource "helm_release" "vault_secrets_operator" {
-  name       = "vault-secrets-operator"
-  version    = "0.3.4"
+  name       = "vault-secrets-operator"     
+  version    = "0.6.0"
   namespace  = kubernetes_namespace.vault.metadata.0.name
   repository = "https://helm.releases.hashicorp.com"
   chart      = "vault-secrets-operator"

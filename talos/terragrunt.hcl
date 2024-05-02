@@ -17,6 +17,8 @@ terraform {
   }
 }
 
+terraform_binary = "/usr/local/bin/tofu"
+
 remote_state {
   backend = "s3"
   generate = {

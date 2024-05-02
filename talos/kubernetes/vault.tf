@@ -11,7 +11,7 @@ resource "kubernetes_secret" "vault_unseal_user" {
 
 resource "helm_release" "vault" {
   name       = "vault"
-  version    = "0.26.0"
+  version    = "0.28.0"
   namespace  = kubernetes_namespace.vault.metadata.0.name
   repository = "https://helm.releases.hashicorp.com"
   chart      = "vault"
@@ -42,7 +42,7 @@ resource "kubernetes_job_v1" "vault_init" {
       spec {
         container {
           name    = "vault-init"
-          image   = "hashicorp/vault:1.15.1"
+          image   = "hashicorp/vault:1.16.1"
           command = ["sh", "-c", file("${path.module}/conf/vault-init.sh")]
           env {
             name  = "VAULT_ENDPOINT"
@@ -129,11 +129,11 @@ resource "kubernetes_cron_job_v1" "vault_ecr_token" {
           metadata {
             annotations = {
               "vault.hashicorp.com/agent-inject"            = "true"
-              "vault.hashicorp.com/agent-internal-role"     = "internal-app"
-              "vault.hashicorp.com/agent-aws-role"          = aws_iam_role.vault_ecr.name
+              "vault.hashicorp.com/role"                    = "internal-app"
+              "vault.hashicorp.com/aws-role"                = aws_iam_role.vault_ecr.name
               "vault.hashicorp.com/agent-cache-enable"      = "true"
               "vault.hashicorp.com/agent-pre-populate-only" = "true"
-              "cache.spicedelver.me/cmtemplate"                 = "vault-aws-agent"
+              "cache.spicedelver.me/cmtemplate"             = "vault-aws-agent"
             }
             labels = {
               app = "vault-ecr-refresh"
