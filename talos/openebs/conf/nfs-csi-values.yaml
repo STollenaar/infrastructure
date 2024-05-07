@@ -12,6 +12,7 @@ nfs:
   path: ${nfs_path}
   mountOptions:
     - vers=4
+    - nolock
   volumeName: nfs-subdir-external-provisioner-root
   # Reclaim policy for the main nfs volume
   reclaimPolicy: Retain
