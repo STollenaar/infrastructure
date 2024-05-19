@@ -1,14 +1,3 @@
-resource "kubernetes_namespace" "openebs" {
-  metadata {
-    name = "openebs"
-    labels = {
-      "pod-security.kubernetes.io/audit"   = "privileged"
-      "pod-security.kubernetes.io/enforce" = "privileged"
-      "pod-security.kubernetes.io/warn"    = "privileged"
-    }
-  }
-}
-
 resource "helm_release" "nfs_csi_movies" {
   repository = "https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/"
 
