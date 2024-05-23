@@ -24,6 +24,32 @@ resource "kubernetes_deployment" "prowlarr" {
       }
 
       spec {
+        init_container {
+          image = "keinos/sqlite3:latest"
+          name  = "init-prowlarr"
+          args = [
+            "/bin/sh",
+            "-c",
+            file("${path.module}/conf/restoreDB.sh")
+          ]
+          env {
+            name  = "DB_PATH"
+            value = "/config"
+          }
+          env {
+            name  = "DB_NAME"
+            value = "prowlarr.db"
+          }
+          volume_mount {
+            name       = "data"
+            mount_path = "/config"
+          }
+          volume_mount {
+            name       = "restore"
+            mount_path = "/tmp/restore.sql"
+            sub_path   = "restore.sql"
+          }
+        }
         container {
           image = "lscr.io/linuxserver/prowlarr:develop"
           name  = "prowlarr"
@@ -46,6 +72,12 @@ resource "kubernetes_deployment" "prowlarr" {
             claim_name = "prowlarr-data"
           }
         }
+        volume {
+          name = "restore"
+          config_map {
+            name = kubernetes_config_map.prowlarr_restore_db.metadata.0.name
+          }
+        }
       }
     }
   }
@@ -60,7 +92,8 @@ resource "kubernetes_persistent_volume_claim" "prowlarr_data" {
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   spec {
-    access_modes = ["ReadWriteOnce"]
+    storage_class_name = "openebs-hostpath"
+    access_modes       = ["ReadWriteOnce"]
     resources {
       requests = {
         storage = "5Gi"
@@ -97,5 +130,15 @@ resource "kubernetes_config_map" "prowlarr_env" {
     "PUID" = 1000
     "PGID" = 1000
     "TZ"   = local.timezone
+  }
+}
+
+resource "kubernetes_config_map" "prowlarr_restore_db" {
+  metadata {
+    name      = "prowlarr-restore-db"
+    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+  }
+  data = {
+    "restore.sql" = file("${path.module}/conf/prowlarr.sql")
   }
 }

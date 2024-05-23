@@ -10,21 +10,15 @@ resource "kubernetes_namespace" "openebs" {
 }
 
 resource "helm_release" "openebs_jiva" {
-  name       = "openebs-jiva"
+  name       = "openebs"
   version    = "3.5.1"
   namespace  = kubernetes_namespace.openebs.metadata.0.name
-  repository = "https://openebs.github.io/jiva-operator"
+  repository = "https://openebs-archive.github.io/jiva-operator"
   chart      = "jiva"
 
   set {
     name  = "defaultPolicy.replicas"
     value = 1
-  }
-}
-
-resource "null_resource" "patch_openebs_sc" {
-  provisioner "local-exec" {
-    command = "kubectl --kubeconfig=${var.kubeconfig_file} annotate sc openebs-jiva-csi-default storageclass.kubernetes.io/is-default-class=true"
   }
 }
 

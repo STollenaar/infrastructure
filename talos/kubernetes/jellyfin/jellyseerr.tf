@@ -24,6 +24,45 @@ resource "kubernetes_deployment" "jellyseerr" {
       }
 
       spec {
+        init_container {
+          image = "keinos/sqlite3:latest"
+          name  = "init-jellyseer"
+          args = [
+            "/bin/sh",
+            "-c",
+            file("${path.module}/conf/restoreDB.sh")
+          ]
+          env {
+            name  = "DB_PATH"
+            value = "/config/db"
+          }
+          env {
+            name  = "SETTINGS_PATH"
+            value = "/config"
+          }
+          env {
+            name  = "SETTINGS_FILE"
+            value = "settings.json"
+          }
+          env {
+            name  = "DB_NAME"
+            value = "db.sqlite3"
+          }
+          volume_mount {
+            name       = "data"
+            mount_path = "/config"
+          }
+          volume_mount {
+            name       = "restore"
+            mount_path = "/tmp/restore.sql"
+            sub_path   = "restore.sql"
+          }
+          volume_mount {
+            name       = "settings"
+            mount_path = "/tmp/settings.json"
+            sub_path   = "settings.json"
+          }
+        }
         container {
           image = "fallenbagel/jellyseerr:latest"
           name  = "jellyseerr"
@@ -47,6 +86,26 @@ resource "kubernetes_deployment" "jellyseerr" {
             claim_name = kubernetes_persistent_volume_claim.jellyseerr_data.metadata.0.name
           }
         }
+        volume {
+          name = "restore"
+          config_map {
+            name = kubernetes_config_map.jellyseer_restore_db.metadata.0.name
+            items {
+              key  = "restore.sql"
+              path = "restore.sql"
+            }
+          }
+        }
+        volume {
+          name = "settings"
+          config_map {
+            name = kubernetes_config_map.jellyseer_restore_db.metadata.0.name
+            items {
+              key  = "settings.json"
+              path = "settings.json"
+            }
+          }
+        }
       }
     }
   }
@@ -61,7 +120,8 @@ resource "kubernetes_persistent_volume_claim" "jellyseerr_data" {
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   spec {
-    access_modes = ["ReadWriteOnce"]
+    storage_class_name = "openebs-hostpath"
+    access_modes       = ["ReadWriteOnce"]
     resources {
       requests = {
         storage = "15Gi"
@@ -98,8 +158,8 @@ resource "kubernetes_ingress_v1" "jellyseer" {
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
 
     annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-    #   "cert-manager.io/cluster-issuer" = local.letsencrypt_type
+      "kubernetes.io/ingress.class" = "nginx"
+      #   "cert-manager.io/cluster-issuer" = local.letsencrypt_type
     }
   }
   spec {
@@ -134,5 +194,16 @@ resource "kubernetes_config_map" "jellyseerr" {
   data = {
     "LOG_LEVEL" = "debug"
     "TZ"        = local.timezone
+  }
+}
+
+resource "kubernetes_config_map" "jellyseer_restore_db" {
+  metadata {
+    name      = "jellyseer-restore-db"
+    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+  }
+  data = {
+    "restore.sql"   = file("${path.module}/conf/jellyseer.sql")
+    "settings.json" = file("${path.module}/conf/jellyseer_settings.json")
   }
 }

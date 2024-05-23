@@ -42,6 +42,33 @@ resource "kubernetes_deployment" "jellyfin" {
         security_context {
           fs_group = 1000
         }
+        init_container {
+          image = "keinos/sqlite3:latest"
+          name  = "init-jellyfin"
+          args = [
+            "/bin/sh",
+            "-c",
+            file("${path.module}/conf/restoreDB.sh")
+          ]
+          env {
+            name  = "SETTINGS_PATH"
+            value = "/config"
+          }
+          env {
+            name  = "SETTINGS_FILE"
+            value = "system.xml"
+          }
+
+          volume_mount {
+            name       = "data"
+            mount_path = "/config"
+          }
+          volume_mount {
+            name       = "system"
+            mount_path = "/tmp/system.xml"
+            sub_path   = "system.xml"
+          }
+        }
         container {
           image = "lscr.io/linuxserver/jellyfin:latest"
           name  = "jellyfin"
@@ -93,11 +120,21 @@ resource "kubernetes_deployment" "jellyfin" {
             claim_name = kubernetes_persistent_volume_claim.jellyfin_shows.metadata.0.name
           }
         }
+        volume {
+          name = "system"
+          config_map {
+            name = kubernetes_config_map.jellyfin_restore_db.metadata.0.name
+            items {
+              key  = "system.xml"
+              path = "system.xml"
+            }
+          }
+        }
       }
     }
   }
   lifecycle {
-    ignore_changes = [ spec.0.replicas ]
+    ignore_changes = [spec.0.replicas]
   }
 }
 
@@ -107,7 +144,8 @@ resource "kubernetes_persistent_volume_claim" "jellyfin_data" {
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   spec {
-    access_modes = ["ReadWriteOnce"]
+    storage_class_name = "openebs-hostpath"
+    access_modes       = ["ReadWriteOnce"]
     resources {
       requests = {
         storage = "10Gi"
@@ -198,8 +236,8 @@ resource "kubernetes_ingress_v1" "jellyfin" {
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
 
     annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-    #   "cert-manager.io/cluster-issuer" = local.letsencrypt_type
+      "kubernetes.io/ingress.class" = "nginx"
+      #   "cert-manager.io/cluster-issuer" = local.letsencrypt_type
     }
   }
   spec {
@@ -236,6 +274,16 @@ resource "kubernetes_config_map" "jellyfin_env" {
     "PGID"      = 1000
     "LOG_LEVEL" = "debug"
     "TZ"        = local.timezone
+  }
+}
+
+resource "kubernetes_config_map" "jellyfin_restore_db" {
+  metadata {
+    name      = "jellyfin-restore-db"
+    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+  }
+  data = {
+    "system.xml"  = file("${path.module}/conf/jellyfin_system.xml")
   }
 }
 
