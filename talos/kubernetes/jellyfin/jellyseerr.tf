@@ -24,45 +24,45 @@ resource "kubernetes_deployment" "jellyseerr" {
       }
 
       spec {
-        init_container {
-          image = "keinos/sqlite3:latest"
-          name  = "init-jellyseer"
-          args = [
-            "/bin/sh",
-            "-c",
-            file("${path.module}/conf/restoreDB.sh")
-          ]
-          env {
-            name  = "DB_PATH"
-            value = "/config/db"
-          }
-          env {
-            name  = "SETTINGS_PATH"
-            value = "/config"
-          }
-          env {
-            name  = "SETTINGS_FILE"
-            value = "settings.json"
-          }
-          env {
-            name  = "DB_NAME"
-            value = "db.sqlite3"
-          }
-          volume_mount {
-            name       = "data"
-            mount_path = "/config"
-          }
-          volume_mount {
-            name       = "restore"
-            mount_path = "/tmp/restore.sql"
-            sub_path   = "restore.sql"
-          }
-          volume_mount {
-            name       = "settings"
-            mount_path = "/tmp/settings.json"
-            sub_path   = "settings.json"
-          }
-        }
+        # init_container {
+        #   image = "keinos/sqlite3:latest"
+        #   name  = "init-jellyseer"
+        #   args = [
+        #     "/bin/sh",
+        #     "-c",
+        #     file("${path.module}/conf/restoreDB.sh")
+        #   ]
+        #   env {
+        #     name  = "DB_PATH"
+        #     value = "/config/db"
+        #   }
+        #   env {
+        #     name  = "SETTINGS_PATH"
+        #     value = "/config"
+        #   }
+        #   env {
+        #     name  = "SETTINGS_FILE"
+        #     value = "settings.json"
+        #   }
+        #   env {
+        #     name  = "DB_NAME"
+        #     value = "db.sqlite3"
+        #   }
+        #   volume_mount {
+        #     name       = "data"
+        #     mount_path = "/config"
+        #   }
+        #   volume_mount {
+        #     name       = "restore"
+        #     mount_path = "/tmp/restore.sql"
+        #     sub_path   = "restore.sql"
+        #   }
+        #   volume_mount {
+        #     name       = "settings"
+        #     mount_path = "/tmp/settings.json"
+        #     sub_path   = "settings.json"
+        #   }
+        # }
         container {
           image = "fallenbagel/jellyseerr:latest"
           name  = "jellyseerr"
