@@ -27,6 +27,6 @@ data "terraform_remote_state" "kubernetes_state" {
     bucket  = "stollenaar-terraform-states"
     key     = "infrastructure/kubernetes/terraform.tfstate"
     region  = "ca-central-1"
-    profile = "personal"
+    # profile = "personal"
   }
 }
