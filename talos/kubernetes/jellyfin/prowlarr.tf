@@ -1,4 +1,5 @@
 resource "kubernetes_deployment" "prowlarr" {
+  depends_on = [kubernetes_job_v1.prowlarr_init]
   metadata {
     name      = "prowlarr"
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
@@ -25,31 +26,24 @@ resource "kubernetes_deployment" "prowlarr" {
 
       spec {
         init_container {
-          image = "keinos/sqlite3:latest"
-          name  = "init-prowlarr"
+          name  = "init-config"
+          image = "busybox"
           args = [
             "/bin/sh",
             "-c",
-            file("${path.module}/conf/restoreDB.sh")
+            file("${path.module}/conf/copyConfig.sh")
           ]
-          env {
-            name  = "DB_PATH"
-            value = "/config"
-          }
-          env {
-            name  = "DB_NAME"
-            value = "prowlarr.db"
+          volume_mount {
+            name       = "config"
+            mount_path = "/tmp/config.xml"
+            sub_path   = "config.xml"
           }
           volume_mount {
             name       = "data"
             mount_path = "/config"
           }
-          volume_mount {
-            name       = "restore"
-            mount_path = "/tmp/restore.sql"
-            sub_path   = "restore.sql"
-          }
         }
+
         container {
           image = "lscr.io/linuxserver/prowlarr:develop"
           name  = "prowlarr"
@@ -67,15 +61,15 @@ resource "kubernetes_deployment" "prowlarr" {
           }
         }
         volume {
-          name = "data"
-          persistent_volume_claim {
-            claim_name = "prowlarr-data"
+          name = "config"
+          config_map {
+            name = kubernetes_config_map.prowlarr_cm.metadata.0.name
           }
         }
         volume {
-          name = "restore"
-          config_map {
-            name = kubernetes_config_map.prowlarr_restore_db.metadata.0.name
+          name = "data"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.prowlarr_data.metadata.0.name
           }
         }
       }
@@ -92,7 +86,7 @@ resource "kubernetes_persistent_volume_claim" "prowlarr_data" {
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   spec {
-    storage_class_name = "openebs-hostpath"
+    storage_class_name = "nfs-csi-other"
     access_modes       = ["ReadWriteOnce"]
     resources {
       requests = {
@@ -133,12 +127,70 @@ resource "kubernetes_config_map" "prowlarr_env" {
   }
 }
 
-resource "kubernetes_config_map" "prowlarr_restore_db" {
+resource "kubernetes_config_map" "prowlarr_cm" {
   metadata {
-    name      = "prowlarr-restore-db"
+    name      = "prowlarr-config"
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   data = {
-    "restore.sql" = file("${path.module}/conf/prowlarr.sql")
+    "config.xml" = templatefile("${path.module}/conf/prowlarr_config.xml", {
+      postgres_host = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local"
+    })
+  }
+}
+
+resource "kubernetes_job_v1" "prowlarr_init" {
+  depends_on = [kubernetes_stateful_set_v1.postgres]
+  metadata {
+    name      = "prowlarr-init"
+    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    labels = {
+      "app" = "prowlarr"
+    }
+  }
+  spec {
+    template {
+      metadata {
+        labels = {
+          app = "prowlarr-init"
+        }
+      }
+      spec {
+        container {
+          name    = "prowlarr-main"
+          image   = "bitnami/postgresql:latest"
+          command = ["createdb"]
+          args = [
+            "-h",
+            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local",
+            "-U",
+            "admin",
+            "prowlarr-main"
+          ]
+
+          env {
+            name  = "PGPASSWORD"
+            value = "password"
+          }
+        }
+        container {
+          name    = "prowlarr-logs"
+          image   = "bitnami/postgresql:latest"
+          command = ["createdb"]
+          args = [
+            "-h",
+            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local",
+            "-U",
+            "admin",
+            "prowlarr-logs"
+          ]
+
+          env {
+            name  = "PGPASSWORD"
+            value = "password"
+          }
+        }
+      }
+    }
   }
 }

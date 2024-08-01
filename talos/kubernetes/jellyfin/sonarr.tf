@@ -1,5 +1,5 @@
-
 resource "kubernetes_deployment" "sonarr" {
+  depends_on = [kubernetes_job_v1.sonarr_init]
   metadata {
     name      = "sonarr"
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
@@ -26,29 +26,21 @@ resource "kubernetes_deployment" "sonarr" {
 
       spec {
         init_container {
-          image = "keinos/sqlite3:latest"
-          name  = "init-sonarr"
+          name  = "init-config"
+          image = "busybox"
           args = [
             "/bin/sh",
             "-c",
-            file("${path.module}/conf/restoreDB.sh")
+            file("${path.module}/conf/copyConfig.sh")
           ]
-          env {
-            name  = "DB_PATH"
-            value = "/config"
-          }
-          env {
-            name  = "DB_NAME"
-            value = "sonarr.db"
+          volume_mount {
+            name       = "config"
+            mount_path = "/tmp/config.xml"
+            sub_path   = "config.xml"
           }
           volume_mount {
             name       = "data"
             mount_path = "/config"
-          }
-          volume_mount {
-            name       = "restore"
-            mount_path = "/tmp/restore.sql"
-            sub_path   = "restore.sql"
           }
         }
         container {
@@ -80,6 +72,12 @@ resource "kubernetes_deployment" "sonarr" {
           }
         }
         volume {
+          name = "config"
+          config_map {
+            name = kubernetes_config_map.sonarr_cm.metadata.0.name
+          }
+        }
+        volume {
           name = "data"
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim.sonarr_data.metadata.0.name
@@ -103,12 +101,6 @@ resource "kubernetes_deployment" "sonarr" {
             claim_name = kubernetes_persistent_volume_claim.downloads.metadata.0.name
           }
         }
-        volume {
-          name = "restore"
-          config_map {
-            name = kubernetes_config_map.sonarr_restore_db.metadata.0.name
-          }
-        }
       }
     }
   }
@@ -123,7 +115,7 @@ resource "kubernetes_persistent_volume_claim" "sonarr_data" {
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   spec {
-    storage_class_name = "openebs-hostpath"
+    storage_class_name = "nfs-csi-other"
     access_modes       = ["ReadWriteOnce"]
     resources {
       requests = {
@@ -140,7 +132,7 @@ resource "kubernetes_persistent_volume_claim" "sonarr_import" {
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
-    storage_class_name = "nfs-client-other"
+    storage_class_name = "nfs-csi-other"
     resources {
       requests = {
         storage = "200Gi"
@@ -186,16 +178,65 @@ resource "kubernetes_config_map" "sonarr_cm" {
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   data = {
-    "config.xml" = templatefile("${path.module}/conf/sonarr_config.xml", {})
+    "config.xml" = templatefile("${path.module}/conf/sonarr_config.xml", {
+      postgres_host = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local"
+    })
   }
 }
 
-resource "kubernetes_config_map" "sonarr_restore_db" {
+
+resource "kubernetes_job_v1" "sonarr_init" {
+  depends_on = [kubernetes_stateful_set_v1.postgres]
   metadata {
-    name      = "sonarr-restore-db"
+    name      = "sonarr-init"
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    labels = {
+      "app" = "sonarr"
+    }
   }
-  data = {
-    "restore.sql" = file("${path.module}/conf/sonarr.sql")
+  spec {
+    template {
+      metadata {
+        labels = {
+          app = "sonarr-init"
+        }
+      }
+      spec {
+        container {
+          name    = "sonarr-main"
+          image   = "bitnami/postgresql:latest"
+          command = ["createdb"]
+          args = [
+            "-h",
+            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local",
+            "-U",
+            "admin",
+            "sonarr-main"
+          ]
+
+          env {
+            name  = "PGPASSWORD"
+            value = "password"
+          }
+        }
+        container {
+          name    = "sonarr-logs"
+          image   = "bitnami/postgresql:latest"
+          command = ["createdb"]
+          args = [
+            "-h",
+            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local",
+            "-U",
+            "admin",
+            "sonarr-logs"
+          ]
+
+          env {
+            name  = "PGPASSWORD"
+            value = "password"
+          }
+        }
+      }
+    }
   }
 }

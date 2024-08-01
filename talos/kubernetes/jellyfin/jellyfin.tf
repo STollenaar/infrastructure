@@ -144,7 +144,7 @@ resource "kubernetes_persistent_volume_claim" "jellyfin_data" {
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   spec {
-    storage_class_name = "openebs-hostpath"
+    storage_class_name = "nfs-csi-other"
     access_modes       = ["ReadWriteOnce"]
     resources {
       requests = {
@@ -161,7 +161,7 @@ resource "kubernetes_persistent_volume_claim" "jellyfin_movies" {
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
-    storage_class_name = "nfs-client-movies"
+    storage_class_name = "nfs-csi-movies"
     resources {
       requests = {
         storage = "200Gi"
@@ -177,7 +177,7 @@ resource "kubernetes_persistent_volume_claim" "jellyfin_shows" {
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
-    storage_class_name = "nfs-client-other"
+    storage_class_name = "nfs-csi-other"
     resources {
       requests = {
         storage = "800Gi"
@@ -295,7 +295,7 @@ resource "kubernetes_persistent_volume_claim" "downloads" {
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
-    storage_class_name = "nfs-client-other"
+    storage_class_name = "nfs-csi-other"
     resources {
       requests = {
         storage = "800Gi"

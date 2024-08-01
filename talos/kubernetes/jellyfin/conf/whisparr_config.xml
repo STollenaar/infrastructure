@@ -1,23 +1,23 @@
 <Config>
     <BindAddress>*</BindAddress>
-    <Port>8989</Port>
-    <SslPort>9898</SslPort>
+    <Port>6969</Port>
+    <SslPort>8008</SslPort>
     <EnableSsl>False</EnableSsl>
     <LaunchBrowser>True</LaunchBrowser>
-    <ApiKey>12f9f7355eb74ec0956077c054bc9145</ApiKey>
-    <AuthenticationMethod>Basic</AuthenticationMethod>
+    <ApiKey>e98855a7e0d34b9083fcc2aa23db8f95</ApiKey>
+    <AuthenticationMethod>None</AuthenticationMethod>
     <AuthenticationRequired>Enabled</AuthenticationRequired>
-    <Branch>main</Branch>
+    <Branch>nightly</Branch>
     <LogLevel>info</LogLevel>
     <SslCertPath></SslCertPath>
     <SslCertPassword></SslCertPassword>
     <UrlBase></UrlBase>
-    <InstanceName>Sonarr</InstanceName>
+    <InstanceName>Whisparr</InstanceName>
     <UpdateMechanism>Docker</UpdateMechanism>
     <PostgresUser>admin</PostgresUser>
     <PostgresPassword>password</PostgresPassword>
     <PostgresPort>5432</PostgresPort>
     <PostgresHost>${postgres_host}</PostgresHost>
-    <PostgresMainDb>sonarr-main</PostgresMainDb>
-    <PostgresLogDb>sonarr-logs</PostgresLogDb>
+    <PostgresMainDb>whisparr-main</PostgresMainDb>
+    <PostgresLogDb>whisparr-logs</PostgresLogDb>
 </Config>

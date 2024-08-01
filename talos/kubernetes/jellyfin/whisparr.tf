@@ -1,10 +1,10 @@
-resource "kubernetes_deployment" "radarr" {
-  depends_on = [kubernetes_job_v1.radarr_init]
+resource "kubernetes_deployment" "whisparr" {
+  depends_on = [kubernetes_job_v1.whisparr_init]
   metadata {
-    name      = "radarr"
+    name      = "whisparr"
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
     labels = {
-      "app" = "radarr"
+      "app" = "whisparr"
     }
   }
 
@@ -13,21 +13,18 @@ resource "kubernetes_deployment" "radarr" {
 
     selector {
       match_labels = {
-        "app" = "radarr"
+        "app" = "whisparr"
       }
     }
 
     template {
       metadata {
         labels = {
-          "app" = "radarr"
+          "app" = "whisparr"
         }
       }
 
       spec {
-        security_context {
-          fs_group = 1000
-        }
         init_container {
           name  = "init-config"
           image = "busybox"
@@ -47,23 +44,23 @@ resource "kubernetes_deployment" "radarr" {
           }
         }
         container {
-          image = "lscr.io/linuxserver/radarr:4.2.4"
-          name  = "radarr"
+          image = "ghcr.io/hotio/whisparr"
+          name  = "whisparr"
           env_from {
             config_map_ref {
-              name = kubernetes_config_map.radarr_env.metadata.0.name
+              name = kubernetes_config_map.whisparr_env.metadata.0.name
             }
           }
           port {
-            container_port = 7878
+            container_port = 6969
           }
           volume_mount {
             name       = "data"
             mount_path = "/config"
           }
           volume_mount {
-            name       = "movies"
-            mount_path = "/movies"
+            name       = "shows"
+            mount_path = "/shows"
           }
           volume_mount {
             name       = "import"
@@ -77,25 +74,25 @@ resource "kubernetes_deployment" "radarr" {
         volume {
           name = "config"
           config_map {
-            name = kubernetes_config_map.radarr_cm.metadata.0.name
+            name = kubernetes_config_map.whisparr_cm.metadata.0.name
           }
         }
         volume {
           name = "data"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.radarr_data.metadata.0.name
+            claim_name = kubernetes_persistent_volume_claim.whisparr_data.metadata.0.name
+          }
+        }
+        volume {
+          name = "shows"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.whisparr_shows.metadata.0.name
           }
         }
         volume {
           name = "import"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.radarr_import.metadata.0.name
-          }
-        }
-        volume {
-          name = "movies"
-          persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.jellyfin_movies.metadata.0.name
+            claim_name = kubernetes_persistent_volume_claim.whisparr_import.metadata.0.name
           }
         }
         volume {
@@ -112,9 +109,9 @@ resource "kubernetes_deployment" "radarr" {
   }
 }
 
-resource "kubernetes_persistent_volume_claim" "radarr_data" {
+resource "kubernetes_persistent_volume_claim" "whisparr_data" {
   metadata {
-    name      = "radarr-data"
+    name      = "whisparr-data"
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   spec {
@@ -128,9 +125,9 @@ resource "kubernetes_persistent_volume_claim" "radarr_data" {
   }
 }
 
-resource "kubernetes_persistent_volume_claim" "radarr_import" {
+resource "kubernetes_persistent_volume_claim" "whisparr_import" {
   metadata {
-    name      = "radarr-import-movies"
+    name      = "whisparr-import"
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   spec {
@@ -144,69 +141,85 @@ resource "kubernetes_persistent_volume_claim" "radarr_import" {
   }
 }
 
-resource "kubernetes_service" "radarr" {
+resource "kubernetes_persistent_volume_claim" "whisparr_shows" {
   metadata {
-    name      = "radarr"
+    name      = "whisparr-shows"
+    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+  }
+  spec {
+    access_modes       = ["ReadWriteOnce"]
+    storage_class_name = "nfs-csi-other"
+    resources {
+      requests = {
+        storage = "200Gi"
+      }
+    }
+  }
+}
+
+resource "kubernetes_service" "whisparr" {
+  metadata {
+    name      = "whisparr"
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   spec {
     type = "ClusterIP"
     selector = {
-      "app" = "radarr"
+      "app" = "whisparr"
     }
     port {
-      port = 7878
+      port = 6969
     }
   }
   depends_on = [
-    kubernetes_deployment.radarr
+    kubernetes_deployment.whisparr
   ]
 }
 
-resource "kubernetes_config_map" "radarr_env" {
+resource "kubernetes_config_map" "whisparr_env" {
   metadata {
-    name      = "radarr-env"
+    name      = "whisparr-env"
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   data = {
     "TZ"   = local.timezone
-    "PUID" = 1000
-    "PGID" = 1000
+    "PUID" = 0
+    "PGID" = 0
   }
 }
 
-resource "kubernetes_config_map" "radarr_cm" {
+resource "kubernetes_config_map" "whisparr_cm" {
   metadata {
-    name      = "radarr-config"
+    name      = "whisparr-config"
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   data = {
-    "config.xml" = templatefile("${path.module}/conf/radarr_config.xml", {
+    "config.xml" = templatefile("${path.module}/conf/whisparr_config.xml", {
       postgres_host = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local"
     })
   }
 }
 
 
-resource "kubernetes_job_v1" "radarr_init" {
+resource "kubernetes_job_v1" "whisparr_init" {
   depends_on = [kubernetes_stateful_set_v1.postgres]
   metadata {
-    name      = "radarr-init"
+    name      = "whisparr-init"
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
     labels = {
-      "app" = "radarr"
+      "app" = "whisparr"
     }
   }
   spec {
     template {
       metadata {
         labels = {
-          app = "radarr-init"
+          app = "whisparr-init"
         }
       }
       spec {
         container {
-          name    = "radarr-main"
+          name    = "whisparr-main"
           image   = "bitnami/postgresql:latest"
           command = ["createdb"]
           args = [
@@ -214,7 +227,7 @@ resource "kubernetes_job_v1" "radarr_init" {
             "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local",
             "-U",
             "admin",
-            "radarr-main"
+            "whisparr-main"
           ]
 
           env {
@@ -223,7 +236,7 @@ resource "kubernetes_job_v1" "radarr_init" {
           }
         }
         container {
-          name    = "radarr-logs"
+          name    = "whisparr-logs"
           image   = "bitnami/postgresql:latest"
           command = ["createdb"]
           args = [
@@ -231,7 +244,7 @@ resource "kubernetes_job_v1" "radarr_init" {
             "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local",
             "-U",
             "admin",
-            "radarr-logs"
+            "whisparr-logs"
           ]
 
           env {

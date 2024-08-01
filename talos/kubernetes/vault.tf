@@ -163,6 +163,11 @@ resource "kubernetes_cron_job_v1" "vault_ecr_token" {
       }
     }
   }
+  lifecycle {
+    ignore_changes = [ 
+        spec[0].suspend
+     ]
+  }
 }
 
 resource "kubernetes_cluster_role" "vault_authorizer" {

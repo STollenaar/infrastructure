@@ -120,7 +120,7 @@ resource "kubernetes_persistent_volume_claim" "jellyseerr_data" {
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   spec {
-    storage_class_name = "openebs-hostpath"
+    storage_class_name = "nfs-csi-other"
     access_modes       = ["ReadWriteOnce"]
     resources {
       requests = {
