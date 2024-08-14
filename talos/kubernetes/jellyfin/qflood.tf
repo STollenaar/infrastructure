@@ -28,6 +28,34 @@ resource "kubernetes_deployment" "qflood" {
         security_context {
           fs_group = 1000
         }
+        init_container {
+          name  = "init-qbittorrent"
+          image = "busybox"
+          args = [
+            "/bin/sh",
+            "-c",
+            file("${path.module}/conf/copyConfig.sh")
+          ]
+          env {
+            name  = "DESTINATION"
+            value = "/config/config/qBittorrent.conf"
+          }
+          env {
+            name  = "SOURCE"
+            value = "/tmp/qBittorrent.conf"
+          }
+
+          volume_mount {
+            name       = "qbit-data"
+            mount_path = "/config"
+          }
+
+          volume_mount {
+            name       = "config"
+            mount_path = "/tmp/qBittorrent.conf"
+            sub_path   = "qBittorrent.conf"
+          }
+        }
         container {
           image = "ghcr.io/qdm12/gluetun"
           name  = "gluetun"
@@ -84,9 +112,8 @@ resource "kubernetes_deployment" "qflood" {
             mount_path = "/downloads"
           }
           volume_mount {
-            name       = "config"
-            mount_path = "/app/qBittorrent.conf"
-            sub_path   = "qBittorrent.conf"
+            name       = "qbit-data"
+            mount_path = "/config"
           }
         }
         volume {
@@ -103,6 +130,12 @@ resource "kubernetes_deployment" "qflood" {
           name = "downloads"
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim.downloads.metadata.0.name
+          }
+        }
+        volume {
+          name = "qbit-data"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.qbit_data.metadata.0.name
           }
         }
       }
@@ -180,5 +213,21 @@ resource "kubernetes_config_map" "qflood_cm" {
   }
   data = {
     "qBittorrent.conf" = file("${path.module}/conf/qflood.conf")
+  }
+}
+
+resource "kubernetes_persistent_volume_claim" "qbit_data" {
+  metadata {
+    name      = "qbit-config"
+    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+  }
+  spec {
+    storage_class_name = "nfs-csi-other"
+    access_modes       = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        storage = "2Gi"
+      }
+    }
   }
 }

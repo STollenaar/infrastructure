@@ -1,11 +1,16 @@
-if [ -f /config/config.xml ]; then
-    echo "/config/config.xml already exists."
+parents=$(dirname "$DESTINATION")
+if [ ! -d "$parents" ]; then
+    mkdir -p "$parents"
+fi
+if [ -f "$DESTINATION" ]; then
+    echo "$DESTINATION already exists."
 else
-    echo "/config/config.xml does not exist. Copying /tmp/config.xml to /config."
-    cp /tmp/config.xml /config/config.xml
+    echo "$DESTINATION does not exist. Copying $SOURCE to /config."
+
+    cp "$SOURCE" "$DESTINATION"
 
     # Verify if the copy was successful
-    if [ -f /config/config.xml ]; then
+    if [ -f "$DESTINATION" ]; then
         echo "Copy successful!"
     else
         echo "Copy failed!"

@@ -19,6 +19,7 @@ resource "helm_release" "vault" {
   values = [templatefile("${path.module}/conf/values.yaml", {
     kms_key_id          = aws_kms_key.vault.key_id,
     vault_unseal_secret = kubernetes_secret.vault_unseal_user.metadata.0.name
+    storage_class = "nfs-csi-other"
   })]
 }
 

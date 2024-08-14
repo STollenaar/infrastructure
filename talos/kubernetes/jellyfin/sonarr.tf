@@ -33,6 +33,14 @@ resource "kubernetes_deployment" "sonarr" {
             "-c",
             file("${path.module}/conf/copyConfig.sh")
           ]
+          env {
+            name = "DESTINATION"
+            value = "/config/config.xml"
+          }
+          env {
+            name = "SOURCE"
+            value = "/tmp/config.xml"
+          }
           volume_mount {
             name       = "config"
             mount_path = "/tmp/config.xml"
