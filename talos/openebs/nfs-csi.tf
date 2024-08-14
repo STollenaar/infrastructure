@@ -6,10 +6,10 @@ resource "helm_release" "csi_nfs" {
   chart      = "csi-driver-nfs"
   version    = "v4.8.0"
 
-#   values = [templatefile("${path.module}/conf/nfs-csi-values.yaml", {
-#     nfs_path           = "/mnt/storage/kubernetes"
-#     storage_class_name = "nfs-csi-movies"
-#   })]
+  #   values = [templatefile("${path.module}/conf/nfs-csi-values.yaml", {
+  #     nfs_path           = "/mnt/storage/kubernetes"
+  #     storage_class_name = "nfs-csi-movies"
+  #   })]
 }
 
 resource "kubernetes_storage_class" "nfs_movies" {
