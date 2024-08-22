@@ -1,13 +1,13 @@
 locals {
-    worker_nodes = [for node in data.kubernetes_nodes.workers.nodes: node.status[0].addresses[index(node.status[0].addresses.*.type, "InternalIP")].address]
+  worker_nodes = [for node in data.kubernetes_nodes.workers.nodes : node.status[0].addresses[index(node.status[0].addresses.*.type, "InternalIP")].address]
 }
 
 data "kubernetes_nodes" "workers" {
-    metadata {
-        labels = {
-            "node-role.kubernetes.io/worker" = "worker"
-        }
+  metadata {
+    labels = {
+      "node-role.kubernetes.io/worker" = "worker"
     }
+  }
 }
 
 resource "kubernetes_namespace" "metallb_system" {
@@ -27,6 +27,7 @@ resource "helm_release" "metallb" {
 
   chart     = "metallb"
   name      = "metallb"
+  version   = "0.14.8"
   namespace = kubernetes_namespace.metallb_system.id
 }
 
@@ -41,7 +42,7 @@ resource "kubernetes_manifest" "metallb_ip_pool" {
       namespace = kubernetes_namespace.metallb_system.id
     }
     spec = {
-      addresses = [for node in local.worker_nodes: "${node}/32"]
+      addresses = [for node in local.worker_nodes : "${node}/32"]
     }
   }
 }

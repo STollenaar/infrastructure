@@ -30,7 +30,7 @@ resource "kubernetes_deployment" "qflood" {
         }
         init_container {
           name  = "init-qbittorrent"
-          image = "busybox"
+          image = "busybox:1.36.1"
           args = [
             "/bin/sh",
             "-c",

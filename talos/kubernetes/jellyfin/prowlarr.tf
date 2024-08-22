@@ -27,7 +27,7 @@ resource "kubernetes_deployment" "prowlarr" {
       spec {
         init_container {
           name  = "init-config"
-          image = "busybox"
+          image = "busybox:1.36.1"
           args = [
             "/bin/sh",
             "-c",
@@ -54,7 +54,7 @@ resource "kubernetes_deployment" "prowlarr" {
         }
 
         container {
-          image = "lscr.io/linuxserver/prowlarr:v1.22.0.4670"
+          image = "lscr.io/linuxserver/prowlarr:1.21.2"
           name  = "prowlarr"
           env_from {
             config_map_ref {
