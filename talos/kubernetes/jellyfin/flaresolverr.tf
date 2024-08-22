@@ -29,7 +29,7 @@ resource "kubernetes_deployment" "flaresolverr" {
           fs_group = 1000
         }
         container {
-          image = "ghcr.io/flaresolverr/flaresolverr:latest"
+          image = "ghcr.io/flaresolverr/flaresolverr:v3.3.21"
           name  = "flaresolverr"
           port {
             container_port = 8191

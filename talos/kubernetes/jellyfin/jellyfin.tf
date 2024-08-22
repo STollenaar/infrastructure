@@ -70,7 +70,7 @@ resource "kubernetes_deployment" "jellyfin" {
           }
         }
         container {
-          image = "lscr.io/linuxserver/jellyfin:latest"
+          image = "lscr.io/linuxserver/jellyfin:10.9.9"
           name  = "jellyfin"
           env_from {
             config_map_ref {

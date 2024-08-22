@@ -57,7 +57,7 @@ resource "kubernetes_deployment" "qflood" {
           }
         }
         container {
-          image = "ghcr.io/qdm12/gluetun"
+          image = "ghcr.io/qdm12/gluetun:v3.39"
           name  = "gluetun"
           env_from {
             config_map_ref {
@@ -92,7 +92,7 @@ resource "kubernetes_deployment" "qflood" {
           }
         }
         container {
-          image = "hotio/qbittorrent:release-4.6.0"
+          image = "hotio/qbittorrent:release-4.6.6"
           name  = "qflood"
           env_from {
             config_map_ref {
