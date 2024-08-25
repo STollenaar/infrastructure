@@ -203,3 +203,37 @@ resource "kubernetes_job_v1" "prowlarr_init" {
     }
   }
 }
+
+resource "kubernetes_ingress_v1" "prowlarr" {
+  metadata {
+    name      = "prowlarr"
+    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+
+    annotations = {
+      "kubernetes.io/ingress.class" = "nginx"
+      #   "cert-manager.io/cluster-issuer" = local.letsencrypt_type
+    }
+  }
+  spec {
+    rule {
+      host = "prowlarr.home.spicedelver.me"
+      http {
+        path {
+          path = "/"
+          backend {
+            service {
+              name = kubernetes_service.prowlarr.metadata.0.name
+              port {
+                number = 9696
+              }
+            }
+          }
+        }
+      }
+    }
+    # tls {
+    #   hosts       = [local.domain]
+    #   secret_name = local.letsencrypt_type
+    # }
+  }
+}

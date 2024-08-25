@@ -231,3 +231,37 @@ resource "kubernetes_persistent_volume_claim" "qbit_data" {
     }
   }
 }
+
+resource "kubernetes_ingress_v1" "qbittorrent" {
+  metadata {
+    name      = "qbittorrent"
+    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+
+    annotations = {
+      "kubernetes.io/ingress.class" = "nginx"
+      #   "cert-manager.io/cluster-issuer" = local.letsencrypt_type
+    }
+  }
+  spec {
+    rule {
+      host = "qbittorrent.home.spicedelver.me"
+      http {
+        path {
+          path = "/"
+          backend {
+            service {
+              name = kubernetes_service.qbittorrent.metadata.0.name
+              port {
+                number = 8080
+              }
+            }
+          }
+        }
+      }
+    }
+    # tls {
+    #   hosts       = [local.domain]
+    #   secret_name = local.letsencrypt_type
+    # }
+  }
+}
