@@ -90,6 +90,11 @@ resource "kubernetes_deployment" "qflood" {
               add = ["NET_ADMIN"]
             }
           }
+          resources {
+            limits = {
+              "squat.ai/tun" = "1"
+            }
+          }
         }
         container {
           image = "hotio/qbittorrent:release-4.6.6"
