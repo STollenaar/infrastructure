@@ -74,6 +74,10 @@ resource "kubernetes_deployment" "qflood" {
             }
           }
           env {
+            name = "WIREGUARD_ADDRESSES"
+            value = "10.14.0.2/16"
+          }
+          env {
             name = "VPN_TYPE"
             value = "wireguard"
           }
