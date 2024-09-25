@@ -74,8 +74,12 @@ resource "kubernetes_deployment" "qflood" {
             }
           }
           env {
+            name = "VPN_TYPE"
+            value = "wireguard"
+          }
+          env {
             name  = "SERVER_COUNTRIES"
-            value = "Netherlands"
+            value = "Canada"
           }
           port {
             container_port = 8000
