@@ -79,7 +79,7 @@ resource "kubernetes_deployment" "qflood" {
           }
           env {
             name = "VPN_TYPE"
-            value = "wireguard"
+            value = "openvpn"
           }
           env {
             name  = "SERVER_COUNTRIES"
