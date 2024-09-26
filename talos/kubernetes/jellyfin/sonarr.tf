@@ -34,11 +34,11 @@ resource "kubernetes_deployment" "sonarr" {
             file("${path.module}/conf/copyConfig.sh")
           ]
           env {
-            name = "DESTINATION"
+            name  = "DESTINATION"
             value = "/config/config.xml"
           }
           env {
-            name = "SOURCE"
+            name  = "SOURCE"
             value = "/tmp/config.xml"
           }
           volume_mount {
@@ -246,5 +246,40 @@ resource "kubernetes_job_v1" "sonarr_init" {
         }
       }
     }
+  }
+}
+
+
+resource "kubernetes_ingress_v1" "sonarr" {
+  metadata {
+    name      = "sonarr"
+    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+
+    annotations = {
+      "kubernetes.io/ingress.class" = "nginx"
+      #   "cert-manager.io/cluster-issuer" = local.letsencrypt_type
+    }
+  }
+  spec {
+    rule {
+      host = "sonarr.home.spicedelver.me"
+      http {
+        path {
+          path = "/"
+          backend {
+            service {
+              name = kubernetes_service.sonarr.metadata.0.name
+              port {
+                number = 8989
+              }
+            }
+          }
+        }
+      }
+    }
+    # tls {
+    #   hosts       = [local.domain]
+    #   secret_name = local.letsencrypt_type
+    # }
   }
 }
