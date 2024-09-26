@@ -15,6 +15,7 @@ resource "kubernetes_namespace" "metallb_system" {
     name = "metallb-system"
 
     labels = {
+      "cmstate.spicedelver.me"             = "opt-out"
       "pod-security.kubernetes.io/enforce" = "privileged"
       "pod-security.kubernetes.io/audit"   = "privileged"
       "pod-security.kubernetes.io/warn"    = "privileged"
