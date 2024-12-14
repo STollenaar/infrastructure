@@ -12,30 +12,12 @@ resource "helm_release" "csi_nfs" {
   #   })]
 }
 
-resource "kubernetes_storage_class" "nfs_movies" {
-  metadata {
-    name = "nfs-csi-movies"
-  }
-
-  storage_provisioner = "nfs.csi.k8s.io"
-  reclaim_policy      = "Retain"
-
-  parameters = {
-    server = "192.168.2.113"
-    share  = "/mnt/storage/kubernetes"
-    subDir = "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
-  }
-  volume_binding_mode = "Immediate"
-  mount_options = [
-    "vers=4",
-    "nolock"
-  ]
-
-}
-
 resource "kubernetes_storage_class" "nfs_other" {
   metadata {
     name = "nfs-csi-other"
+    annotations = {
+      "storageclass.kubernetes.io/is-default-class" = "true"
+    }
   }
 
   storage_provisioner = "nfs.csi.k8s.io"

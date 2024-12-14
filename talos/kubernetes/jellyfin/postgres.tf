@@ -21,7 +21,7 @@ resource "kubernetes_stateful_set_v1" "postgres" {
       }
       spec {
         security_context {
-          fs_group = 1000
+          fs_group    = 1000
           run_as_user = 1000
         }
         container {
@@ -41,9 +41,9 @@ resource "kubernetes_stateful_set_v1" "postgres" {
           env {
             name  = "POSTGRES_PASSWORD"
             value = "password"
-          } 
+          }
           env {
-            name = "POSTGRESQL_DATA_DIR"
+            name  = "POSTGRESQL_DATA_DIR"
             value = "/bitnami/postgresql/data/pgdata"
           }
         }
@@ -55,7 +55,7 @@ resource "kubernetes_stateful_set_v1" "postgres" {
         name = "postgres"
       }
       spec {
-        access_modes = ["ReadWriteOnce"]
+        access_modes       = ["ReadWriteOnce"]
         storage_class_name = "nfs-csi-other"
         resources {
           requests = {
@@ -64,6 +64,9 @@ resource "kubernetes_stateful_set_v1" "postgres" {
         }
       }
     }
+  }
+  lifecycle {
+    ignore_changes = [spec.0.replicas]
   }
 }
 

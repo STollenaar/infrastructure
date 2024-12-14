@@ -161,7 +161,7 @@ resource "kubernetes_persistent_volume_claim" "jellyfin_movies" {
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
-    storage_class_name = "nfs-csi-movies"
+    storage_class_name = "nfs-csi-other"
     resources {
       requests = {
         storage = "200Gi"
