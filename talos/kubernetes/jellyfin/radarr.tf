@@ -251,3 +251,38 @@ resource "kubernetes_job_v1" "radarr_init" {
     }
   }
 }
+
+
+resource "kubernetes_ingress_v1" "radarr" {
+  metadata {
+    name      = "radarr"
+    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+
+    annotations = {
+      "kubernetes.io/ingress.class" = "nginx"
+      #   "cert-manager.io/cluster-issuer" = local.letsencrypt_type
+    }
+  }
+  spec {
+    rule {
+      host = "radarr.home.spicedelver.me"
+      http {
+        path {
+          path = "/"
+          backend {
+            service {
+              name = kubernetes_service.radarr.metadata.0.name
+              port {
+                number = 8989
+              }
+            }
+          }
+        }
+      }
+    }
+    # tls {
+    #   hosts       = [local.domain]
+    #   secret_name = local.letsencrypt_type
+    # }
+  }
+}
