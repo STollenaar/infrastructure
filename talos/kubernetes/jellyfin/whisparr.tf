@@ -53,7 +53,7 @@ resource "kubernetes_deployment" "whisparr" {
           }
         }
         container {
-          image = "ghcr.io/hotio/whisparr"
+          image = "ghcr.io/hotio/whisparr:v3-3.0.0.770"
           name  = "whisparr"
           env_from {
             config_map_ref {

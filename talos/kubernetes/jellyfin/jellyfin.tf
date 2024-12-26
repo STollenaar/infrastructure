@@ -39,6 +39,21 @@ resource "kubernetes_deployment" "jellyfin" {
       }
 
       spec {
+        affinity {
+          node_affinity {
+            required_during_scheduling_ignored_during_execution {
+              node_selector_term {
+                match_expressions {
+                  key      = "node-role.kubernetes.io/worker"
+                  operator = "In"
+                  values = [
+                    "hard-worker"
+                  ]
+                }
+              }
+            }
+          }
+        }
         security_context {
           fs_group = 1000
         }
@@ -283,7 +298,7 @@ resource "kubernetes_config_map" "jellyfin_restore_db" {
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   data = {
-    "system.xml"  = file("${path.module}/conf/jellyfin_system.xml")
+    "system.xml" = file("${path.module}/conf/jellyfin_system.xml")
   }
 }
 

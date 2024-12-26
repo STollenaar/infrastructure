@@ -273,7 +273,7 @@ resource "kubernetes_ingress_v1" "radarr" {
             service {
               name = kubernetes_service.radarr.metadata.0.name
               port {
-                number = 8989
+                number = 7878
               }
             }
           }
