@@ -85,33 +85,6 @@ resource "kubernetes_secret" "vault_cert_issuer" {
   }
 }
 
-resource "kubernetes_manifest" "vault_cert_issuer" {
-  depends_on = [helm_release.cert_manager]
-  manifest = {
-    apiVersion = "cert-manager.io/v1"
-    kind       = "Issuer"
-    metadata = {
-      name      = "vault-issuer"
-      namespace = kubernetes_namespace.cmstate_operator.metadata.0.name
-    }
-    spec = {
-      vault = {
-        server = "http://vault.vault.svc.cluster.local:8200"
-        path   = "pki_int/sign/mutatingwebhook"
-        auth = {
-          kubernetes = {
-            mountPath = "/v1/auth/kubernetes"
-            role      = "vault-issuer"
-            serviceAccountRef = {
-              name = kubernetes_service_account.vault_issuer.metadata.0.name
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
 resource "kubernetes_manifest" "cert_certificate" {
   manifest = {
     apiVersion = "cert-manager.io/v1"
@@ -121,14 +94,15 @@ resource "kubernetes_manifest" "cert_certificate" {
       namespace = kubernetes_namespace.cmstate_operator.metadata.0.name
     }
     spec = {
-      secretName = kubernetes_secret.vault_cert_issuer.metadata.0.name
+      secretName = "cmstates-webhook-cert"
       issuerRef = {
-        name = kubernetes_manifest.vault_cert_issuer.manifest.metadata.name
+        kind = "ClusterIssuer"
+        name = kubernetes_manifest.vault_cluster_issuer.manifest.metadata.name
       }
       dnsNames = [
-        "cmstate-operator-service.${kubernetes_namespace.cmstate_operator.metadata.0.name}.svc"
+        "cmstate-operator-service.${kubernetes_namespace.cmstate_operator.metadata.0.name}.svc.cluster.local"
       ]
-      commonName = "cmstate-operator-service.${kubernetes_namespace.cmstate_operator.metadata.0.name}.svc"
+      commonName = "cmstate-operator-service.${kubernetes_namespace.cmstate_operator.metadata.0.name}.svc.cluster.local"
       privateKey = {
         algorithm = "RSA"
         encoding  = "PKCS1"

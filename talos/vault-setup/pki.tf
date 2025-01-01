@@ -108,3 +108,48 @@ resource "vault_kubernetes_auth_backend_role" "mutating_issuer" {
   token_ttl                        = 3600
   token_policies                   = [vault_policy.root_policy.name]
 }
+
+resource "vault_pki_secret_backend_role" "cert_manager_role" {
+  backend          = vault_mount.pki_int.path
+  name             = "cert-manager"
+  ttl              = 86400              # 1 day certificates
+  max_ttl          = "2160h"              # 90 days
+  allow_ip_sans    = true
+  key_type         = "rsa"
+  key_bits         = 4096
+  allowed_domains  = ["spicedelver.me", "svc.cluster.local"]
+  allow_subdomains = true
+  allow_any_name   = false
+}
+
+data "vault_policy_document" "cert_manager_policy" {
+  rule {
+    path         = "pki_int/issue/cert-manager"
+    capabilities = ["create", "update"]
+    description  = "Allow cert-manager to issue certificates"
+  }
+  rule {
+    path         = "pki_int/sign/cert-manager"
+    capabilities = ["create", "update"]
+    description  = "Allow cert-manager to sign intermediate certificates"
+  }
+  rule {
+    path         = "pki_int/certs/*"
+    capabilities = ["read"]
+    description  = "Allow cert-manager to read issued certificates"
+  }
+}
+
+resource "vault_policy" "cert_manager" {
+  name   = "cert-manager"
+  policy = data.vault_policy_document.cert_manager_policy.hcl
+}
+
+resource "vault_kubernetes_auth_backend_role" "cert_manager_k8s_role" {
+  backend                          = vault_auth_backend.kubernetes.path
+  role_name                        = "cert-manager"
+  bound_service_account_names      = ["cert-manager"]
+  bound_service_account_namespaces = ["cert-manager"]
+  token_ttl                        = 3600
+  token_policies                   = [vault_policy.cert_manager.name]
+}
