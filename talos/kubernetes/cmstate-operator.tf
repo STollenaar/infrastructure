@@ -19,6 +19,7 @@ resource "kubernetes_labels" "kube_system_label" {
 }
 
 resource "helm_release" "cmstate_operator" {
+  depends_on = [kubernetes_manifest.cert_certificate, kubernetes_manifest.cm_vault_template]
   name       = "cmstate-operator"
   version    = "0.3.0"
   namespace  = kubernetes_namespace.cmstate_operator.metadata.0.name
@@ -26,60 +27,25 @@ resource "helm_release" "cmstate_operator" {
   chart      = "cmstate-operator"
 
   values = [templatefile("${path.module}/conf/cmstate-operator-values.yaml", {
-    ca_secret   = "${kubernetes_namespace.cmstate_operator.metadata.0.name}/${kubernetes_secret.vault_cert_issuer.metadata.0.name}"
-    cert_secret = kubernetes_secret.vault_cert_issuer.metadata.0.name
+    ca_secret   = "${kubernetes_namespace.cmstate_operator.metadata.0.name}/${kubernetes_secret_v1.vault_cert_issuer.metadata.0.name}"
+    cert_secret = kubernetes_secret_v1.vault_cert_issuer.metadata.0.name
   })]
 }
 
-resource "kubernetes_service_account" "vault_issuer" {
+resource "kubernetes_secret_v1" "vault_cert_issuer" {
   metadata {
-    name      = "vault-issuer"
-    namespace = kubernetes_namespace.cmstate_operator.metadata.0.name
-  }
-}
-
-resource "kubernetes_role" "vault_issuer_role" {
-  metadata {
-    name      = "vault-issuer"
-    namespace = kubernetes_namespace.cmstate_operator.metadata.0.name
-  }
-
-  rule {
-    api_groups     = [""]
-    resources      = ["serviceaccounts/token"]
-    resource_names = ["vault-issuer"]
-    verbs          = ["create"]
-  }
-}
-
-resource "kubernetes_role_binding" "vault_issuer_role_binding" {
-  metadata {
-    name      = "vault-issuer"
-    namespace = kubernetes_namespace.cmstate_operator.metadata.0.name
-  }
-
-  subject {
-    kind      = "ServiceAccount"
-    name      = "cert-manager"
-    namespace = kubernetes_namespace.cert_manager.metadata.0.name
-  }
-
-  role_ref {
-    api_group = "rbac.authorization.k8s.io"
-    kind      = "Role"
-    name      = kubernetes_role.vault_issuer_role.metadata.0.name
-  }
-}
-
-
-resource "kubernetes_secret" "vault_cert_issuer" {
-  metadata {
-    name      = "vault-cert-issuer-role"
+    name      = "cmstates-webhook-cert"
     namespace = kubernetes_namespace.cmstate_operator.metadata.0.name
     annotations = {
       "cert-manager.io/allow-direct-injection" = "true"
     }
   }
+  data = {
+    "tls.crt" = ""
+    "tls.key" = ""
+  }
+  type = "kubernetes.io/tls"
+
   lifecycle {
     ignore_changes = [metadata.0.annotations, metadata.0.labels]
   }
@@ -94,14 +60,16 @@ resource "kubernetes_manifest" "cert_certificate" {
       namespace = kubernetes_namespace.cmstate_operator.metadata.0.name
     }
     spec = {
-      secretName = "cmstates-webhook-cert"
+      secretName = kubernetes_secret_v1.vault_cert_issuer.metadata.0.name
       issuerRef = {
         kind = "ClusterIssuer"
         name = kubernetes_manifest.vault_cluster_issuer.manifest.metadata.name
       }
       dnsNames = [
-        "cmstate-operator-service.${kubernetes_namespace.cmstate_operator.metadata.0.name}.svc.cluster.local"
+        "cmstate-operator-service.${kubernetes_namespace.cmstate_operator.metadata.0.name}.svc",
+        "cmstate-operator-service.${kubernetes_namespace.cmstate_operator.metadata.0.name}.svc.cluster.local",
       ]
+
       commonName = "cmstate-operator-service.${kubernetes_namespace.cmstate_operator.metadata.0.name}.svc.cluster.local"
       privateKey = {
         algorithm = "RSA"
