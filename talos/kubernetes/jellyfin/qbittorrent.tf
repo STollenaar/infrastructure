@@ -1,10 +1,10 @@
 
-resource "kubernetes_deployment" "qflood" {
+resource "kubernetes_deployment" "qbittorrent" {
   metadata {
-    name      = "qflood"
+    name      = "qbittorrent"
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
     labels = {
-      "app" = "qflood"
+      "app" = "qbittorrent"
     }
   }
 
@@ -13,14 +13,14 @@ resource "kubernetes_deployment" "qflood" {
 
     selector {
       match_labels = {
-        "app" = "qflood"
+        "app" = "qbittorrent"
       }
     }
 
     template {
       metadata {
         labels = {
-          "app" = "qflood"
+          "app" = "qbittorrent"
         }
       }
 
@@ -61,7 +61,7 @@ resource "kubernetes_deployment" "qflood" {
           name  = "gluetun"
           env_from {
             config_map_ref {
-              name = kubernetes_config_map.qflood_env.metadata.0.name
+              name = kubernetes_config_map.qbittorrent_env.metadata.0.name
             }
           }
           env {
@@ -106,10 +106,10 @@ resource "kubernetes_deployment" "qflood" {
         }
         container {
           image = "hotio/qbittorrent:release-4.6.6"
-          name  = "qflood"
+          name  = "qbittorrent"
           env_from {
             config_map_ref {
-              name = kubernetes_config_map.qflood_env.metadata.0.name
+              name = kubernetes_config_map.qbittorrent_env.metadata.0.name
             }
           }
           port {
@@ -132,7 +132,7 @@ resource "kubernetes_deployment" "qflood" {
         volume {
           name = "config"
           config_map {
-            name = kubernetes_config_map.qflood_cm.metadata.0.name
+            name = kubernetes_config_map.qbittorrent_cm.metadata.0.name
             items {
               key  = "qBittorrent.conf"
               path = "qBittorrent.conf"
@@ -167,7 +167,7 @@ resource "kubernetes_service" "qbittorrent" {
   spec {
     type = "ClusterIP"
     selector = {
-      "app" = "qflood"
+      "app" = "qbittorrent"
     }
     port {
       name        = "qbittorrent"
@@ -181,7 +181,7 @@ resource "kubernetes_service" "qbittorrent" {
     }
   }
   depends_on = [
-    kubernetes_deployment.qflood
+    kubernetes_deployment.qbittorrent
   ]
 }
 
@@ -193,7 +193,7 @@ resource "kubernetes_service" "floodui" {
   spec {
     type = "ClusterIP"
     selector = {
-      "app" = "qflood"
+      "app" = "qbittorrent"
     }
     port {
       name        = "floodui"
@@ -202,13 +202,13 @@ resource "kubernetes_service" "floodui" {
     }
   }
   depends_on = [
-    kubernetes_deployment.qflood
+    kubernetes_deployment.qbittorrent
   ]
 }
 
-resource "kubernetes_config_map" "qflood_env" {
+resource "kubernetes_config_map" "qbittorrent_env" {
   metadata {
-    name      = "qflood-env"
+    name      = "qbittorrent-env"
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   data = {
@@ -219,13 +219,13 @@ resource "kubernetes_config_map" "qflood_env" {
   }
 }
 
-resource "kubernetes_config_map" "qflood_cm" {
+resource "kubernetes_config_map" "qbittorrent_cm" {
   metadata {
-    name      = "qflood-config"
+    name      = "qbittorrent-config"
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   data = {
-    "qBittorrent.conf" = file("${path.module}/conf/qflood.conf")
+    "qBittorrent.conf" = file("${path.module}/conf/qbittorrent.conf")
   }
 }
 
