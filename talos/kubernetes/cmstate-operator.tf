@@ -47,7 +47,7 @@ resource "kubernetes_secret_v1" "vault_cert_issuer" {
   type = "kubernetes.io/tls"
 
   lifecycle {
-    ignore_changes = [metadata.0.annotations, metadata.0.labels]
+    ignore_changes = [metadata.0.annotations, metadata.0.labels, data]
   }
 }
 

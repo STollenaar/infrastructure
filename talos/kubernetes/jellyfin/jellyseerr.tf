@@ -24,45 +24,6 @@ resource "kubernetes_deployment" "jellyseerr" {
       }
 
       spec {
-        # init_container {
-        #   image = "keinos/sqlite3:latest"
-        #   name  = "init-jellyseer"
-        #   args = [
-        #     "/bin/sh",
-        #     "-c",
-        #     file("${path.module}/conf/restoreDB.sh")
-        #   ]
-        #   env {
-        #     name  = "DB_PATH"
-        #     value = "/config/db"
-        #   }
-        #   env {
-        #     name  = "SETTINGS_PATH"
-        #     value = "/config"
-        #   }
-        #   env {
-        #     name  = "SETTINGS_FILE"
-        #     value = "settings.json"
-        #   }
-        #   env {
-        #     name  = "DB_NAME"
-        #     value = "db.sqlite3"
-        #   }
-        #   volume_mount {
-        #     name       = "data"
-        #     mount_path = "/config"
-        #   }
-        #   volume_mount {
-        #     name       = "restore"
-        #     mount_path = "/tmp/restore.sql"
-        #     sub_path   = "restore.sql"
-        #   }
-        #   volume_mount {
-        #     name       = "settings"
-        #     mount_path = "/tmp/settings.json"
-        #     sub_path   = "settings.json"
-        #   }
-        # }
         container {
           image = "fallenbagel/jellyseerr:1.9.2"
           name  = "jellyseerr"
@@ -84,16 +45,6 @@ resource "kubernetes_deployment" "jellyseerr" {
           name = "data"
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim.jellyseerr_data.metadata.0.name
-          }
-        }
-        volume {
-          name = "restore"
-          config_map {
-            name = kubernetes_config_map.jellyseer_restore_db.metadata.0.name
-            items {
-              key  = "restore.sql"
-              path = "restore.sql"
-            }
           }
         }
         volume {
@@ -203,7 +154,6 @@ resource "kubernetes_config_map" "jellyseer_restore_db" {
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   data = {
-    "restore.sql"   = file("${path.module}/conf/jellyseer.sql")
     "settings.json" = file("${path.module}/conf/jellyseer_settings.json")
   }
 }

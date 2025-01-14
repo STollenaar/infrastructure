@@ -57,33 +57,6 @@ resource "kubernetes_deployment" "jellyfin" {
         security_context {
           fs_group = 1000
         }
-        init_container {
-          image = "keinos/sqlite3:latest"
-          name  = "init-jellyfin"
-          args = [
-            "/bin/sh",
-            "-c",
-            file("${path.module}/conf/restoreDB.sh")
-          ]
-          env {
-            name  = "SETTINGS_PATH"
-            value = "/config"
-          }
-          env {
-            name  = "SETTINGS_FILE"
-            value = "system.xml"
-          }
-
-          volume_mount {
-            name       = "data"
-            mount_path = "/config"
-          }
-          volume_mount {
-            name       = "system"
-            mount_path = "/tmp/system.xml"
-            sub_path   = "system.xml"
-          }
-        }
         container {
           image = "lscr.io/linuxserver/jellyfin:10.9.9"
           name  = "jellyfin"
