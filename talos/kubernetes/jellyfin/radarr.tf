@@ -55,7 +55,7 @@ resource "kubernetes_deployment" "radarr" {
           }
         }
         container {
-          image = "lscr.io/linuxserver/radarr:5.9.1"
+          image = "lscr.io/linuxserver/radarr:5.17.2"
           name  = "radarr"
           env_from {
             config_map_ref {
