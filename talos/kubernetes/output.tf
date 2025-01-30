@@ -9,3 +9,10 @@ output "vault_user" {
 output "vault_ecr_role" {
   value = aws_iam_role.vault_ecr
 }
+
+output "ollama" {
+  value = {
+    namespace = kubernetes_namespace.ollama
+    service = kubernetes_service.ollama
+  }
+}
