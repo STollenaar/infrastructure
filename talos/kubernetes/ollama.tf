@@ -45,9 +45,10 @@ resource "kubernetes_deployment" "ollama" {
       }
 
       spec {
+
         container {
           name  = "ollama"
-          image = "ollama/ollama:latest"
+          image = "ollama/ollama:0.5.7"
           args  = ["serve"]
 
           env {
@@ -77,7 +78,6 @@ resource "kubernetes_deployment" "ollama" {
 
         volume {
           name = "ollama-cache"
-
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim.ollama_pvc.metadata.0.name
           }
@@ -85,6 +85,76 @@ resource "kubernetes_deployment" "ollama" {
       }
     }
   }
+}
+
+resource "kubernetes_job" "ollama_model_creation" {
+  depends_on = [kubernetes_deployment.ollama]
+
+  metadata {
+    name = "ollama-model-creation"
+    namespace = kubernetes_namespace.ollama.metadata.0.name
+  }
+
+  spec {
+    template {
+      metadata {
+        labels = {
+          job                                      = "ollama-model-creation"
+          "checksum/configmap-mistral-model-files" = kubernetes_config_map.ollama_models.metadata.0.resource_version
+        }
+      }
+
+      spec {
+        container {
+          name  = "ollama"
+          image = "ollama/ollama:0.5.7"
+
+          command = [
+            "/bin/sh",
+            "-c",
+          ]
+          args = [
+            <<EOF
+                for file in /modelfiles/*.modelfile; do
+                    model_name=$(basename "$file" .modelfile)
+                    ollama create "$model_name" -f "$file"
+                done
+            EOF
+
+          ]
+
+          env {
+            name  = "OLLAMA_HOST"
+            value = "${kubernetes_service.ollama.metadata.0.name}.${kubernetes_namespace.ollama.metadata.0.name}:11434"
+          }
+
+          volume_mount {
+            name       = "ollama-models"
+            mount_path = "/modelfiles"
+          }
+        }
+
+        restart_policy = "Never"
+
+        volume {
+          name = "ollama-models"
+          config_map {
+            name = kubernetes_config_map.ollama_models.metadata.0.name
+          }
+        }
+      }
+    }
+
+    backoff_limit = 4
+  }
+}
+
+resource "kubernetes_config_map" "ollama_models" {
+  metadata {
+    name      = "ollama-models"
+    namespace = kubernetes_namespace.ollama.metadata.0.name
+  }
+  data = { for f in fileset("${path.module}/conf/ollama", "*") : f => file("${path.module}/conf/ollama/${f}") }
 }
 
 resource "kubernetes_service" "ollama" {

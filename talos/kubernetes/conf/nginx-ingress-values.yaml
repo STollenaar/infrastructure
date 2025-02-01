@@ -41,7 +41,6 @@ controller:
     annotations: {}
       # If you want NLB instead of ELB, enable this!
     externalTrafficPolicy: Local
-    loadBalancerIP: ${cluster_ip}
   replicaCount: 1
   stats:
     enabled: true

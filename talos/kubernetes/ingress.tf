@@ -9,6 +9,6 @@ resource "helm_release" "nginx-ingress" {
 
   # Enable TLSv1.3
   values = [templatefile("${path.module}/conf/nginx-ingress-values.yaml", {
-    cluster_ip = local.worker_nodes[0]
+    cluster_ip = "192.168.2.118"
   })]
 }
