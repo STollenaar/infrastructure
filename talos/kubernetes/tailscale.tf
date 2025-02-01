@@ -7,7 +7,7 @@ resource "kubernetes_namespace" "tailscale" {
 resource "helm_release" "tailscale" {
   depends_on = [kubernetes_manifest.tailscale_keys]
   name       = "tailscale"
-  version    = "1.64.2"
+  version    = "1.78.3"
   namespace  = kubernetes_namespace.tailscale.metadata.0.name
   chart      = "tailscale-operator"
   repository = "https://pkgs.tailscale.com/helmcharts"
