@@ -4,8 +4,8 @@ resource "kubernetes_secret" "vault_unseal_user" {
     namespace = kubernetes_namespace.vault.metadata.0.name
   }
   data = {
-    AWS_ACCESS_KEY_ID     = aws_iam_access_key.vault_unseal_user_key.id
-    AWS_SECRET_ACCESS_KEY = aws_iam_access_key.vault_unseal_user_key.secret
+    AWS_ACCESS_KEY_ID     = data.hcp_vault_secrets_secret.vault_user_access_key.secret_value
+    AWS_SECRET_ACCESS_KEY = data.hcp_vault_secrets_secret.vault_user_secret_access_key.secret_value
   }
 }
 
@@ -19,7 +19,7 @@ resource "helm_release" "vault" {
   values = [templatefile("${path.module}/conf/values.yaml", {
     kms_key_id          = aws_kms_key.vault.key_id,
     vault_unseal_secret = kubernetes_secret.vault_unseal_user.metadata.0.name
-    storage_class = "nfs-csi-other"
+    storage_class       = "nfs-csi-other"
   })]
 }
 
@@ -131,7 +131,7 @@ resource "kubernetes_cron_job_v1" "vault_ecr_token" {
             annotations = {
               "vault.hashicorp.com/agent-inject"            = "true"
               "vault.hashicorp.com/role"                    = "internal-app"
-              "vault.hashicorp.com/aws-role"                = aws_iam_role.vault_ecr.name
+              "vault.hashicorp.com/aws-role"                = data.terraform_remote_state.aws_iam.outputs.vault_ecr_role.name
               "vault.hashicorp.com/agent-cache-enable"      = "true"
               "vault.hashicorp.com/agent-pre-populate-only" = "true"
               "cache.spicedelver.me/cmtemplate"             = "vault-aws-agent"
@@ -165,9 +165,9 @@ resource "kubernetes_cron_job_v1" "vault_ecr_token" {
     }
   }
   lifecycle {
-    ignore_changes = [ 
-        spec[0].suspend
-     ]
+    ignore_changes = [
+      spec[0].suspend
+    ]
   }
 }
 
@@ -256,7 +256,7 @@ resource "kubernetes_manifest" "external_secret" {
     apiVersion = "external-secrets.io/v1beta1"
     kind       = "ExternalSecret"
     metadata = {
-      name      = aws_iam_role.vault_ecr.name
+      name      = "vault-ecr"
       namespace = kubernetes_namespace.vault.metadata.0.name
     }
     spec = {
@@ -276,7 +276,7 @@ resource "kubernetes_manifest" "external_secret" {
         {
           secretKey = ".dockerconfigjson"
           remoteRef = {
-            key      = aws_iam_role.vault_ecr.name
+            key      = "vault-ecr"
             property = ".dockerconfigjson"
           }
         }

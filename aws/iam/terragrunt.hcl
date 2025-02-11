@@ -3,5 +3,5 @@ include "root" {
 }
 
 dependencies {
-  paths = ["../openebs"]
+  paths = []
 }

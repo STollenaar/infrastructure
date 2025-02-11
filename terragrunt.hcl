@@ -8,15 +8,6 @@ locals {
   providers = local.provider_vars.locals.providers
 }
 
-terraform {
-  extra_arguments "common_vars" {
-    commands = get_terraform_commands_that_need_vars()
-    arguments = [
-      "-var=kubeconfig_file=${local.kubeconfig_file}"
-    ]
-  }
-}
-
 terraform_binary = "/usr/local/bin/tofu"
 
 remote_state {
@@ -38,23 +29,29 @@ generate "provider" {
   path      = "grunt_providers.tf"
   if_exists = "overwrite"
   contents  = <<EOF
+        %{if contains(local.providers, "aws")}
         provider "aws" {
             region = "ca-central-1"
         }
+        %{endif}
+        %{if contains(local.providers, "kubernetes")}
         provider "kubernetes" {
             config_path = "${local.kubeconfig_file}"
         }
-
+        %{endif}
+        %{if contains(local.providers, "hcp")}
         provider "hcp" {
             client_id     = data.aws_ssm_parameter.vault_client_id.value
             client_secret = data.aws_ssm_parameter.vault_client_secret.value
         }
-
+        %{endif}
+        %{if contains(local.providers, "helm")}
         provider "helm" {
             kubernetes {
                 config_path = "${local.kubeconfig_file}"
             }
         }
+        %{endif}
         %{if contains(local.providers, "vault")}
         provider "vault" {
             token   = data.hcp_vault_secrets_secret.vault_root.secret_value
