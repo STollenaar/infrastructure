@@ -295,8 +295,8 @@ resource "kubernetes_ingress_v1" "diplomacy" {
     namespace = kubernetes_namespace_v1.diplomacy.metadata.0.name
 
     annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
-      #   "cert-manager.io/cluster-issuer" = local.letsencrypt_type
+      "kubernetes.io/ingress.class"    = "nginx"
+      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
     }
   }
   spec {

@@ -103,3 +103,14 @@ data "aws_iam_policy_document" "vault_ecr_role_policy" {
     ]
   }
 }
+
+data "aws_iam_policy_document" "server_assume_role" {
+  statement {
+    principals {
+      identifiers = [aws_iam_user.vault_user.arn]
+      type        = "AWS"
+    }
+    actions = ["sts:AssumeRole"]
+  }
+}
+

@@ -16,7 +16,7 @@ resource "helm_release" "vault" {
   repository = "https://helm.releases.hashicorp.com"
   chart      = "vault"
 
-  values = [templatefile("${path.module}/conf/values.yaml", {
+  values = [templatefile("${path.module}/conf/vault-values.yaml", {
     kms_key_id          = aws_kms_key.vault.key_id,
     vault_unseal_secret = kubernetes_secret.vault_unseal_user.metadata.0.name
     storage_class       = "nfs-csi-other"
@@ -131,7 +131,7 @@ resource "kubernetes_cron_job_v1" "vault_ecr_token" {
             annotations = {
               "vault.hashicorp.com/agent-inject"            = "true"
               "vault.hashicorp.com/role"                    = "internal-app"
-              "vault.hashicorp.com/aws-role"                = data.terraform_remote_state.aws_iam.outputs.vault_ecr_role.name
+              "vault.hashicorp.com/aws-role"                = data.terraform_remote_state.aws_iam.outputs.iam_roles.vault_ecr_role.name
               "vault.hashicorp.com/agent-cache-enable"      = "true"
               "vault.hashicorp.com/agent-pre-populate-only" = "true"
               "cache.spicedelver.me/cmtemplate"             = "vault-aws-agent"

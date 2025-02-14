@@ -18,6 +18,16 @@ data "hcp_vault_secrets_secret" "vault_user_secret_access_key" {
   secret_name = data.terraform_remote_state.aws_iam.outputs.hcp.vault_user_secret_access_key
 }
 
+data "hcp_vault_secrets_secret" "route53_user_access_key" {
+  app_name    = data.terraform_remote_state.aws_iam.outputs.hcp.app_name
+  secret_name = data.terraform_remote_state.aws_iam.outputs.hcp.route53_user_access_key
+}
+
+data "hcp_vault_secrets_secret" "route53_user_secret_access_key" {
+  app_name    = data.terraform_remote_state.aws_iam.outputs.hcp.app_name
+  secret_name = data.terraform_remote_state.aws_iam.outputs.hcp.route53_user_secret_access_key
+}
+
 data "terraform_remote_state" "aws_iam" {
   backend = "s3"
   config = {

@@ -15,6 +15,9 @@ resource "helm_release" "cert_manager" {
   namespace   = kubernetes_namespace.cert_manager.metadata.0.name
   wait        = false
   max_history = 50
+  values = [templatefile("${path.module}/conf/cert-manager-values.yaml", {
+  })]
+
 }
 
 
@@ -39,6 +42,51 @@ resource "kubernetes_manifest" "vault_cluster_issuer" {
             }
           }
         }
+      }
+    }
+  }
+}
+
+resource "kubernetes_secret_v1" "route53_credentials_secret" {
+  metadata {
+    name      = "route53-credentials-secret"
+    namespace = kubernetes_namespace.cert_manager.metadata.0.name
+  }
+  data = {
+    "access-key-id"     = data.hcp_vault_secrets_secret.route53_user_access_key.secret_value
+    "secret-access-key" = data.hcp_vault_secrets_secret.route53_user_secret_access_key.secret_value
+  }
+}
+
+resource "kubernetes_manifest" "letsencrypt_cluster_issuer" {
+  manifest = {
+    "apiVersion" = "cert-manager.io/v1"
+    "kind"       = "ClusterIssuer"
+    "metadata" = {
+      "name" = "letsencrypt-prod"
+    }
+    "spec" = {
+      "acme" = {
+        "email"  = "stephen@tollenaar.com"
+        "server" = "https://acme-v02.api.letsencrypt.org/directory"
+        "privateKeySecretRef" = {
+          "name" = "letsencrypt-prod"
+        }
+        "solvers" = [{
+          "dns01" = {
+            "route53" = {
+              "region" = "ca-central-1"
+              "accessKeyIDSecretRef" = {
+                "name" = "route53-credentials-secret"
+                "key"  = "access-key-id"
+              }
+              "secretAccessKeySecretRef" = {
+                "name" = "route53-credentials-secret"
+                "key"  = "secret-access-key"
+              }
+            }
+          }
+        }]
       }
     }
   }

@@ -210,8 +210,8 @@ resource "kubernetes_ingress_v1" "prowlarr" {
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
 
     annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
-      #   "cert-manager.io/cluster-issuer" = local.letsencrypt_type
+      "kubernetes.io/ingress.class"    = "nginx"
+      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
     }
   }
   spec {
@@ -231,9 +231,11 @@ resource "kubernetes_ingress_v1" "prowlarr" {
         }
       }
     }
-    # tls {
-    #   hosts       = [local.domain]
-    #   secret_name = local.letsencrypt_type
-    # }
+    tls {
+      hosts = [
+        "prowlarr.home.spicedelver.me"
+      ]
+      secret_name = "prowlarr-tls"
+    }
   }
 }

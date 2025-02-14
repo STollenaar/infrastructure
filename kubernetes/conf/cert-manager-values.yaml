@@ -227,24 +227,17 @@ enableCertificateOwnerRef: false
 #    kubernetesAPIQPS: 9000
 #    kubernetesAPIBurst: 9000
 #    numberOfConcurrentWorkers: 200
-#    enableGatewayAPI: true
-#    # Feature gates as of v1.16.0. Listed with their default values.
-#    # See https://cert-manager.io/docs/cli/controller/
 #    featureGates:
-#      AdditionalCertificateOutputFormats: true # BETA - default=true
-#      AllAlpha: false # ALPHA - default=false
-#      AllBeta: false # BETA - default=false
-#      ExperimentalCertificateSigningRequestControllers: false # ALPHA - default=false
-#      ExperimentalGatewayAPISupport: true # BETA - default=true
-#      LiteralCertificateSubject: true # BETA - default=true
-#      NameConstraints: false # ALPHA - default=false
-#      OtherNames: false # ALPHA - default=false
-#      SecretsFilteredCaching: true # BETA - default=true
-#      ServerSideApply: false # ALPHA - default=false
-#      StableCertificateRequestName: true # BETA - default=true
-#      UseCertificateRequestBasicConstraints: false # ALPHA - default=false
-#      UseDomainQualifiedFinalizer: false # ALPHA - default=false
-#      ValidateCAA: false # ALPHA - default=false
+#      AdditionalCertificateOutputFormats: true
+#      DisallowInsecureCSRUsageDefinition: true
+#      ExperimentalCertificateSigningRequestControllers: true
+#      ExperimentalGatewayAPISupport: true
+#      LiteralCertificateSubject: true
+#      SecretsFilteredCaching: true
+#      ServerSideApply: true
+#      StableCertificateRequestName: true
+#      UseCertificateRequestBasicConstraints: true
+#      ValidateCAA: true
 #    # Configure the metrics server for TLS
 #    # See https://cert-manager.io/docs/devops-tips/prometheus-metrics/#tls
 #    metricsTLSConfig:
@@ -279,8 +272,8 @@ disableAutoApproval: false
 # ref: https://cert-manager.io/docs/concepts/certificaterequest/#approval
 # +docs:property
 approveSignerNames:
-- issuers.cert-manager.io/*
-- clusterissuers.cert-manager.io/*
+  - issuers.cert-manager.io/*
+  - clusterissuers.cert-manager.io/*
 
 # Additional command line flags to pass to cert-manager controller binary.
 # To see all available flags run `docker run quay.io/jetstack/cert-manager-controller:<version> --help`.
@@ -324,7 +317,7 @@ containerSecurityContext:
   allowPrivilegeEscalation: false
   capabilities:
     drop:
-    - ALL
+      - ALL
   readOnlyRootFilesystem: true
 
 # Additional volumes to add to the cert-manager controller pod.
@@ -340,6 +333,7 @@ volumeMounts: []
 # Optional additional annotations to add to the controller Pods.
 # +docs:property
 # podAnnotations: {}
+podAnnotations: {}
 
 # Optional additional labels to add to the controller Pods.
 podLabels: {}
@@ -402,7 +396,8 @@ nodeSelector:
   kubernetes.io/os: linux
 
 # +docs:ignore
-ingressShim: {}
+ingressShim:
+  {}
 
   # Optional default issuer to use for ingress resources.
   # +docs:property=ingressShim.defaultIssuerName
@@ -430,7 +425,6 @@ ingressShim: {}
 # but certain domains should be excluded.
 # +docs:property
 # no_proxy: 127.0.0.1,localhost
-
 
 # A Kubernetes Affinity, if required. For more information, see [Affinity v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core).
 #
@@ -690,7 +684,7 @@ webhook:
     allowPrivilegeEscalation: false
     capabilities:
       drop:
-      - ALL
+        - ALL
     readOnlyRootFilesystem: true
 
   podDisruptionBudget:
@@ -757,7 +751,6 @@ webhook:
     #      operator: NotIn
     #      values:
     #        - kube-system
-
 
   # Additional command line flags to pass to cert-manager webhook binary.
   # To see all available flags run `docker run quay.io/jetstack/cert-manager-webhook:<version> --help`.
@@ -941,7 +934,8 @@ webhook:
 
   # Overrides the mutating webhook and validating webhook so they reach the webhook
   # service using the `url` field instead of a service.
-  url: {}
+  url:
+    {}
     # host:
 
   # Enables default network policies for webhooks.
@@ -953,30 +947,30 @@ webhook:
     # inbound traffic.
     # +docs:property
     ingress:
-    - from:
-      - ipBlock:
-          cidr: 0.0.0.0/0
+      - from:
+          - ipBlock:
+              cidr: 0.0.0.0/0
 
     # Egress rule for the webhook network policy. By default, it allows all
     # outbound traffic to ports 80 and 443, as well as DNS ports.
     # +docs:property
     egress:
-    - ports:
-      - port: 80
-        protocol: TCP
-      - port: 443
-        protocol: TCP
-      - port: 53
-        protocol: TCP
-      - port: 53
-        protocol: UDP
-      # On OpenShift and OKD, the Kubernetes API server listens on.
-      # port 6443.
-      - port: 6443
-        protocol: TCP
-      to:
-      - ipBlock:
-          cidr: 0.0.0.0/0
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 443
+            protocol: TCP
+          - port: 53
+            protocol: TCP
+          - port: 53
+            protocol: UDP
+          # On OpenShift and OKD, the Kubernetes API server listens on.
+          # port 6443.
+          - port: 6443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: 0.0.0.0/0
 
   # Additional volumes to add to the cert-manager controller pod.
   volumes: []
@@ -1057,7 +1051,7 @@ cainjector:
     allowPrivilegeEscalation: false
     capabilities:
       drop:
-      - ALL
+        - ALL
     readOnlyRootFilesystem: true
 
   podDisruptionBudget:
@@ -1121,7 +1115,6 @@ cainjector:
   #
   # For more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
   resources: {}
-
 
   # The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with
   # matching labels.
@@ -1284,7 +1277,7 @@ startupapicheck:
     allowPrivilegeEscalation: false
     capabilities:
       drop:
-      - ALL
+        - ALL
     readOnlyRootFilesystem: true
 
   # Timeout for 'kubectl check api' command.
@@ -1312,7 +1305,7 @@ startupapicheck:
   # the webhook URL, IP address and TCP connect errors for example.
   # +docs:property
   extraArgs:
-  - -v
+    - -v
 
   # Additional environment variables to pass to cert-manager startupapicheck binary.
   # For example:
@@ -1330,7 +1323,6 @@ startupapicheck:
   #
   # For more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
   resources: {}
-
 
   # The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with
   # matching labels.

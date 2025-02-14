@@ -74,11 +74,11 @@ resource "kubernetes_deployment" "qbittorrent" {
             }
           }
           env {
-            name = "WIREGUARD_ADDRESSES"
+            name  = "WIREGUARD_ADDRESSES"
             value = "10.14.0.2/16"
           }
           env {
-            name = "VPN_TYPE"
+            name  = "VPN_TYPE"
             value = "openvpn"
           }
           env {
@@ -251,8 +251,8 @@ resource "kubernetes_ingress_v1" "qbittorrent" {
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
 
     annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
-      #   "cert-manager.io/cluster-issuer" = local.letsencrypt_type
+      "kubernetes.io/ingress.class"    = "nginx"
+      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
     }
   }
   spec {
@@ -272,9 +272,11 @@ resource "kubernetes_ingress_v1" "qbittorrent" {
         }
       }
     }
-    # tls {
-    #   hosts       = [local.domain]
-    #   secret_name = local.letsencrypt_type
-    # }
+    tls {
+      hosts = [
+        "qbittorrent.home.spicedelver.me"
+      ]
+      secret_name = "qbittorrent-tls"
+    }
   }
 }
