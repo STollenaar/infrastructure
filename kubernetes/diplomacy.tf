@@ -30,7 +30,7 @@ resource "kubernetes_deployment_v1" "diplomacy_frontend" {
         }
         container {
           name  = "diplomacy-frontend"
-          image = "405934267152.dkr.ecr.ca-central-1.amazonaws.com/diplomacy:client-0.0.1"
+          image = "405934267152.dkr.ecr.ca-central-1.amazonaws.com/diplomacy:client-0.0.2"
           port {
             container_port = 8080
             name           = "frontend"
@@ -102,14 +102,28 @@ resource "kubernetes_deployment_v1" "diplomacy_backend" {
         }
         container {
           name  = "diplomacy-backend"
-          image = "405934267152.dkr.ecr.ca-central-1.amazonaws.com/diplomacy:server-0.0.1"
+          image = "405934267152.dkr.ecr.ca-central-1.amazonaws.com/diplomacy:server-0.0.2"
           env {
             name  = "ConnectionStrings__Database"
-            value = "Server=mssql.diplomacy.svc.cluster.local;Database=diplomacy;User=SA;Password=Passw0rd@;Encrypt=True;TrustServerCertificate=True"
+            value = "Data Source=5dDiplomacy.db"
+          }
+          env {
+            name = "Provider"
+            value = "Sqlite"
           }
           port {
             container_port = 8080
             name           = "backend"
+          }
+          volume_mount {
+            name = "database"
+            mount_path = "/app/db"
+          }
+        }
+        volume {
+          name = "database"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim_v1.diplomacy_database.metadata.0.name
           }
         }
       }
@@ -137,82 +151,17 @@ resource "kubernetes_service_v1" "diplomacy_backend" {
 }
 
 
-resource "kubernetes_stateful_set_v1" "mssql" {
+resource "kubernetes_persistent_volume_claim_v1" "diplomacy_database" {
   metadata {
-    name      = "mssql"
+    name      = "diplomacy-db"
     namespace = kubernetes_namespace_v1.diplomacy.metadata.0.name
-    labels = {
-      app = "mssql"
-    }
   }
   spec {
-    service_name = kubernetes_service_v1.mssql.metadata.0.name
-    selector {
-      match_labels = {
-        app = "mssql"
+    access_modes = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        "storage" = "10Gi"
       }
-    }
-    template {
-      metadata {
-        labels = {
-          app = "mssql"
-        }
-      }
-      spec {
-        container {
-          name  = "mssql"
-          image = "mcr.microsoft.com/mssql/server:2022-latest"
-          env {
-            name  = "ACCEPT_EULA"
-            value = "y"
-          }
-          env {
-            name  = "MSSQL_SA_PASSWORD"
-            value = "Passw0rd@"
-          }
-          port {
-            container_port = 1433
-            name           = "mssql"
-          }
-          volume_mount {
-            name       = "mssql-data"
-            mount_path = "/var/opt/mssql/data"
-          }
-        }
-      }
-    }
-    volume_claim_template {
-      metadata {
-        name = "mssql-data"
-      }
-      spec {
-        access_modes       = ["ReadWriteOnce"]
-        storage_class_name = "nfs-csi-other"
-        resources {
-          requests = {
-            storage = "20Gi"
-          }
-        }
-      }
-    }
-  }
-}
-
-resource "kubernetes_service_v1" "mssql" {
-  metadata {
-    name      = "mssql"
-    namespace = kubernetes_namespace_v1.diplomacy.metadata.0.name
-    labels = {
-      app = "mssql"
-    }
-  }
-  spec {
-    selector = {
-      app = "mssql"
-    }
-    port {
-      port        = 1433
-      target_port = "mssql"
     }
   }
 }
