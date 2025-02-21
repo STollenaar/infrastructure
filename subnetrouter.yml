@@ -1,0 +1,10 @@
+# In case of loss of other subnet router
+apiVersion: tailscale.com/v1alpha1
+kind: Connector
+metadata:
+  name: subnet-router
+spec:
+  hostname: subnet-router
+  subnetRouter:
+    advertiseRoutes:
+      - "192.168.2.0/24"
