@@ -261,6 +261,7 @@ resource "kubernetes_ingress_v1" "sonarr" {
     }
   }
   spec {
+    ingress_class_name = "nginx"
     rule {
       host = "sonarr.home.spicedelver.me"
       http {

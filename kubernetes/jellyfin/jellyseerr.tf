@@ -114,12 +114,7 @@ resource "kubernetes_ingress_v1" "jellyseer" {
     }
   }
   spec {
-    tls {
-      hosts = [
-        "jellyseer.home.spicedelver.me"
-      ]
-      secret_name = "jellyseer-tls"
-    }
+    ingress_class_name = "nginx"
     rule {
       host = "jellyseer.home.spicedelver.me"
       http {

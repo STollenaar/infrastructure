@@ -229,6 +229,7 @@ resource "kubernetes_ingress_v1" "jellyfin" {
     }
   }
   spec {
+    ingress_class_name = "nginx"
     rule {
       host = "jellyfin.home.spicedelver.me"
       http {

@@ -215,6 +215,7 @@ resource "kubernetes_ingress_v1" "prowlarr" {
     }
   }
   spec {
+    ingress_class_name = "nginx"
     rule {
       host = "prowlarr.home.spicedelver.me"
       http {

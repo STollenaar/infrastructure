@@ -12,3 +12,47 @@ resource "helm_release" "nginx-ingress" {
     cluster_ip = "192.168.2.118"
   })]
 }
+
+resource "kubernetes_ingress_v1" "ingress" {
+  metadata {
+    name      = "default-ingress"
+    namespace = "default"
+    annotations = {
+      "cert-manager.io/issuer"                     = "letsencrypt-prod"
+      "cert-manager.io/usages"                     = "key agreement,digital signature, server auth, client auth"
+      "kubernetes.io/ingress.class"                = "nginx"
+      "nginx.ingress.kubernetes.io/rewrite-target" = "/$1"
+      "nginx.ingress.kubernetes.io/server-snippet" = <<EOT
+      location ~* "^/" {
+          deny all;
+          return 444;
+        }
+        EOT
+      "nginx.ingress.kubernetes.io/ssl-redirect"   = "false"
+    }
+  }
+  spec {
+    tls {
+      hosts = [
+        "spicedelver.me"
+      ]
+      secret_name = "nginx-ingress-tls"
+    }
+    rule {
+      host = "spicedelver.me"
+      http {
+        path {
+          path = "/"
+          backend {
+            service {
+              name = "nginx-ingress-ingress-nginx-controller"
+              port {
+                number = 80
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

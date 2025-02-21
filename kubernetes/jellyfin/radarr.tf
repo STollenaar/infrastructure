@@ -264,6 +264,7 @@ resource "kubernetes_ingress_v1" "radarr" {
     }
   }
   spec {
+    ingress_class_name = "nginx"
     rule {
       host = "radarr.home.spicedelver.me"
       http {

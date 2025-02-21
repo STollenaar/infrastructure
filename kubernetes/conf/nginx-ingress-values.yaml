@@ -14,6 +14,7 @@ controller:
   config:
     ssl-protocols: TLSv1.3 TLSv1.2
     load-balance: ewma
+    allow-snippet-annotations: "true"
     # disable-access-log: "true"
     enable-vts-status: "true"
     error-log-level: "error"

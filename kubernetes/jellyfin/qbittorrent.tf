@@ -256,6 +256,7 @@ resource "kubernetes_ingress_v1" "qbittorrent" {
     }
   }
   spec {
+    ingress_class_name = "nginx"
     rule {
       host = "qbittorrent.home.spicedelver.me"
       http {

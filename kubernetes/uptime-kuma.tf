@@ -94,6 +94,7 @@ resource "kubernetes_ingress_v1" "uptime_kuma_ingress" {
   }
 
   spec {
+    ingress_class_name = "nginx"
     rule {
       host = "status.home.spicedelver.me"
       http {
@@ -111,12 +112,33 @@ resource "kubernetes_ingress_v1" "uptime_kuma_ingress" {
         }
       }
     }
+    tls {
+      hosts = [
+        "status.home.spicedelver.me",
+      ]
+      secret_name = "uptime-kuma-tls"
+    }
+  }
+}
+
+resource "kubernetes_ingress_v1" "uptime_kuma_ingress_public" {
+  metadata {
+    name      = "uptime-kuma-public"
+    namespace = kubernetes_namespace_v1.uptime_kuma.metadata.0.name
+    annotations = {
+      "kubernetes.io/ingress.class"    = "nginx"
+      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+    }
+  }
+
+  spec {
+    ingress_class_name = "nginx"
     rule {
       host = "status.spicedelver.me"
       http {
         path {
-          path      = "/status/homelab"
-          path_type = "ImplementationSpecific"
+          path      = "/"
+          path_type = "Prefix"
           backend {
             service {
               name = kubernetes_service_v1.uptime_kuma.metadata.0.name
@@ -130,10 +152,9 @@ resource "kubernetes_ingress_v1" "uptime_kuma_ingress" {
     }
     tls {
       hosts = [
-        "status.home.spicedelver.me",
         "status.spicedelver.me"
       ]
-      secret_name = "uptime-kuma-tls"
+      secret_name = "uptime-kuma-tls-public"
     }
   }
 }

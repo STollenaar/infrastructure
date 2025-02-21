@@ -249,6 +249,7 @@ resource "kubernetes_ingress_v1" "diplomacy" {
     }
   }
   spec {
+    ingress_class_name = "nginx"
     tls {
       hosts = [
         "diplomacy.home.spicedelver.me"
