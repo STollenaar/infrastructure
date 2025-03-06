@@ -45,7 +45,7 @@ resource "kubernetes_deployment" "ollama" {
       }
 
       spec {
-
+        runtime_class_name = "nvidia"
         container {
           name  = "ollama"
           image = "ollama/ollama:0.5.7"

@@ -2667,6 +2667,11 @@ prometheus:
     ## port to 2379 and allow etcd scraping provided it is running on all Kubernetes master nodes
     ##
     additionalScrapeConfigs:
+      - job_name: "nvidia-gpu-exporter"
+        scrape_interval: 15s
+        metrics_path: "/metrics"
+        static_configs:
+          - targets: ["nvidia-gpu-exporter.monitoring.svc.cluster.local:9835"]
       - job_name: "istiod"
         kubernetes_sd_configs:
           - role: endpoints

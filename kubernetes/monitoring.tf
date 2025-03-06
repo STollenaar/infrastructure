@@ -73,3 +73,84 @@ resource "helm_release" "prometheus_operator" {
 
 #   values = [file("${path.module}/conf/prometheus-adapter-values.yaml")]
 # }
+
+resource "helm_release" "nvidia_gpu_exporter" {
+  name       = "nvidia-gpu-exporter"
+  repository = "https://utkuozdemir.org/helm-charts"
+  chart      = "nvidia-gpu-exporter"
+  version    = "1.0.0" # Update to the latest version if needed
+  namespace  = kubernetes_namespace.monitoring.metadata.0.name
+
+  values = [<<EOF
+image:
+    tag: 1.3.1
+    repository: 405934267152.dkr.ecr.ca-central-1.amazonaws.com/nvidia-exporter
+imagePullSecrets:
+- name: ${kubernetes_manifest.monitoring_external_secret.manifest.spec.target.name}
+nodeSelector:
+  nvidia.com/gpu.present: "true"
+volumes: []
+volumeMounts: []    
+EOF
+  ]
+}
+
+resource "kubernetes_manifest" "monitoring_vault_backend" {
+  manifest = {
+    apiVersion = "external-secrets.io/v1beta1"
+    kind       = "SecretStore"
+    metadata = {
+      name      = "vault-backend"
+      namespace = kubernetes_namespace.monitoring.metadata.0.name
+    }
+    spec = {
+      provider = {
+        vault = {
+          server  = "http://vault.${kubernetes_namespace.vault.metadata.0.name}.svc.cluster.local:8200"
+          path    = "secret"
+          version = "v2"
+          auth = {
+            kubernetes = {
+              mountPath = "kubernetes"
+              role      = "external-secrets"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_manifest" "monitoring_external_secret" {
+  manifest = {
+    apiVersion = "external-secrets.io/v1beta1"
+    kind       = "ExternalSecret"
+    metadata = {
+      name      = "ecr-auth"
+      namespace = kubernetes_namespace.monitoring.metadata.0.name
+    }
+    spec = {
+      secretStoreRef = {
+        name = kubernetes_manifest.monitoring_vault_backend.manifest.metadata.name
+        kind = kubernetes_manifest.monitoring_vault_backend.manifest.kind
+      }
+      target = {
+        name = "regcred"
+        template = {
+          type          = "kubernetes.io/dockerconfigjson"
+          mergePolicy   = "Replace"
+          engineVersion = "v2"
+        }
+      }
+      data = [
+        {
+          secretKey = ".dockerconfigjson"
+          remoteRef = {
+            key      = "ecr-auth"
+            property = ".dockerconfigjson"
+          }
+        }
+      ]
+    }
+  }
+}
