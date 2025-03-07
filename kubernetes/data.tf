@@ -36,3 +36,8 @@ data "terraform_remote_state" "aws_iam" {
     key    = "infrastructure/aws/iam/terraform.tfstate"
   }
 }
+
+data "aws_ssm_parameter" "diplomacy_auth" {
+  name = "/diplomacy/password"
+  with_decryption = true
+}

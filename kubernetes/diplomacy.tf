@@ -30,7 +30,7 @@ resource "kubernetes_deployment_v1" "diplomacy_frontend" {
         }
         container {
           name  = "diplomacy-frontend"
-          image = "405934267152.dkr.ecr.ca-central-1.amazonaws.com/diplomacy:client-0.0.2"
+          image = "405934267152.dkr.ecr.ca-central-1.amazonaws.com/diplomacy:client-0.0.3"
           port {
             container_port = 8080
             name           = "frontend"
@@ -102,7 +102,7 @@ resource "kubernetes_deployment_v1" "diplomacy_backend" {
         }
         container {
           name  = "diplomacy-backend"
-          image = "405934267152.dkr.ecr.ca-central-1.amazonaws.com/diplomacy:server-0.0.2"
+          image = "405934267152.dkr.ecr.ca-central-1.amazonaws.com/diplomacy:server-0.0.3"
           env {
             name  = "ConnectionStrings__Database"
             value = "Data Source=5dDiplomacy.db"
@@ -271,6 +271,61 @@ resource "kubernetes_ingress_v1" "diplomacy" {
           }
         }
       }
+    }
+  }
+}
+
+resource "kubernetes_secret_v1" "diplomacy_basic_auth" {
+  metadata {
+    name      = "diplomacy-basic-auth"
+    namespace = kubernetes_namespace_v1.diplomacy.metadata.0.name
+  }
+
+  data = {
+    "auth" = data.aws_ssm_parameter.diplomacy_auth.value
+  }
+
+  type = "Opaque"
+}
+
+
+resource "kubernetes_ingress_v1" "diplomacy_ingress_public" {
+  metadata {
+    name      = "diplomacy-public"
+    namespace = kubernetes_namespace_v1.diplomacy.metadata.0.name
+    annotations = {
+      "kubernetes.io/ingress.class"        = "nginx"
+      "cert-manager.io/cluster-issuer"     = "letsencrypt-prod"
+      "nginx.ingress.kubernetes.io/auth-type"   = "basic"
+      "nginx.ingress.kubernetes.io/auth-secret" = "diplomacy-basic-auth"
+      "nginx.ingress.kubernetes.io/auth-realm"  = "Authentication Required"
+    }
+  }
+
+  spec {
+    ingress_class_name = "nginx"
+    rule {
+      host = "diplomacy.spicedelver.me"
+      http {
+        path {
+          path      = "/"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = kubernetes_service_v1.diplomacy_frontend.metadata.0.name
+              port {
+                number = 8080
+              }
+            }
+          }
+        }
+      }
+    }
+    tls {
+      hosts = [
+        "diplomacy.spicedelver.me"
+      ]
+      secret_name = "diplomacy-tls-public"
     }
   }
 }

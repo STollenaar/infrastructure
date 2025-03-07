@@ -12,33 +12,33 @@ resource "helm_release" "nginx-ingress" {
     cluster_ip = "192.168.2.118"
   })]
 }
-resource "kubernetes_ingress_v1" "ingress" {
-  metadata {
-    name      = "default-ingress"
-    namespace = "default"
-    annotations = {
-      "kubernetes.io/ingress.class"                = "nginx"
-      "nginx.ingress.kubernetes.io/server-snippet" = <<EOT
-      location ~* "^/" {
-          deny all;
-          return 444;
-        }
-      EOT
-      "nginx.ingress.kubernetes.io/ssl-redirect"   = "true"
-    }
-  }
-  spec {
-    tls {
-      hosts       = ["*.spicedelver.me"]
-      secret_name = "nginx-ingress-tls"
-    }
-    default_backend {
-      service {
-        name = "nginx-ingress-ingress-nginx-controller"
-        port {
-          number = 80
-        }
-      }
-    }
-  }
-}
+# resource "kubernetes_ingress_v1" "ingress" {
+#   metadata {
+#     name      = "default-ingress"
+#     namespace = "default"
+#     annotations = {
+#       "kubernetes.io/ingress.class"                = "nginx"
+#       "nginx.ingress.kubernetes.io/server-snippet" = <<EOT
+#       location ~* "^/" {
+#           deny all;
+#           return 444;
+#         }
+#       EOT
+#       "nginx.ingress.kubernetes.io/ssl-redirect"   = "true"
+#     }
+#   }
+#   spec {
+#     tls {
+#       hosts       = ["*.spicedelver.me"]
+#       secret_name = "nginx-ingress-tls"
+#     }
+#     default_backend {
+#       service {
+#         name = "nginx-ingress-ingress-nginx-controller"
+#         port {
+#           number = 80
+#         }
+#       }
+#     }
+#   }
+# }
