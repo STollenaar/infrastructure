@@ -33,16 +33,17 @@ controller:
     # enable-underscores-in-headers: ""
     # proxy-buffers-size: ""
     # proxy-buffers: ""
-  admissionWebhooks:
-    patch:
-      podAnnotations:
-        sidecar.istio.io/inject: "false"
+  # admissionWebhooks:
+  #   patch:
+  #     podAnnotations:
+  #       sidecar.istio.io/inject: "false"
   podAnnotations: {}
   service:
     annotations: {}
+    loadBalancerIP: ${load_balancer_main_ip}
       # If you want NLB instead of ELB, enable this!
     externalTrafficPolicy: Local
-  replicaCount: 1
+  replicaCount: 2
   stats:
     enabled: true
   metrics:
@@ -51,6 +52,26 @@ controller:
     requests:
       cpu: 250m
       memory: 256Mi
-
+  affinity:
+    # An example of preferred pod anti-affinity, weight is in the range 1-100
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+              - 'nginx-ingress'
+            - key: app.kubernetes.io/instance
+              operator: In
+              values:
+              - 'nginx-ingress'
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - controller
+          topologyKey: kubernetes.io/hostname
 defaultBackend:
   replicaCount: 3

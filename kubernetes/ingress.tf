@@ -9,7 +9,7 @@ resource "helm_release" "nginx-ingress" {
 
   # Enable TLSv1.3
   values = [templatefile("${path.module}/conf/nginx-ingress-values.yaml", {
-    cluster_ip = "192.168.2.118"
+    load_balancer_main_ip = local.ip_range[0]
   })]
 }
 # resource "kubernetes_ingress_v1" "ingress" {

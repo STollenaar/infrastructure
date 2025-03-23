@@ -43,9 +43,7 @@ resource "kubernetes_manifest" "metallb_ip_pool" {
       namespace = kubernetes_namespace.metallb_system.id
     }
     spec = {
-      addresses = [
-        "192.168.2.118/32"
-      ]
+      addresses = [for ip in local.ip_range: "${ip}/32"]
       #   addresses = [for node in local.worker_nodes : "${node}/32"]
     }
   }
