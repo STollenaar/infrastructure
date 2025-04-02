@@ -77,11 +77,11 @@ resource "kubernetes_manifest" "letsencrypt_cluster_issuer" {
             "route53" = {
               "region" = "ca-central-1"
               "accessKeyIDSecretRef" = {
-                "name" = "route53-credentials-secret"
+                "name" = kubernetes_secret_v1.route53_credentials_secret.metadata.0.name
                 "key"  = "access-key-id"
               }
               "secretAccessKeySecretRef" = {
-                "name" = "route53-credentials-secret"
+                "name" = kubernetes_secret_v1.route53_credentials_secret.metadata.0.name
                 "key"  = "secret-access-key"
               }
             }
