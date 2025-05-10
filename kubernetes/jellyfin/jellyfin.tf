@@ -255,6 +255,43 @@ resource "kubernetes_ingress_v1" "jellyfin" {
   }
 }
 
+resource "kubernetes_ingress_v1" "jellyfin_public" {
+  metadata {
+    name      = "jellyfin-public"
+    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+
+    annotations = {
+      "kubernetes.io/ingress.class"    = "nginx"
+      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+    }
+  }
+  spec {
+    ingress_class_name = "nginx"
+    rule {
+      host = "jellyfin.spicedelver.me"
+      http {
+        path {
+          path = "/"
+          backend {
+            service {
+              name = kubernetes_service.jellyfin_web.metadata.0.name
+              port {
+                number = 8096
+              }
+            }
+          }
+        }
+      }
+    }
+    tls {
+      hosts = [
+        "jellyfin.spicedelver.me"
+      ]
+      secret_name = "jellyfin-public-tls"
+    }
+  }
+}
+
 resource "kubernetes_config_map" "jellyfin_env" {
   metadata {
     name      = "jellyfin"

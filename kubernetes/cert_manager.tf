@@ -53,8 +53,8 @@ resource "kubernetes_secret_v1" "route53_credentials_secret" {
     namespace = kubernetes_namespace.cert_manager.metadata.0.name
   }
   data = {
-    "access-key-id"     = data.hcp_vault_secrets_secret.route53_user_access_key.secret_value
-    "secret-access-key" = data.hcp_vault_secrets_secret.route53_user_secret_access_key.secret_value
+    "access-key-id"     = data.aws_ssm_parameter.route53_user_access_key.value
+    "secret-access-key" = data.aws_ssm_parameter.route53_user_secret_access_key.value
   }
 }
 

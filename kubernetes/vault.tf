@@ -60,8 +60,8 @@ resource "kubernetes_secret" "vault_unseal_user" {
     namespace = kubernetes_namespace.vault.metadata.0.name
   }
   data = {
-    AWS_ACCESS_KEY_ID     = data.hcp_vault_secrets_secret.vault_user_access_key.secret_value
-    AWS_SECRET_ACCESS_KEY = data.hcp_vault_secrets_secret.vault_user_secret_access_key.secret_value
+    AWS_ACCESS_KEY_ID     = data.aws_ssm_parameter.vault_user_access_key.value
+    AWS_SECRET_ACCESS_KEY = data.aws_ssm_parameter.vault_user_secret_access_key.value
   }
 }
 
@@ -274,7 +274,6 @@ resource "kubernetes_cluster_role_binding" "vault-token-creator-binding" {
     namespace = kubernetes_namespace.vault.metadata.0.name
   }
 }
-
 
 resource "hcp_vault_secrets_app" "proxmox_vault" {
   app_name    = "proxmox"

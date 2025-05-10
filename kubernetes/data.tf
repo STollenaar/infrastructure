@@ -6,27 +6,27 @@ data "aws_ssm_parameter" "vault_client_secret" {
   name = "/vault/serviceprincipals/talos/client_secret"
 }
 
+data "aws_ssm_parameter" "github_arc_token" {
+  name = "/github/github_arc"
+}
+
+data "aws_ssm_parameter" "vault_user_access_key" {
+  name = "/iam/vault_user/access_key"
+}
+
+data "aws_ssm_parameter" "vault_user_secret_access_key" {
+  name = "/iam/vault_user/secret_access_key"
+}
+
+data "aws_ssm_parameter" "route53_user_access_key" {
+  name = "/iam/route53_user/access_key"
+}
+
+data "aws_ssm_parameter" "route53_user_secret_access_key" {
+  name = "/iam/route53_user/secret_access_key"
+}
+
 data "aws_caller_identity" "current" {}
-
-data "hcp_vault_secrets_secret" "vault_user_access_key" {
-  app_name    = data.terraform_remote_state.aws_iam.outputs.hcp.app_name
-  secret_name = data.terraform_remote_state.aws_iam.outputs.hcp.vault_user_access_key
-}
-
-data "hcp_vault_secrets_secret" "vault_user_secret_access_key" {
-  app_name    = data.terraform_remote_state.aws_iam.outputs.hcp.app_name
-  secret_name = data.terraform_remote_state.aws_iam.outputs.hcp.vault_user_secret_access_key
-}
-
-data "hcp_vault_secrets_secret" "route53_user_access_key" {
-  app_name    = data.terraform_remote_state.aws_iam.outputs.hcp.app_name
-  secret_name = data.terraform_remote_state.aws_iam.outputs.hcp.route53_user_access_key
-}
-
-data "hcp_vault_secrets_secret" "route53_user_secret_access_key" {
-  app_name    = data.terraform_remote_state.aws_iam.outputs.hcp.app_name
-  secret_name = data.terraform_remote_state.aws_iam.outputs.hcp.route53_user_secret_access_key
-}
 
 data "terraform_remote_state" "aws_iam" {
   backend = "s3"

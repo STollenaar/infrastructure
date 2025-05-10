@@ -1,6 +1,6 @@
 resource "vault_aws_secret_backend" "aws_client" {
-  access_key = data.hcp_vault_secrets_secret.aws_user_access_key.secret_value
-  secret_key = data.hcp_vault_secrets_secret.aws_user_secret_access_key.secret_value
+  access_key = data.aws_ssm_parameter.aws_user_access_key.value
+  secret_key = data.aws_ssm_parameter.aws_user_secret_access_key.value
 }
 
 resource "vault_kubernetes_secret_backend" "kubernetes" {

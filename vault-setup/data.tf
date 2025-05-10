@@ -11,14 +11,12 @@ data "hcp_vault_secrets_secret" "vault_root" {
   secret_name = "root"
 }
 
-data "hcp_vault_secrets_secret" "aws_user_access_key" {
-  app_name    = "aws"
-  secret_name = "access_key"
+data "aws_ssm_parameter" "aws_user_access_key" {
+  name = "/iam/vault_user/access_key"
 }
 
-data "hcp_vault_secrets_secret" "aws_user_secret_access_key" {
-  app_name    = "aws"
-  secret_name = "secret_access_key"
+data "aws_ssm_parameter" "aws_user_secret_access_key" {
+  name = "/iam/vault_user/secret_access_key"
 }
 
 data "terraform_remote_state" "kubernetes_state" {
