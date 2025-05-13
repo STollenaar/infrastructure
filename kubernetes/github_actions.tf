@@ -5,6 +5,13 @@ locals {
 resource "kubernetes_namespace_v1" "github_actions_runner" {
   metadata {
     name = "github-arc"
+
+    labels = {
+      "cmstate.spicedelver.me"             = "opt-out"
+      "pod-security.kubernetes.io/enforce" = "privileged"
+      "pod-security.kubernetes.io/audit"   = "privileged"
+      "pod-security.kubernetes.io/warn"    = "privileged"
+    }
   }
 }
 
