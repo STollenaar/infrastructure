@@ -1,0 +1,56 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:recommended"
+    ],
+    "description": "Renovate configuration for Terragrunt + Terraform + Helm",
+    "enabledManagers": [
+        "terraform",
+        "terragrunt"
+    ],
+    "terraform": {
+        "enabled": true
+    },
+    "packageRules": [
+        {
+            "matchManagers": [
+                "terraform",
+                "terragrunt"
+            ],
+            "matchPackagePatterns": [
+                ".*"
+            ],
+            "groupName": "terraform providers",
+            "schedule": [
+                "before 6am on Thursday"
+            ]
+        },
+        {
+            "matchDatasources": [
+                "helm"
+            ],
+            "groupName": "helm charts",
+            "schedule": [
+                "before 6am on Thursday"
+            ]
+        }
+    ],
+    "regexManagers": [
+        {
+            "fileMatch": [
+                "^.*\\.hcl$"
+            ],
+            "matchStrings": [
+                "version\\s*=\\s*\"(?<currentValue>~?>?\\s?[0-9.]+)\""
+            ],
+            "depNameTemplate": "{{arg1}}",
+            "datasourceTemplate": "terraform-provider",
+            "versioningTemplate": "terraform",
+            "packageNameTemplate": "{{arg1}}"
+        }
+    ],
+    "schedule": [
+        "at any time"
+    ],
+    "commitMessagePrefix": "chore(deps): "
+}
