@@ -42,22 +42,14 @@
                 "docker"
             ],
             "enabled": false
-}
-    ],
-    "regexManagers": [
-        {
-            "fileMatch": [
-                "^.*\\.hcl$"
-            ],
-            "matchStrings": [
-                "version\\s*=\\s*\"(?<currentValue>~?>?\\s?[0-9.]+)\""
-            ],
-            "depNameTemplate": "{{arg1}}",
-            "datasourceTemplate": "terraform-provider",
-            "versioningTemplate": "terraform",
-            "packageNameTemplate": "{{arg1}}"
         }
     ],
+    "terragrunt": {
+        "managerFilePatterns": [
+            "/(^|/)terragrunt\\.hcl$/",
+            "/(^|/)root\\.hcl$/"
+        ]
+    },
     "schedule": [
         "at any time"
     ],
