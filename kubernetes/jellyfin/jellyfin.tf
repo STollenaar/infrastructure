@@ -58,7 +58,7 @@ resource "kubernetes_deployment" "jellyfin" {
           fs_group = 1000
         }
         container {
-          image = "lscr.io/linuxserver/jellyfin:10.10.3"
+          image = "lscr.io/linuxserver/jellyfin:2021.12.16"
           name  = "jellyfin"
           env_from {
             config_map_ref {
