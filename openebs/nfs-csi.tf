@@ -4,7 +4,7 @@ resource "helm_release" "csi_nfs" {
 
   repository = "https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts"
   chart      = "csi-driver-nfs"
-  version    = "v4.8.0"
+  version    = "4.11.0"
 
   #   values = [templatefile("${path.module}/conf/nfs-csi-values.yaml", {
   #     nfs_path           = "/mnt/storage/kubernetes"
