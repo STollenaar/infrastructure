@@ -33,7 +33,16 @@
             "schedule": [
                 "before 6am on Thursday"
             ]
-        }
+        },
+        {
+            "matchManagers": [
+                "terraform"
+            ],
+            "matchDatasources": [
+                "docker"
+            ],
+            "enabled": false
+}
     ],
     "regexManagers": [
         {
