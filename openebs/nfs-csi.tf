@@ -15,6 +15,26 @@ resource "helm_release" "csi_nfs" {
 resource "kubernetes_storage_class" "nfs_other" {
   metadata {
     name = "nfs-csi-other"
+  }
+
+  storage_provisioner = "nfs.csi.k8s.io"
+  volume_binding_mode = "Immediate"
+
+  parameters = {
+    server = "192.168.2.113"
+    share  = "/mnt/storage2/kubernetes"
+    subDir = "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
+  }
+  reclaim_policy = "Retain"
+  mount_options = [
+    "vers=4",
+    "nolock"
+  ]
+}
+
+resource "kubernetes_storage_class" "nfs_main" {
+  metadata {
+    name = "nfs-csi-main"
     annotations = {
       "storageclass.kubernetes.io/is-default-class" = "true"
     }
@@ -25,7 +45,7 @@ resource "kubernetes_storage_class" "nfs_other" {
 
   parameters = {
     server = "192.168.2.113"
-    share  = "/mnt/storage2/kubernetes"
+    share  = "/mnt/main/kubernetes"
     subDir = "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
   }
   reclaim_policy = "Retain"

@@ -95,7 +95,7 @@ resource "kubernetes_persistent_volume_claim" "prowlarr_data" {
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   spec {
-    storage_class_name = "nfs-csi-other"
+    storage_class_name = "nfs-csi-main"
     access_modes       = ["ReadWriteOnce"]
     resources {
       requests = {

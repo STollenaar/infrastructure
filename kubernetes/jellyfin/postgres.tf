@@ -56,7 +56,7 @@ resource "kubernetes_stateful_set_v1" "postgres" {
       }
       spec {
         access_modes       = ["ReadWriteOnce"]
-        storage_class_name = "nfs-csi-other"
+        storage_class_name = "nfs-csi-main"
         resources {
           requests = {
             storage = "20Gi"
