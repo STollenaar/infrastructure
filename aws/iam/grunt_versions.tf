@@ -6,15 +6,15 @@ terraform {
       version = "~> 5.99.0"
     }
     hcp = {
-      version = "~> 0.75.0"
+      version = "~> 0.106.0"
       source  = "hashicorp/hcp"
     }
     helm = {
-      version = "~> 2.10.1"
+      version = "~> 2.17.0"
       source  = "hashicorp/helm"
     }
     kubernetes = {
-      version = "~> 2.23.0"
+      version = "~> 2.37.0"
       source  = "hashicorp/kubernetes"
     }
     null = {
