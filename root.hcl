@@ -8,7 +8,7 @@ locals {
   providers = local.provider_vars.locals.providers
 
 
-  raw_versions = jsondecode(file("versions.hcl.json"))
+  raw_versions = jsondecode(file("versions.tf.json"))
   # Remove undesired keys
   filtered_versions = {
     terraform = {

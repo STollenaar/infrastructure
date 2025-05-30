@@ -11,7 +11,7 @@
     "terraform": {
         "enabled": true,
         "managerFilePatterns": [
-            "/(^|/)versions\\.hcl\\.json$/"
+            "/(^|/)versions\\.tf\\.json$/"
         ]
     },
     "packageRules": [
