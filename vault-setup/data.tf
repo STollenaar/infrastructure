@@ -19,11 +19,11 @@ data "aws_ssm_parameter" "aws_user_secret_access_key" {
   name = "/iam/vault_user/secret_access_key"
 }
 
-data "terraform_remote_state" "kubernetes_state" {
+data "terraform_remote_state" "iam_state" {
   backend = "s3"
   config = {
     bucket  = "stollenaar-terraform-states"
-    key     = "infrastructure/kubernetes/terraform.tfstate"
+    key     = "infrastructure/aws/iam/terraform.tfstate"
     region  = "ca-central-1"
     # profile = "personal"
   }

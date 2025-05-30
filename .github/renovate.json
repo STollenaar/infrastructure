@@ -9,7 +9,10 @@
         "terragrunt"
     ],
     "terraform": {
-        "enabled": true
+        "enabled": true,
+        "managerFilePatterns": [
+            "/(^|/)versions\\.hcl\\.json$/"
+        ]
     },
     "packageRules": [
         {
@@ -44,12 +47,6 @@
             "enabled": false
         }
     ],
-    "terragrunt": {
-        "managerFilePatterns": [
-            "/(^|/)terragrunt\\.hcl$/",
-            "/(^|/)root\\.hcl$/"
-        ]
-    },
     "schedule": [
         "at any time"
     ],

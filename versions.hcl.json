@@ -1,0 +1,35 @@
+{
+    "terraform": {
+        "required_providers": {
+            "aws": {
+                "source": "hashicorp/aws",
+                "version": "~> 4.20.1"
+            },
+            "hcp": {
+                "source": "hashicorp/hcp",
+                "version": "~> 0.75.0"
+            },
+            "helm": {
+                "source": "hashicorp/helm",
+                "version": "~> 2.10.1"
+            },
+            "kubernetes": {
+                "source": "hashicorp/kubernetes",
+                "version": "~> 2.23.0"
+            },
+            "null": {
+                "source": "hashicorp/null",
+                "version": "~> 3.2.1"
+            },
+            "vault": {
+                "source": "hashicorp/vault",
+                "version": "~> 3.21.0"
+            },
+            "talos": {
+                "source": "siderolabs/talos",
+                "version": "0.3.4"
+            }
+        },
+        "required_version": ">= 1.2.2"
+    }
+}

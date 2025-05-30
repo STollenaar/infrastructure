@@ -9,9 +9,9 @@ data "vault_policy_document" "external_secrets" {
 
 resource "vault_aws_secret_backend_role" "vault_ecr" {
   backend         = vault_aws_secret_backend.aws_client.path
-  name            = data.terraform_remote_state.kubernetes_state.outputs.iam_roles.vault_ecr_role.id
+  name            = data.terraform_remote_state.iam_state.outputs.iam_roles.vault_ecr_role.id
   credential_type = "assumed_role"
-  role_arns       = [data.terraform_remote_state.kubernetes_state.outputs.iam_roles.vault_ecr_role.arn] #TODO: fetch dynamically
+  role_arns       = [data.terraform_remote_state.iam_state.outputs.iam_roles.vault_ecr_role.arn] #TODO: fetch dynamically
 }
 
 resource "vault_kubernetes_auth_backend_role" "external_secrets" {

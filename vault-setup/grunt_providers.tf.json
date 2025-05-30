@@ -1,0 +1,1 @@
+{"provider":{"aws":{"region":"ca-central-1"},"hcp":{"client_id":"${data.aws_ssm_parameter.vault_client_id.value}","client_secret":"${data.aws_ssm_parameter.vault_client_secret.value}"},"vault":{"address":"http://localhost:8200","token":"${data.hcp_vault_secrets_secret.vault_root.secret_value}"}}}

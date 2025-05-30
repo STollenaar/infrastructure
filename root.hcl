@@ -6,6 +6,24 @@ locals {
 
   # Extract the variables we need for easy access
   providers = local.provider_vars.locals.providers
+
+
+  raw_versions = jsondecode(file("versions.hcl.json"))
+  # Remove undesired keys
+  filtered_versions = {
+    terraform = {
+      required_providers = { for k, v in local.raw_versions.terraform.required_providers : k => v if contains(local.providers, k) }
+    }
+  }
+
+  raw_providers = jsondecode(templatefile("providers.hcl.json", {
+    kubeconfig_file = local.kubeconfig_file
+  }))
+  # Remove undesired keys
+  filtered_providers = {
+    provider = { for k, v in local.raw_providers.provider : k => v if contains(local.providers, k) }
+  }
+
 }
 
 terraform_binary = "/usr/local/bin/tofu"
@@ -26,84 +44,15 @@ remote_state {
 }
 
 generate "provider" {
-  path      = "grunt_providers.tf"
-  if_exists = "overwrite"
-  contents  = <<EOF
-        %{if contains(local.providers, "aws")}
-        provider "aws" {
-            region = "ca-central-1"
-        }
-        %{endif}
-        %{if contains(local.providers, "kubernetes")}
-        provider "kubernetes" {
-            config_path = "${local.kubeconfig_file}"
-        }
-        %{endif}
-        %{if contains(local.providers, "hcp")}
-        provider "hcp" {
-            client_id     = data.aws_ssm_parameter.vault_client_id.value
-            client_secret = data.aws_ssm_parameter.vault_client_secret.value
-        }
-        %{endif}
-        %{if contains(local.providers, "helm")}
-        provider "helm" {
-            kubernetes {
-                config_path = "${local.kubeconfig_file}"
-            }
-        }
-        %{endif}
-        %{if contains(local.providers, "vault")}
-        provider "vault" {
-            token   = data.hcp_vault_secrets_secret.vault_root.secret_value
-            address = "http://localhost:8200"
-        }
-        %{endif}
-        %{if contains(local.providers, "talos")}
-        provider "talos" {}
-        %{endif}
-    EOF
+  path              = "grunt_providers.tf.json"
+  if_exists         = "overwrite"
+  disable_signature = true
+  contents          = jsonencode(local.filtered_providers)
 }
 
 generate "versions" {
-  path      = "grunt_versions.tf"
-  if_exists = "overwrite_terragrunt"
-  contents  = <<EOF
-    terraform {
-        required_providers {
-            aws = {
-            source  = "hashicorp/aws"
-            version = "~> 4.20.1"
-            }
-            hcp = {
-            version = "~> 0.75.0"
-            source  = "hashicorp/hcp"
-            }
-            helm = {
-            version = "~> 2.10.1"
-            source  = "hashicorp/helm"
-            }
-            kubernetes = {
-            version = "~> 2.23.0"
-            source  = "hashicorp/kubernetes"
-            }
-            null = {
-            source  = "hashicorp/null"
-            version = "~> 3.2.1"
-            }
-            %{if contains(local.providers, "vault")}
-            vault = {
-                source  = "hashicorp/vault"
-                version = "~> 3.21.0"
-            }
-            %{endif}
-            %{if contains(local.providers, "talos")}
-            talos = {
-                source  = "siderolabs/talos"
-                version = "0.3.4"
-            }            
-            %{endif}
-        }
-        required_version = ">= 1.2.2"
-    }
-    EOF
+  path              = "grunt_versions.tf.json"
+  if_exists         = "overwrite"
+  disable_signature = true
+  contents          = jsonencode(local.filtered_versions)
 }

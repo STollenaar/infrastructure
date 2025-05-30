@@ -1,3 +1,3 @@
 locals {
-  providers = ["aws", "hcp"]
+  providers = ["aws"]
 }
