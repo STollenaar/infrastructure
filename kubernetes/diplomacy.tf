@@ -180,7 +180,7 @@ resource "kubernetes_config_map" "diplomacy_frontend" {
 
 resource "kubernetes_manifest" "diplomacy_vault_backend" {
   manifest = {
-    apiVersion = "external-secrets.io/v1beta1"
+    apiVersion = "external-secrets.io/v1"
     kind       = "SecretStore"
     metadata = {
       name      = "vault-backend"
@@ -206,7 +206,7 @@ resource "kubernetes_manifest" "diplomacy_vault_backend" {
 
 resource "kubernetes_manifest" "diplomacy_external_secret" {
   manifest = {
-    apiVersion = "external-secrets.io/v1beta1"
+    apiVersion = "external-secrets.io/v1"
     kind       = "ExternalSecret"
     metadata = {
       name      = "ecr-auth"

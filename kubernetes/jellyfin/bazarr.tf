@@ -78,6 +78,9 @@ resource "kubernetes_deployment" "bazarr" {
       }
     }
   }
+  lifecycle {
+    ignore_changes = [spec.0.replicas]
+  }
 }
 
 resource "kubernetes_config_map" "bazarr_env" {

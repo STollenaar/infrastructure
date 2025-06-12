@@ -282,7 +282,7 @@ resource "hcp_vault_secrets_app" "proxmox_vault" {
 
 resource "kubernetes_manifest" "vault_backend" {
   manifest = {
-    apiVersion = "external-secrets.io/v1beta1"
+    apiVersion = "external-secrets.io/v1"
     kind       = "SecretStore"
     metadata = {
       name      = "vault-backend"
@@ -308,7 +308,7 @@ resource "kubernetes_manifest" "vault_backend" {
 
 resource "kubernetes_manifest" "external_secret" {
   manifest = {
-    apiVersion = "external-secrets.io/v1beta1"
+    apiVersion = "external-secrets.io/v1"
     kind       = "ExternalSecret"
     metadata = {
       name      = "vault-ecr"
@@ -331,7 +331,7 @@ resource "kubernetes_manifest" "external_secret" {
         {
           secretKey = ".dockerconfigjson"
           remoteRef = {
-            key      = "vault-ecr"
+            key      = "ecr-auth"
             property = ".dockerconfigjson"
           }
         }

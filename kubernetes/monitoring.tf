@@ -50,29 +50,9 @@ resource "helm_release" "prometheus_operator" {
 
   values = [
     templatefile("${path.module}/conf/prometheus-operator-values.yaml",
-      {
-        # purpose = "prod",
-        # grafana_role               = var.cluster_admin_iam.grafana.arn,
-        # monitoring_namespace = kubernetes_namespace.monitoring.metadata.0.name,
-    })
+    {})
   ]
 }
-
-# resource "helm_release" "prometheus-adapter" {
-#   name       = "prometheus-adapter"
-#   depends_on = [helm_release.cert_manager]
-
-#   chart         = "prometheus-adapter"
-#   repository    = "https://prometheus-community.github.io/helm-charts"
-#   version       = "4.1.1"
-#   namespace     = kubernetes_namespace.monitoring.metadata.0.name
-#   wait          = false
-#   recreate_pods = true
-#   max_history   = 50
-
-
-#   values = [file("${path.module}/conf/prometheus-adapter-values.yaml")]
-# }
 
 resource "helm_release" "nvidia_gpu_exporter" {
   name       = "nvidia-gpu-exporter"
@@ -97,7 +77,7 @@ EOF
 
 resource "kubernetes_manifest" "monitoring_vault_backend" {
   manifest = {
-    apiVersion = "external-secrets.io/v1beta1"
+    apiVersion = "external-secrets.io/v1"
     kind       = "SecretStore"
     metadata = {
       name      = "vault-backend"
@@ -123,7 +103,7 @@ resource "kubernetes_manifest" "monitoring_vault_backend" {
 
 resource "kubernetes_manifest" "monitoring_external_secret" {
   manifest = {
-    apiVersion = "external-secrets.io/v1beta1"
+    apiVersion = "external-secrets.io/v1"
     kind       = "ExternalSecret"
     metadata = {
       name      = "ecr-auth"
@@ -157,13 +137,24 @@ resource "kubernetes_manifest" "monitoring_external_secret" {
 
 resource "kubernetes_config_map_v1" "nvidia_gpu_exporter_dashboard" {
   metadata {
-    name = "nvidia-gpu-exporter-dashboard"
+    name      = "nvidia-gpu-exporter-dashboard"
     namespace = kubernetes_namespace.monitoring.metadata.0.name
     labels = {
-        grafana_dashboard = "1"
+      grafana_dashboard = "1"
     }
   }
   data = {
     "nvidia-gpu-exporter.json" = file("${path.module}/conf/grafana/nvidia-gpu-exporter.json")
   }
+}
+
+resource "helm_release" "loki" {
+  name      = "loki"
+  namespace = kubernetes_namespace.monitoring.metadata.0.name
+
+  repository = "https://grafana.github.io/helm-charts"
+  chart      = "loki"
+  version    = "6.30.1"
+
+  values = [templatefile("${path.module}/conf/loki-values.yaml", {})]
 }
