@@ -20,6 +20,9 @@
                 "terraform",
                 "terragrunt"
             ],
+            "ignorePaths": [
+                "**/grunt_*"
+            ],
             "matchPackagePatterns": [
                 ".*"
             ],
