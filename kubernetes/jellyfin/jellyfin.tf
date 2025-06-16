@@ -57,6 +57,7 @@ resource "kubernetes_deployment" "jellyfin" {
         security_context {
           fs_group = 1000
         }
+        runtime_class_name = "nvidia"
         container {
           image = "lscr.io/linuxserver/jellyfin:10.10.3"
           name  = "jellyfin"

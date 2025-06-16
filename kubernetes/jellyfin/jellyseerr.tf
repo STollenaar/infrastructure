@@ -103,9 +103,9 @@ resource "kubernetes_service" "jellyseerr" {
 }
 
 
-resource "kubernetes_ingress_v1" "jellyseer" {
+resource "kubernetes_ingress_v1" "jellyseerr" {
   metadata {
-    name      = "jellyseer"
+    name      = "jellyseerr"
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
 
     annotations = {
@@ -116,7 +116,7 @@ resource "kubernetes_ingress_v1" "jellyseer" {
   spec {
     ingress_class_name = "nginx"
     rule {
-      host = "jellyseer.home.spicedelver.me"
+      host = "jellyseerr.home.spicedelver.me"
       http {
         path {
           path = "/"
@@ -133,9 +133,46 @@ resource "kubernetes_ingress_v1" "jellyseer" {
     }
     tls {
       hosts = [
-        "jellyseer.home.spicedelver.me"
+        "jellyseerr.home.spicedelver.me"
       ]
-      secret_name = "jellyseer-tls"
+      secret_name = "jellyseerr-tls"
+    }
+  }
+}
+
+resource "kubernetes_ingress_v1" "jellyseer_public" {
+  metadata {
+    name      = "jellyseerr-public"
+    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+
+    annotations = {
+      "kubernetes.io/ingress.class"    = "nginx"
+      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+    }
+  }
+  spec {
+    ingress_class_name = "nginx"
+    rule {
+      host = "jellyseerr.spicedelver.me"
+      http {
+        path {
+          path = "/"
+          backend {
+            service {
+              name = kubernetes_service.jellyseerr.metadata.0.name
+              port {
+                number = 5055
+              }
+            }
+          }
+        }
+      }
+    }
+    tls {
+      hosts = [
+        "jellyseerr.spicedelver.me"
+      ]
+      secret_name = "jellyseerr-public-tls"
     }
   }
 }
@@ -153,7 +190,7 @@ resource "kubernetes_config_map" "jellyseerr" {
 
 resource "kubernetes_config_map" "jellyseer_restore_db" {
   metadata {
-    name      = "jellyseer-restore-db"
+    name      = "jellyseerr-restore-db"
     namespace = kubernetes_namespace.jellyfin.metadata.0.name
   }
   data = {
