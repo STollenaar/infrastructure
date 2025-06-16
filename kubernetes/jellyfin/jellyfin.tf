@@ -66,6 +66,10 @@ resource "kubernetes_deployment" "jellyfin" {
               name = kubernetes_config_map.jellyfin_env.metadata.0.name
             }
           }
+          env {
+            name = "NVIDIA_VISIBLE_DEVICES"
+            value = "all"
+          }
           port {
             name           = "web"
             container_port = 8096
