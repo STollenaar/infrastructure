@@ -16,7 +16,7 @@ resource "helm_release" "vault_secrets_operator" {
 
 resource "helm_release" "external_secrets" {
   name       = "external-secrets"
-  version    = "0.17.0"
+  version    = "0.18.0"
   namespace  = kubernetes_namespace.vault.metadata.0.name
   repository = "https://charts.external-secrets.io"
   chart      = "external-secrets"
