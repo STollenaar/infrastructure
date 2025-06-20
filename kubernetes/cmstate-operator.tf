@@ -21,7 +21,7 @@ resource "kubernetes_labels" "kube_system_label" {
 resource "helm_release" "cmstate_operator" {
   depends_on = [kubernetes_manifest.cert_certificate, kubernetes_manifest.cm_vault_template]
   name       = "cmstate-operator"
-  version    = "0.4.0"
+  version    = "0.5.0"
   namespace  = kubernetes_namespace.cmstate_operator.metadata.0.name
   repository = "https://stollenaar.github.io/cmstate-injector-operator"
   chart      = "cmstate-operator"

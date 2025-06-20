@@ -21,7 +21,7 @@ service:
 replicaCount: 1
 image:
   repository: public.ecr.aws/x4a1o1q2/cmstate-operator
-  tag: cmstate-operator-0.3.0
+  tag: cmstate-operator-0.5.0
   pullPolicy: IfNotPresent
 
 nameOverride: ""
