@@ -5,3 +5,7 @@ resource "aws_ecr_repository" "discord_bots" {
 resource "aws_ecr_repository" "diplomacy" {
   name = "diplomacy"
 }
+
+resource "aws_ecr_repository" "renovate" {
+  name = "renovate"
+}
