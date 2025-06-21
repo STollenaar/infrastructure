@@ -5,10 +5,6 @@
                 "source": "hashicorp/aws",
                 "version": "~> 4.20.1"
             },
-            "hcp": {
-                "source": "hashicorp/hcp",
-                "version": "~> 0.75.0"
-            },
             "helm": {
                 "source": "hashicorp/helm",
                 "version": "~> 2.10.1"

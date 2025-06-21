@@ -76,7 +76,7 @@ injector:
   # required.
   agentImage:
     repository: "hashicorp/vault"
-    tag: "1.19.0"
+    tag: "${vault_image_version}"
 
   # The default values for the injected Vault Agent containers.
   agentDefaults:

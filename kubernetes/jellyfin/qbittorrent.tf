@@ -70,7 +70,7 @@ resource "kubernetes_deployment" "qbittorrent" {
           }
           env_from {
             secret_ref {
-              name = kubernetes_manifest.surfshark_openvpn_credentials.manifest.spec.destination.name
+              name = kubernetes_secret.surfshark.metadata.0.name
             }
           }
           env {
@@ -279,5 +279,18 @@ resource "kubernetes_ingress_v1" "qbittorrent" {
       ]
       secret_name = "qbittorrent-tls"
     }
+  }
+}
+
+resource "kubernetes_secret" "surfshark" {
+  metadata {
+    name      = "surfshark-openvpn"
+    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+  }
+  data = {
+    OPENVPN_PASSWORD      = data.aws_ssm_parameter.surfshark_openvpn_password.value
+    OPENVPN_USER          = data.aws_ssm_parameter.surfshark_openvpn_user.value
+    WIREGUARD_PRIVATE_KEY = data.aws_ssm_parameter.surfshark_wireguard_private_key.value
+    WIREGUARD_PUBLIC      = data.aws_ssm_parameter.surfshark_wireguard_public_key.value
   }
 }

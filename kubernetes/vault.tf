@@ -1,17 +1,11 @@
+locals {
+    vault_image_version = "1.19.0"
+}
+
 resource "kubernetes_namespace" "vault" {
   metadata {
     name = "vault"
   }
-}
-
-resource "helm_release" "vault_secrets_operator" {
-  name       = "vault-secrets-operator"     
-  version    = "0.10.0"
-  namespace  = kubernetes_namespace.vault.metadata.0.name
-  repository = "https://helm.releases.hashicorp.com"
-  chart      = "vault-secrets-operator"
-
-  values = [file("${path.module}/conf/vault-secrets-operator-values.yaml")]
 }
 
 resource "helm_release" "external_secrets" {
@@ -20,38 +14,6 @@ resource "helm_release" "external_secrets" {
   namespace  = kubernetes_namespace.vault.metadata.0.name
   repository = "https://charts.external-secrets.io"
   chart      = "external-secrets"
-}
-
-## For syncing secrets from hcp vault secrets:
-resource "kubernetes_secret" "vault_auth" {
-  metadata {
-    name      = "default"
-    namespace = kubernetes_namespace.vault.metadata.0.name
-  }
-  data = {
-    clientID     = data.aws_ssm_parameter.vault_client_id.value
-    clientSecret = data.aws_ssm_parameter.vault_client_secret.value
-  }
-}
-
-resource "kubernetes_manifest" "hcp_vault_auth" {
-  depends_on = [helm_release.vault_secrets_operator]
-  manifest = {
-    apiVersion = "secrets.hashicorp.com/v1beta1"
-    kind       = "HCPAuth"
-    metadata = {
-      name      = "default"
-      namespace = kubernetes_namespace.vault.metadata.0.name
-    }
-    spec = {
-      allowedNamespaces = ["*"]
-      organizationID    = hcp_vault_secrets_app.proxmox_vault.organization_id
-      projectID         = hcp_vault_secrets_app.proxmox_vault.project_id
-      servicePrincipal = {
-        secretRef = kubernetes_secret.vault_auth.metadata.0.name
-      }
-    }
-  }
 }
 
 resource "kubernetes_secret" "vault_unseal_user" {
@@ -76,6 +38,7 @@ resource "helm_release" "vault" {
     kms_key_id          = aws_kms_key.vault.key_id,
     vault_unseal_secret = kubernetes_secret.vault_unseal_user.metadata.0.name
     storage_class       = "nfs-csi-main"
+    vault_image_version = local.vault_image_version
   })]
 }
 
@@ -99,7 +62,7 @@ resource "kubernetes_job_v1" "vault_init" {
       spec {
         container {
           name    = "vault-init"
-          image   = "hashicorp/vault:1.16.1"
+          image   = "hashicorp/vault:${local.vault_image_version}"
           command = ["sh", "-c", file("${path.module}/conf/vault-init.sh")]
           env {
             name  = "VAULT_ENDPOINT"
@@ -110,32 +73,20 @@ resource "kubernetes_job_v1" "vault_init" {
             value = "8200"
           }
           env {
-            name  = "HCP_APP_NAME"
-            value = hcp_vault_secrets_app.proxmox_vault.app_name
-          }
-          env {
-            name  = "HCP_ORG_ID"
-            value = hcp_vault_secrets_app.proxmox_vault.organization_id
-          }
-          env {
-            name  = "HCP_PROJECT_ID"
-            value = hcp_vault_secrets_app.proxmox_vault.project_id
-          }
-          env {
-            name = "HCP_CLIENT_ID"
+            name = "AWS_ACCESS_KEY_ID"
             value_from {
               secret_key_ref {
-                key  = "clientID"
-                name = kubernetes_secret.vault_auth.metadata.0.name
+                key  = "AWS_ACCESS_KEY_ID"
+                name = kubernetes_secret.vault_unseal_user.metadata.0.name
               }
             }
           }
           env {
-            name = "HCP_CLIENT_SECRET"
+            name = "AWS_SECRET_ACCESS_KEY"
             value_from {
               secret_key_ref {
-                key  = "clientSecret"
-                name = kubernetes_secret.vault_auth.metadata.0.name
+                key  = "AWS_SECRET_ACCESS_KEY"
+                name = kubernetes_secret.vault_unseal_user.metadata.0.name
               }
             }
           }
@@ -273,11 +224,6 @@ resource "kubernetes_cluster_role_binding" "vault-token-creator-binding" {
     name      = "vault"
     namespace = kubernetes_namespace.vault.metadata.0.name
   }
-}
-
-resource "hcp_vault_secrets_app" "proxmox_vault" {
-  app_name    = "proxmox"
-  description = "Proxmox hosted Vault tokens"
 }
 
 resource "kubernetes_manifest" "vault_backend" {

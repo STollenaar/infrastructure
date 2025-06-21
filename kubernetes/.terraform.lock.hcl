@@ -19,24 +19,6 @@ provider "registry.opentofu.org/hashicorp/aws" {
   ]
 }
 
-provider "registry.opentofu.org/hashicorp/hcp" {
-  version     = "0.75.0"
-  constraints = "~> 0.75.0"
-  hashes = [
-    "h1:DQ9fJMn2DoZWPRJpHuHn+1V9y1ApJdePfQV6vEG52pc=",
-    "zh:5031a90d50223daca79e549f60b8720924de411bc16e8182a5f8b053134c625b",
-    "zh:78d96264563e1691b0397e0874c9b00d576e3563ddf6cefaa6fa4d9763df5b7c",
-    "zh:7a1db09a779439af4e373da5a242b485268aa30b9ceb187bea475c41e4447e2c",
-    "zh:81aefc4881dcad3e74d7ccbdef32707f0869c86c94677ad1d29772767426228b",
-    "zh:93f16bdf383b6dfa515e5784c17687bf412db862439dbddbf362fc1d32ffe23f",
-    "zh:b0ae9a7c5706491f93d64f43486664f53cb4d4d910e67a926498da63a99ba611",
-    "zh:b9a9ec7379e7c3197b5bffbcb8ca1f64e2ffeb37a1bc44bf33862ce8e7d6e632",
-    "zh:b9ccbe9a5726753f232c6b9df1b4f5f56a4b9e5cbf3e5f08826cdb1ea4ae2c58",
-    "zh:c44ece92f54c1a6a6e4c7ff96790da831c07322ced75a721d475c1284b9e4c37",
-    "zh:fb1e01f47faa1708639b2957fbc154574fc06fe4a787c1fe58b5552c29ee2e15",
-  ]
-}
-
 provider "registry.opentofu.org/hashicorp/helm" {
   version     = "2.10.1"
   constraints = "~> 2.10.1"

@@ -6,6 +6,14 @@ data "aws_ssm_parameter" "vault_client_secret" {
   name = "/vault/serviceprincipals/talos/client_secret"
 }
 
+data "aws_ssm_parameter" "tailscale_client_id" {
+  name = "/tailscale/client/id"
+}
+
+data "aws_ssm_parameter" "tailscale_client_secret" {
+  name = "/tailscale/client/secret"
+}
+
 data "aws_ssm_parameter" "github_arc_token" {
   name = "/github/github_arc"
 }
@@ -20,6 +28,10 @@ data "aws_ssm_parameter" "vault_user_secret_access_key" {
 
 data "aws_ssm_parameter" "route53_user_access_key" {
   name = "/iam/route53_user/access_key"
+}
+
+data "aws_ssm_parameter" "github_renovate" {
+    name = "/github/renovate"
 }
 
 data "aws_ssm_parameter" "route53_user_secret_access_key" {
@@ -38,6 +50,6 @@ data "terraform_remote_state" "aws_iam" {
 }
 
 data "aws_ssm_parameter" "diplomacy_auth" {
-  name = "/diplomacy/password"
+  name            = "/diplomacy/password"
   with_decryption = true
 }

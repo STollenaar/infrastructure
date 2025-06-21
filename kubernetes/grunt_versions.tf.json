@@ -1,1 +1,1 @@
-{"terraform":{"required_providers":{"aws":{"source":"hashicorp/aws","version":"~\u003e 4.20.1"},"hcp":{"source":"hashicorp/hcp","version":"~\u003e 0.75.0"},"helm":{"source":"hashicorp/helm","version":"~\u003e 2.10.1"},"kubernetes":{"source":"hashicorp/kubernetes","version":"~\u003e 2.23.0"}}}}
+{"terraform":{"required_providers":{"aws":{"source":"hashicorp/aws","version":"~\u003e 4.20.1"},"helm":{"source":"hashicorp/helm","version":"~\u003e 2.10.1"},"kubernetes":{"source":"hashicorp/kubernetes","version":"~\u003e 2.23.0"}}}}
