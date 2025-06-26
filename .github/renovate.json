@@ -26,19 +26,13 @@
             "matchPackagePatterns": [
                 ".*"
             ],
-            "groupName": "terraform providers",
-            "schedule": [
-                "before 6am on Thursday"
-            ]
+            "groupName": "terraform providers"
         },
         {
             "matchDatasources": [
                 "helm"
             ],
-            "groupName": "helm charts",
-            "schedule": [
-                "before 6am on Thursday"
-            ]
+            "groupName": "helm charts"
         },
         {
             "matchManagers": [
