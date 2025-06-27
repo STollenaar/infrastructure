@@ -23,10 +23,10 @@
             "ignorePaths": [
                 "**/grunt_*"
             ],
-            "matchPackagePatterns": [
-                ".*"
-            ],
-            "groupName": "terraform providers"
+            "groupName": "terraform providers",
+            "matchPackageNames": [
+                "/.*/"
+            ]
         },
         {
             "matchDatasources": [
