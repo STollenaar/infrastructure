@@ -7,7 +7,7 @@ resource "kubernetes_namespace" "ollama" {
 resource "kubernetes_persistent_volume_claim" "ollama_pvc" {
   metadata {
     name      = "ollama-cache"
-    namespace = kubernetes_namespace.ollama.metadata.0.name
+    namespace = kubernetes_namespace.ollama.id
   }
 
   spec {
@@ -23,7 +23,7 @@ resource "kubernetes_persistent_volume_claim" "ollama_pvc" {
 resource "kubernetes_deployment" "ollama" {
   metadata {
     name      = "ollama"
-    namespace = kubernetes_namespace.ollama.metadata.0.name
+    namespace = kubernetes_namespace.ollama.id
     labels = {
       app = "ollama"
     }
@@ -92,7 +92,7 @@ resource "kubernetes_job" "ollama_model_creation" {
 
   metadata {
     name = "ollama-model-creation"
-    namespace = kubernetes_namespace.ollama.metadata.0.name
+    namespace = kubernetes_namespace.ollama.id
   }
 
   spec {
@@ -125,7 +125,7 @@ resource "kubernetes_job" "ollama_model_creation" {
 
           env {
             name  = "OLLAMA_HOST"
-            value = "${kubernetes_service.ollama.metadata.0.name}.${kubernetes_namespace.ollama.metadata.0.name}:11434"
+            value = "${kubernetes_service.ollama.metadata.0.name}.${kubernetes_namespace.ollama.id}:11434"
           }
 
           volume_mount {
@@ -152,7 +152,7 @@ resource "kubernetes_job" "ollama_model_creation" {
 resource "kubernetes_config_map" "ollama_models" {
   metadata {
     name      = "ollama-models"
-    namespace = kubernetes_namespace.ollama.metadata.0.name
+    namespace = kubernetes_namespace.ollama.id
   }
   data = { for f in fileset("${path.module}/conf/ollama", "*") : f => file("${path.module}/conf/ollama/${f}") }
 }
@@ -160,7 +160,7 @@ resource "kubernetes_config_map" "ollama_models" {
 resource "kubernetes_service" "ollama" {
   metadata {
     name      = "ollama"
-    namespace = kubernetes_namespace.ollama.metadata.0.name
+    namespace = kubernetes_namespace.ollama.id
   }
 
   spec {

@@ -6,7 +6,7 @@ resource "kubernetes_namespace_v1" "renovate" {
 resource "kubernetes_config_map" "renovate_config" {
   metadata {
     name      = "renovate-config"
-    namespace = kubernetes_namespace_v1.renovate.metadata.0.name
+    namespace = kubernetes_namespace_v1.renovate.id
   }
 
   data = {
@@ -20,7 +20,7 @@ resource "kubernetes_config_map" "renovate_config" {
 resource "kubernetes_secret" "github_renovate_token" {
   metadata {
     name      = "renovate"
-    namespace = kubernetes_namespace_v1.renovate.metadata.0.name
+    namespace = kubernetes_namespace_v1.renovate.id
   }
   data = {
     RENOVATE_TOKEN = data.aws_ssm_parameter.github_renovate.value
@@ -30,7 +30,7 @@ resource "kubernetes_secret" "github_renovate_token" {
 resource "kubernetes_cron_job_v1" "renovate_bot" {
   metadata {
     name      = "renovate-bot"
-    namespace = kubernetes_namespace_v1.renovate.metadata.0.name
+    namespace = kubernetes_namespace_v1.renovate.id
   }
 
   spec {
@@ -128,12 +128,12 @@ resource "kubernetes_manifest" "renovate_vault_backend" {
     kind       = "SecretStore"
     metadata = {
       name      = "vault-backend"
-      namespace = kubernetes_namespace_v1.renovate.metadata.0.name
+      namespace = kubernetes_namespace_v1.renovate.id
     }
     spec = {
       provider = {
         vault = {
-          server  = "http://vault.${kubernetes_namespace.vault.metadata.0.name}.svc.cluster.local:8200"
+          server  = "http://vault.${kubernetes_namespace.vault.id}.svc.cluster.local:8200"
           path    = "secret"
           version = "v2"
           auth = {
@@ -154,7 +154,7 @@ resource "kubernetes_manifest" "renovate_external_secret" {
     kind       = "ExternalSecret"
     metadata = {
       name      = "ecr-auth"
-      namespace = kubernetes_namespace_v1.renovate.metadata.0.name
+      namespace = kubernetes_namespace_v1.renovate.id
     }
     spec = {
       secretStoreRef = {

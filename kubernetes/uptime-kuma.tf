@@ -10,7 +10,7 @@ resource "kubernetes_namespace_v1" "uptime_kuma" {
 resource "kubernetes_deployment_v1" "uptime_kuma" {
   metadata {
     name      = "uptime-kuma"
-    namespace = kubernetes_namespace_v1.uptime_kuma.metadata.0.name
+    namespace = kubernetes_namespace_v1.uptime_kuma.id
     labels = {
       app = "uptime-kuma"
     }
@@ -54,7 +54,7 @@ resource "kubernetes_deployment_v1" "uptime_kuma" {
 resource "kubernetes_service_v1" "uptime_kuma" {
   metadata {
     name      = "uptime-kuma"
-    namespace = kubernetes_namespace_v1.uptime_kuma.metadata.0.name
+    namespace = kubernetes_namespace_v1.uptime_kuma.id
   }
   spec {
     selector = {
@@ -71,7 +71,7 @@ resource "kubernetes_service_v1" "uptime_kuma" {
 resource "kubernetes_persistent_volume_claim_v1" "uptime_kuma_pvc" {
   metadata {
     name      = "uptime-kuma-pvc"
-    namespace = kubernetes_namespace_v1.uptime_kuma.metadata.0.name
+    namespace = kubernetes_namespace_v1.uptime_kuma.id
   }
   spec {
     access_modes = ["ReadWriteOnce"]
@@ -86,7 +86,7 @@ resource "kubernetes_persistent_volume_claim_v1" "uptime_kuma_pvc" {
 resource "kubernetes_ingress_v1" "uptime_kuma_ingress" {
   metadata {
     name      = "uptime-kuma"
-    namespace = kubernetes_namespace_v1.uptime_kuma.metadata.0.name
+    namespace = kubernetes_namespace_v1.uptime_kuma.id
     annotations = {
       "kubernetes.io/ingress.class"    = "nginx"
       "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
@@ -124,7 +124,7 @@ resource "kubernetes_ingress_v1" "uptime_kuma_ingress" {
 resource "kubernetes_ingress_v1" "uptime_kuma_ingress_public" {
   metadata {
     name      = "uptime-kuma-public"
-    namespace = kubernetes_namespace_v1.uptime_kuma.metadata.0.name
+    namespace = kubernetes_namespace_v1.uptime_kuma.id
     annotations = {
       "kubernetes.io/ingress.class"    = "nginx"
       "cert-manager.io/cluster-issuer" = "letsencrypt-prod"

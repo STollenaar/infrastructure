@@ -2,7 +2,7 @@ resource "kubernetes_deployment" "sonarr" {
   depends_on = [kubernetes_job_v1.sonarr_init]
   metadata {
     name      = "sonarr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
     labels = {
       "app" = "sonarr"
     }
@@ -120,7 +120,7 @@ resource "kubernetes_deployment" "sonarr" {
 resource "kubernetes_persistent_volume_claim" "sonarr_data" {
   metadata {
     name      = "sonarr-data"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     storage_class_name = "nfs-csi-main"
@@ -136,7 +136,7 @@ resource "kubernetes_persistent_volume_claim" "sonarr_data" {
 resource "kubernetes_persistent_volume_claim" "sonarr_import" {
   metadata {
     name      = "sonarr-import"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
@@ -152,7 +152,7 @@ resource "kubernetes_persistent_volume_claim" "sonarr_import" {
 resource "kubernetes_service" "sonarr" {
   metadata {
     name      = "sonarr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     type = "ClusterIP"
@@ -171,7 +171,7 @@ resource "kubernetes_service" "sonarr" {
 resource "kubernetes_config_map" "sonarr_env" {
   metadata {
     name      = "sonarr-env"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   data = {
     "TZ"   = local.timezone
@@ -183,11 +183,11 @@ resource "kubernetes_config_map" "sonarr_env" {
 resource "kubernetes_config_map" "sonarr_cm" {
   metadata {
     name      = "sonarr-config"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   data = {
     "config.xml" = templatefile("${path.module}/conf/sonarr_config.xml", {
-      postgres_host = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local"
+      postgres_host = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local"
     })
   }
 }
@@ -197,7 +197,7 @@ resource "kubernetes_job_v1" "sonarr_init" {
   depends_on = [kubernetes_stateful_set_v1.postgres]
   metadata {
     name      = "sonarr-init"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
     labels = {
       "app" = "sonarr"
     }
@@ -216,7 +216,7 @@ resource "kubernetes_job_v1" "sonarr_init" {
           command = ["createdb"]
           args = [
             "-h",
-            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local",
+            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local",
             "-U",
             "admin",
             "sonarr-main"
@@ -233,7 +233,7 @@ resource "kubernetes_job_v1" "sonarr_init" {
           command = ["createdb"]
           args = [
             "-h",
-            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local",
+            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local",
             "-U",
             "admin",
             "sonarr-logs"
@@ -253,7 +253,7 @@ resource "kubernetes_job_v1" "sonarr_init" {
 resource "kubernetes_ingress_v1" "sonarr" {
   metadata {
     name      = "sonarr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
 
     annotations = {
       "kubernetes.io/ingress.class"    = "nginx"

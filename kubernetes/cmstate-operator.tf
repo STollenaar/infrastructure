@@ -22,12 +22,12 @@ resource "helm_release" "cmstate_operator" {
   depends_on = [kubernetes_manifest.cert_certificate, kubernetes_manifest.cm_vault_template]
   name       = "cmstate-operator"
   version    = "0.5.0"
-  namespace  = kubernetes_namespace.cmstate_operator.metadata.0.name
+  namespace  = kubernetes_namespace.cmstate_operator.id
   repository = "https://stollenaar.github.io/cmstate-injector-operator"
   chart      = "cmstate-operator"
 
   values = [templatefile("${path.module}/conf/cmstate-operator-values.yaml", {
-    ca_secret   = "${kubernetes_namespace.cmstate_operator.metadata.0.name}/${kubernetes_secret_v1.vault_cert_issuer.metadata.0.name}"
+    ca_secret   = "${kubernetes_namespace.cmstate_operator.id}/${kubernetes_secret_v1.vault_cert_issuer.metadata.0.name}"
     cert_secret = kubernetes_secret_v1.vault_cert_issuer.metadata.0.name
   })]
 }
@@ -35,7 +35,7 @@ resource "helm_release" "cmstate_operator" {
 resource "kubernetes_secret_v1" "vault_cert_issuer" {
   metadata {
     name      = "cmstates-webhook-cert"
-    namespace = kubernetes_namespace.cmstate_operator.metadata.0.name
+    namespace = kubernetes_namespace.cmstate_operator.id
     annotations = {
       "cert-manager.io/allow-direct-injection" = "true"
     }
@@ -57,7 +57,7 @@ resource "kubernetes_manifest" "cert_certificate" {
     kind       = "Certificate"
     metadata = {
       name      = "cmstates-webhook-cert"
-      namespace = kubernetes_namespace.cmstate_operator.metadata.0.name
+      namespace = kubernetes_namespace.cmstate_operator.id
     }
     spec = {
       secretName = kubernetes_secret_v1.vault_cert_issuer.metadata.0.name
@@ -66,11 +66,11 @@ resource "kubernetes_manifest" "cert_certificate" {
         name = kubernetes_manifest.vault_cluster_issuer.manifest.metadata.name
       }
       dnsNames = [
-        "cmstate-operator-service.${kubernetes_namespace.cmstate_operator.metadata.0.name}.svc",
-        "cmstate-operator-service.${kubernetes_namespace.cmstate_operator.metadata.0.name}.svc.cluster.local",
+        "cmstate-operator-service.${kubernetes_namespace.cmstate_operator.id}.svc",
+        "cmstate-operator-service.${kubernetes_namespace.cmstate_operator.id}.svc.cluster.local",
       ]
 
-      commonName = "cmstate-operator-service.${kubernetes_namespace.cmstate_operator.metadata.0.name}.svc.cluster.local"
+      commonName = "cmstate-operator-service.${kubernetes_namespace.cmstate_operator.id}.svc.cluster.local"
       privateKey = {
         algorithm = "RSA"
         encoding  = "PKCS1"

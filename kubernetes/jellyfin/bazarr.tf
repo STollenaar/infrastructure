@@ -2,7 +2,7 @@
 resource "kubernetes_deployment" "bazarr" {
   metadata {
     name      = "bazarr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
     labels = {
       app = "bazarr"
     }
@@ -86,7 +86,7 @@ resource "kubernetes_deployment" "bazarr" {
 resource "kubernetes_config_map" "bazarr_env" {
   metadata {
     name      = "bazarr-env"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
 
   data = {
@@ -94,7 +94,7 @@ resource "kubernetes_config_map" "bazarr_env" {
     PGID              = "1000"
     TZ                = "UTC"
     POSTGRES_ENABLED  = "true"
-    POSTGRES_HOST     = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local"
+    POSTGRES_HOST     = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local"
     POSTGRES_PORT     = "5432"
     POSTGRES_DATABASE = "bazarr-main"
     POSTGRES_USERNAME = "admin"
@@ -107,7 +107,7 @@ resource "kubernetes_job_v1" "bazarr_init" {
   depends_on = [kubernetes_stateful_set_v1.postgres]
   metadata {
     name      = "bazarr-init"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
     labels = {
       "app" = "bazarr"
     }
@@ -126,7 +126,7 @@ resource "kubernetes_job_v1" "bazarr_init" {
           command = ["createdb"]
           args = [
             "-h",
-            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local",
+            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local",
             "-U",
             "admin",
             "bazarr-main"
@@ -145,7 +145,7 @@ resource "kubernetes_job_v1" "bazarr_init" {
 resource "kubernetes_persistent_volume_claim" "bazarr_config" {
   metadata {
     name      = "bazarr-config"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
 
   spec {
@@ -162,7 +162,7 @@ resource "kubernetes_persistent_volume_claim" "bazarr_config" {
 resource "kubernetes_service" "bazarr" {
   metadata {
     name      = "bazarr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
 
   spec {
@@ -181,7 +181,7 @@ resource "kubernetes_service" "bazarr" {
 resource "kubernetes_ingress_v1" "bazarr" {
   metadata {
     name      = "bazarr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
 
     annotations = {
       "kubernetes.io/ingress.class"    = "nginx"

@@ -2,7 +2,7 @@ resource "kubernetes_deployment" "prowlarr" {
   depends_on = [kubernetes_job_v1.prowlarr_init]
   metadata {
     name      = "prowlarr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
     labels = {
       "app" = "prowlarr"
     }
@@ -92,7 +92,7 @@ resource "kubernetes_deployment" "prowlarr" {
 resource "kubernetes_persistent_volume_claim" "prowlarr_data" {
   metadata {
     name      = "prowlarr-data"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     storage_class_name = "nfs-csi-main"
@@ -108,7 +108,7 @@ resource "kubernetes_persistent_volume_claim" "prowlarr_data" {
 resource "kubernetes_service" "prowlarr" {
   metadata {
     name      = "prowlarr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     type = "ClusterIP"
@@ -127,7 +127,7 @@ resource "kubernetes_service" "prowlarr" {
 resource "kubernetes_config_map" "prowlarr_env" {
   metadata {
     name      = "prowlarr-env"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   data = {
     "PUID" = 1000
@@ -139,11 +139,11 @@ resource "kubernetes_config_map" "prowlarr_env" {
 resource "kubernetes_config_map" "prowlarr_cm" {
   metadata {
     name      = "prowlarr-config"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   data = {
     "config.xml" = templatefile("${path.module}/conf/prowlarr_config.xml", {
-      postgres_host = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local"
+      postgres_host = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local"
     })
   }
 }
@@ -152,7 +152,7 @@ resource "kubernetes_job_v1" "prowlarr_init" {
   depends_on = [kubernetes_stateful_set_v1.postgres]
   metadata {
     name      = "prowlarr-init"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
     labels = {
       "app" = "prowlarr"
     }
@@ -171,7 +171,7 @@ resource "kubernetes_job_v1" "prowlarr_init" {
           command = ["createdb"]
           args = [
             "-h",
-            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local",
+            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local",
             "-U",
             "admin",
             "prowlarr-main"
@@ -188,7 +188,7 @@ resource "kubernetes_job_v1" "prowlarr_init" {
           command = ["createdb"]
           args = [
             "-h",
-            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local",
+            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local",
             "-U",
             "admin",
             "prowlarr-logs"
@@ -207,7 +207,7 @@ resource "kubernetes_job_v1" "prowlarr_init" {
 resource "kubernetes_ingress_v1" "prowlarr" {
   metadata {
     name      = "prowlarr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
 
     annotations = {
       "kubernetes.io/ingress.class"    = "nginx"

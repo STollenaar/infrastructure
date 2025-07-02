@@ -2,7 +2,7 @@ resource "kubernetes_deployment" "whisparr" {
   depends_on = [kubernetes_job_v1.whisparr_init]
   metadata {
     name      = "whisparr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
     labels = {
       "app" = "whisparr"
     }
@@ -121,7 +121,7 @@ resource "kubernetes_deployment" "whisparr" {
 resource "kubernetes_persistent_volume_claim" "whisparr_data" {
   metadata {
     name      = "whisparr-data"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     storage_class_name = "nfs-csi-main"
@@ -137,7 +137,7 @@ resource "kubernetes_persistent_volume_claim" "whisparr_data" {
 resource "kubernetes_persistent_volume_claim" "whisparr_import" {
   metadata {
     name      = "whisparr-import"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
@@ -153,7 +153,7 @@ resource "kubernetes_persistent_volume_claim" "whisparr_import" {
 resource "kubernetes_persistent_volume_claim" "whisparr_shows" {
   metadata {
     name      = "whisparr-shows"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
@@ -169,7 +169,7 @@ resource "kubernetes_persistent_volume_claim" "whisparr_shows" {
 resource "kubernetes_service" "whisparr" {
   metadata {
     name      = "whisparr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     type = "ClusterIP"
@@ -188,7 +188,7 @@ resource "kubernetes_service" "whisparr" {
 resource "kubernetes_config_map" "whisparr_env" {
   metadata {
     name      = "whisparr-env"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   data = {
     "TZ"   = local.timezone
@@ -200,11 +200,11 @@ resource "kubernetes_config_map" "whisparr_env" {
 resource "kubernetes_config_map" "whisparr_cm" {
   metadata {
     name      = "whisparr-config"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   data = {
     "config.xml" = templatefile("${path.module}/conf/whisparr_config.xml", {
-      postgres_host = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local"
+      postgres_host = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local"
     })
   }
 }
@@ -214,7 +214,7 @@ resource "kubernetes_job_v1" "whisparr_init" {
   depends_on = [kubernetes_stateful_set_v1.postgres]
   metadata {
     name      = "whisparr-init"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
     labels = {
       "app" = "whisparr"
     }
@@ -233,7 +233,7 @@ resource "kubernetes_job_v1" "whisparr_init" {
           command = ["createdb"]
           args = [
             "-h",
-            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local",
+            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local",
             "-U",
             "admin",
             "whisparr-main"
@@ -250,7 +250,7 @@ resource "kubernetes_job_v1" "whisparr_init" {
           command = ["createdb"]
           args = [
             "-h",
-            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local",
+            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local",
             "-U",
             "admin",
             "whisparr-logs"

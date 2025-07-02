@@ -10,8 +10,8 @@ resource "kubernetes_namespace" "vault" {
 
 resource "helm_release" "external_secrets" {
   name       = "external-secrets"
-  version    = "0.18.0"
-  namespace  = kubernetes_namespace.vault.metadata.0.name
+  version    = "0.18.1"
+  namespace  = kubernetes_namespace.vault.id
   repository = "https://charts.external-secrets.io"
   chart      = "external-secrets"
 }
@@ -19,7 +19,7 @@ resource "helm_release" "external_secrets" {
 resource "kubernetes_secret" "vault_unseal_user" {
   metadata {
     name      = "vault-unseal"
-    namespace = kubernetes_namespace.vault.metadata.0.name
+    namespace = kubernetes_namespace.vault.id
   }
   data = {
     AWS_ACCESS_KEY_ID     = data.aws_ssm_parameter.vault_user_access_key.value
@@ -30,7 +30,7 @@ resource "kubernetes_secret" "vault_unseal_user" {
 resource "helm_release" "vault" {
   name       = "vault"
   version    = "0.30.0"
-  namespace  = kubernetes_namespace.vault.metadata.0.name
+  namespace  = kubernetes_namespace.vault.id
   repository = "https://helm.releases.hashicorp.com"
   chart      = "vault"
 
@@ -46,7 +46,7 @@ resource "kubernetes_job_v1" "vault_init" {
   depends_on = [helm_release.vault]
   metadata {
     name      = "vault-init"
-    namespace = kubernetes_namespace.vault.metadata.0.name
+    namespace = kubernetes_namespace.vault.id
     labels = {
       app = "vault-init"
     }
@@ -66,7 +66,7 @@ resource "kubernetes_job_v1" "vault_init" {
           command = ["sh", "-c", file("${path.module}/conf/vault-init.sh")]
           env {
             name  = "VAULT_ENDPOINT"
-            value = "vault.${kubernetes_namespace.vault.metadata.0.name}.svc.cluster.local"
+            value = "vault.${kubernetes_namespace.vault.id}.svc.cluster.local"
           }
           env {
             name  = "VAULT_PORT"
@@ -113,14 +113,14 @@ resource "aws_kms_alias" "vault" {
 resource "kubernetes_service_account_v1" "internal_app_sa" {
   metadata {
     name      = "internal-app"
-    namespace = kubernetes_namespace.vault.metadata.0.name
+    namespace = kubernetes_namespace.vault.id
   }
 }
 
 resource "kubernetes_cron_job_v1" "vault_ecr_token" {
   metadata {
     name      = "vault-ecr-refresh"
-    namespace = kubernetes_namespace.vault.metadata.0.name
+    namespace = kubernetes_namespace.vault.id
   }
   spec {
     failed_jobs_history_limit     = 5
@@ -159,7 +159,7 @@ resource "kubernetes_cron_job_v1" "vault_ecr_token" {
               }
               env {
                 name  = "VAULT_ADDR"
-                value = "http://vault.${kubernetes_namespace.vault.metadata.0.name}.svc.cluster.local:8200"
+                value = "http://vault.${kubernetes_namespace.vault.id}.svc.cluster.local:8200"
               }
               env {
                 name  = "ECR_REPO"
@@ -222,7 +222,7 @@ resource "kubernetes_cluster_role_binding" "vault-token-creator-binding" {
   subject {
     kind      = "ServiceAccount"
     name      = "vault"
-    namespace = kubernetes_namespace.vault.metadata.0.name
+    namespace = kubernetes_namespace.vault.id
   }
 }
 
@@ -232,12 +232,12 @@ resource "kubernetes_manifest" "vault_backend" {
     kind       = "SecretStore"
     metadata = {
       name      = "vault-backend"
-      namespace = kubernetes_namespace.vault.metadata.0.name
+      namespace = kubernetes_namespace.vault.id
     }
     spec = {
       provider = {
         vault = {
-          server  = "http://vault.${kubernetes_namespace.vault.metadata.0.name}.svc.cluster.local:8200"
+          server  = "http://vault.${kubernetes_namespace.vault.id}.svc.cluster.local:8200"
           path    = "secret"
           version = "v2"
           auth = {
@@ -258,7 +258,7 @@ resource "kubernetes_manifest" "external_secret" {
     kind       = "ExternalSecret"
     metadata = {
       name      = "vault-ecr"
-      namespace = kubernetes_namespace.vault.metadata.0.name
+      namespace = kubernetes_namespace.vault.id
     }
     spec = {
       secretStoreRef = {

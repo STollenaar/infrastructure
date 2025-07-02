@@ -7,7 +7,7 @@ resource "kubernetes_namespace_v1" "diplomacy" {
 resource "kubernetes_deployment_v1" "diplomacy_frontend" {
   metadata {
     name      = "diplomacy-frontend"
-    namespace = kubernetes_namespace_v1.diplomacy.metadata.0.name
+    namespace = kubernetes_namespace_v1.diplomacy.id
     labels = {
       app = "diplomacy-frontend"
     }
@@ -59,7 +59,7 @@ resource "kubernetes_deployment_v1" "diplomacy_frontend" {
 resource "kubernetes_service_v1" "diplomacy_frontend" {
   metadata {
     name      = "diplomacy-frontend"
-    namespace = kubernetes_namespace_v1.diplomacy.metadata.0.name
+    namespace = kubernetes_namespace_v1.diplomacy.id
     labels = {
       app = "diplomacy-frontend"
     }
@@ -79,7 +79,7 @@ resource "kubernetes_service_v1" "diplomacy_frontend" {
 resource "kubernetes_deployment_v1" "diplomacy_backend" {
   metadata {
     name      = "diplomacy-backend"
-    namespace = kubernetes_namespace_v1.diplomacy.metadata.0.name
+    namespace = kubernetes_namespace_v1.diplomacy.id
     labels = {
       app = "diplomacy-backend"
     }
@@ -134,7 +134,7 @@ resource "kubernetes_deployment_v1" "diplomacy_backend" {
 resource "kubernetes_service_v1" "diplomacy_backend" {
   metadata {
     name      = "diplomacy-backend"
-    namespace = kubernetes_namespace_v1.diplomacy.metadata.0.name
+    namespace = kubernetes_namespace_v1.diplomacy.id
     labels = {
       app = "diplomacy-backend"
     }
@@ -154,7 +154,7 @@ resource "kubernetes_service_v1" "diplomacy_backend" {
 resource "kubernetes_persistent_volume_claim_v1" "diplomacy_database" {
   metadata {
     name      = "diplomacy-db"
-    namespace = kubernetes_namespace_v1.diplomacy.metadata.0.name
+    namespace = kubernetes_namespace_v1.diplomacy.id
   }
   spec {
     access_modes = ["ReadWriteOnce"]
@@ -169,11 +169,11 @@ resource "kubernetes_persistent_volume_claim_v1" "diplomacy_database" {
 resource "kubernetes_config_map" "diplomacy_frontend" {
   metadata {
     name      = "frontend"
-    namespace = kubernetes_namespace_v1.diplomacy.metadata.0.name
+    namespace = kubernetes_namespace_v1.diplomacy.id
   }
   data = {
     Caddyfile = templatefile("${path.module}/conf/diplomacy-frontend.Caddyfile", {
-      backend_url = "http://${kubernetes_service_v1.diplomacy_backend.metadata.0.name}.${kubernetes_namespace_v1.diplomacy.metadata.0.name}.svc.cluster.local:8080"
+      backend_url = "http://${kubernetes_service_v1.diplomacy_backend.metadata.0.name}.${kubernetes_namespace_v1.diplomacy.id}.svc.cluster.local:8080"
     })
   }
 }
@@ -184,12 +184,12 @@ resource "kubernetes_manifest" "diplomacy_vault_backend" {
     kind       = "SecretStore"
     metadata = {
       name      = "vault-backend"
-      namespace = kubernetes_namespace_v1.diplomacy.metadata.0.name
+      namespace = kubernetes_namespace_v1.diplomacy.id
     }
     spec = {
       provider = {
         vault = {
-          server  = "http://vault.${kubernetes_namespace.vault.metadata.0.name}.svc.cluster.local:8200"
+          server  = "http://vault.${kubernetes_namespace.vault.id}.svc.cluster.local:8200"
           path    = "secret"
           version = "v2"
           auth = {
@@ -210,7 +210,7 @@ resource "kubernetes_manifest" "diplomacy_external_secret" {
     kind       = "ExternalSecret"
     metadata = {
       name      = "ecr-auth"
-      namespace = kubernetes_namespace_v1.diplomacy.metadata.0.name
+      namespace = kubernetes_namespace_v1.diplomacy.id
     }
     spec = {
       secretStoreRef = {
@@ -241,7 +241,7 @@ resource "kubernetes_manifest" "diplomacy_external_secret" {
 resource "kubernetes_ingress_v1" "diplomacy" {
   metadata {
     name      = "diplomacy"
-    namespace = kubernetes_namespace_v1.diplomacy.metadata.0.name
+    namespace = kubernetes_namespace_v1.diplomacy.id
 
     annotations = {
       "kubernetes.io/ingress.class"    = "nginx"
@@ -278,7 +278,7 @@ resource "kubernetes_ingress_v1" "diplomacy" {
 resource "kubernetes_secret_v1" "diplomacy_basic_auth" {
   metadata {
     name      = "diplomacy-basic-auth"
-    namespace = kubernetes_namespace_v1.diplomacy.metadata.0.name
+    namespace = kubernetes_namespace_v1.diplomacy.id
   }
 
   data = {
@@ -292,7 +292,7 @@ resource "kubernetes_secret_v1" "diplomacy_basic_auth" {
 resource "kubernetes_ingress_v1" "diplomacy_ingress_public" {
   metadata {
     name      = "diplomacy-public"
-    namespace = kubernetes_namespace_v1.diplomacy.metadata.0.name
+    namespace = kubernetes_namespace_v1.diplomacy.id
     annotations = {
       "kubernetes.io/ingress.class"        = "nginx"
       "cert-manager.io/cluster-issuer"     = "letsencrypt-prod"

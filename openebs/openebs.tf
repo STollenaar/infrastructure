@@ -12,7 +12,7 @@ resource "kubernetes_namespace" "openebs" {
 # resource "helm_release" "openebs_jiva" {
 #   name       = "openebs"
 #   version    = "3.5.1"
-#   namespace  = kubernetes_namespace.openebs.metadata.0.name
+#   namespace  = kubernetes_namespace.openebs.id
 #   repository = "https://openebs-archive.github.io/jiva-operator"
 #   chart      = "jiva"
 
@@ -27,7 +27,7 @@ resource "kubernetes_namespace" "openebs" {
 #     openebs_hash = helm_release.openebs_jiva.metadata.0.revision
 #   }
 #   provisioner "local-exec" {
-#     command = "kubectl --kubeconfig=${var.kubeconfig_file} --namespace ${kubernetes_namespace.openebs.metadata.0.name} replace -f ${path.module}/conf/iscsiadm.yaml"
+#     command = "kubectl --kubeconfig=${var.kubeconfig_file} --namespace ${kubernetes_namespace.openebs.id} replace -f ${path.module}/conf/iscsiadm.yaml"
 #   }
 # }
 
@@ -37,6 +37,6 @@ resource "kubernetes_namespace" "openebs" {
 #     openebs_hash = helm_release.openebs_jiva.metadata.0.revision
 #   }
 #   provisioner "local-exec" {
-#     command = "kubectl --kubeconfig=${var.kubeconfig_file} --namespace ${kubernetes_namespace.openebs.metadata.0.name} patch daemonset openebs-jiva-csi-node --type=json --patch '[{\"op\": \"add\", \"path\": \"/spec/template/spec/hostPID\", \"value\": true}]'"
+#     command = "kubectl --kubeconfig=${var.kubeconfig_file} --namespace ${kubernetes_namespace.openebs.id} patch daemonset openebs-jiva-csi-node --type=json --patch '[{\"op\": \"add\", \"path\": \"/spec/template/spec/hostPID\", \"value\": true}]'"
 #   }
 # }
