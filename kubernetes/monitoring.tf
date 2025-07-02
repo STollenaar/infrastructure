@@ -42,8 +42,8 @@ resource "helm_release" "prometheus_operator" {
 
   chart       = "kube-prometheus-stack"
   repository  = "https://prometheus-community.github.io/helm-charts"
-  version     = "75.3.5"
-  namespace   = kubernetes_namespace.monitoring.metadata.0.name
+  version     = "75.7.0"
+  namespace   = kubernetes_namespace.monitoring.id
   timeout     = 300
   wait        = false
   max_history = 50
@@ -59,7 +59,7 @@ resource "helm_release" "nvidia_gpu_exporter" {
   repository = "https://utkuozdemir.org/helm-charts"
   chart      = "nvidia-gpu-exporter"
   version    = "1.0.0" # Update to the latest version if needed
-  namespace  = kubernetes_namespace.monitoring.metadata.0.name
+  namespace  = kubernetes_namespace.monitoring.id
 
   values = [<<EOF
 image:
@@ -81,12 +81,12 @@ resource "kubernetes_manifest" "monitoring_vault_backend" {
     kind       = "SecretStore"
     metadata = {
       name      = "vault-backend"
-      namespace = kubernetes_namespace.monitoring.metadata.0.name
+      namespace = kubernetes_namespace.monitoring.id
     }
     spec = {
       provider = {
         vault = {
-          server  = "http://vault.${kubernetes_namespace.vault.metadata.0.name}.svc.cluster.local:8200"
+          server  = "http://vault.${kubernetes_namespace.vault.id}.svc.cluster.local:8200"
           path    = "secret"
           version = "v2"
           auth = {
@@ -107,7 +107,7 @@ resource "kubernetes_manifest" "monitoring_external_secret" {
     kind       = "ExternalSecret"
     metadata = {
       name      = "ecr-auth"
-      namespace = kubernetes_namespace.monitoring.metadata.0.name
+      namespace = kubernetes_namespace.monitoring.id
     }
     spec = {
       secretStoreRef = {
@@ -138,7 +138,7 @@ resource "kubernetes_manifest" "monitoring_external_secret" {
 resource "kubernetes_config_map_v1" "nvidia_gpu_exporter_dashboard" {
   metadata {
     name      = "nvidia-gpu-exporter-dashboard"
-    namespace = kubernetes_namespace.monitoring.metadata.0.name
+    namespace = kubernetes_namespace.monitoring.id
     labels = {
       grafana_dashboard = "1"
     }
@@ -150,7 +150,7 @@ resource "kubernetes_config_map_v1" "nvidia_gpu_exporter_dashboard" {
 
 resource "helm_release" "loki" {
   name      = "loki"
-  namespace = kubernetes_namespace.monitoring.metadata.0.name
+  namespace = kubernetes_namespace.monitoring.id
 
   repository = "https://grafana.github.io/helm-charts"
   chart      = "loki"

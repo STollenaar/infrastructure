@@ -1,7 +1,7 @@
 resource "kubernetes_deployment" "jellyseerr" {
   metadata {
     name      = "jellyseerr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
     labels = {
       "app" = "jellyseerr"
     }
@@ -68,7 +68,7 @@ resource "kubernetes_deployment" "jellyseerr" {
 resource "kubernetes_persistent_volume_claim" "jellyseerr_data" {
   metadata {
     name      = "jellyseerr-data"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     storage_class_name = "nfs-csi-main"
@@ -84,7 +84,7 @@ resource "kubernetes_persistent_volume_claim" "jellyseerr_data" {
 resource "kubernetes_service" "jellyseerr" {
   metadata {
     name      = "jellyseerr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     type = "ClusterIP"
@@ -106,7 +106,7 @@ resource "kubernetes_service" "jellyseerr" {
 resource "kubernetes_ingress_v1" "jellyseerr" {
   metadata {
     name      = "jellyseerr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
 
     annotations = {
       "kubernetes.io/ingress.class"    = "nginx"
@@ -143,7 +143,7 @@ resource "kubernetes_ingress_v1" "jellyseerr" {
 resource "kubernetes_ingress_v1" "jellyseer_public" {
   metadata {
     name      = "jellyseerr-public"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
 
     annotations = {
       "kubernetes.io/ingress.class"    = "nginx"
@@ -180,7 +180,7 @@ resource "kubernetes_ingress_v1" "jellyseer_public" {
 resource "kubernetes_config_map" "jellyseerr" {
   metadata {
     name      = "jellyseerr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   data = {
     "LOG_LEVEL" = "debug"
@@ -191,7 +191,7 @@ resource "kubernetes_config_map" "jellyseerr" {
 resource "kubernetes_config_map" "jellyseer_restore_db" {
   metadata {
     name      = "jellyseerr-restore-db"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   data = {
     "settings.json" = file("${path.module}/conf/jellyseer_settings.json")

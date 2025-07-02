@@ -13,8 +13,8 @@ resource "kubernetes_namespace" "tailscale" {
 resource "helm_release" "tailscale" {
   depends_on = [kubernetes_secret.tailscale]
   name       = "tailscale"
-  version    = "1.84.2"
-  namespace  = kubernetes_namespace.tailscale.metadata.0.name
+  version    = "1.84.3"
+  namespace  = kubernetes_namespace.tailscale.id
   chart      = "tailscale-operator"
   repository = "https://pkgs.tailscale.com/helmcharts"
   values     = [file("${path.module}/conf/tailscale-values.yaml")]
@@ -24,7 +24,7 @@ resource "helm_release" "tailscale" {
 resource "kubernetes_secret" "vault_tailscale_auth" {
   metadata {
     name      = "vault-tailscale-auth"
-    namespace = kubernetes_namespace.tailscale.metadata.0.name
+    namespace = kubernetes_namespace.tailscale.id
   }
   data = {
     clientID     = data.aws_ssm_parameter.vault_client_id.value
@@ -35,7 +35,7 @@ resource "kubernetes_secret" "vault_tailscale_auth" {
 resource "kubernetes_secret" "tailscale" {
   metadata {
     name      = "operator-oauth"
-    namespace = kubernetes_namespace.tailscale.metadata.0.name
+    namespace = kubernetes_namespace.tailscale.id
   }
   data = {
     client_id     = data.aws_ssm_parameter.tailscale_client_id.value

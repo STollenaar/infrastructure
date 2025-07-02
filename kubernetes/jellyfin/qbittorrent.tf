@@ -2,7 +2,7 @@
 resource "kubernetes_deployment" "qbittorrent" {
   metadata {
     name      = "qbittorrent"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
     labels = {
       "app" = "qbittorrent"
     }
@@ -162,7 +162,7 @@ resource "kubernetes_deployment" "qbittorrent" {
 resource "kubernetes_service" "qbittorrent" {
   metadata {
     name      = "qbittorrent"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     type = "ClusterIP"
@@ -188,7 +188,7 @@ resource "kubernetes_service" "qbittorrent" {
 resource "kubernetes_service" "floodui" {
   metadata {
     name      = "floodui"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     type = "ClusterIP"
@@ -209,7 +209,7 @@ resource "kubernetes_service" "floodui" {
 resource "kubernetes_config_map" "qbittorrent_env" {
   metadata {
     name      = "qbittorrent-env"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   data = {
     "PUID"       = 1000
@@ -222,7 +222,7 @@ resource "kubernetes_config_map" "qbittorrent_env" {
 resource "kubernetes_config_map" "qbittorrent_cm" {
   metadata {
     name      = "qbittorrent-config"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   data = {
     "qBittorrent.conf" = file("${path.module}/conf/qbittorrent.conf")
@@ -232,7 +232,7 @@ resource "kubernetes_config_map" "qbittorrent_cm" {
 resource "kubernetes_persistent_volume_claim" "qbit_data" {
   metadata {
     name      = "qbit-config"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     storage_class_name = "nfs-csi-main"
@@ -248,7 +248,7 @@ resource "kubernetes_persistent_volume_claim" "qbit_data" {
 resource "kubernetes_ingress_v1" "qbittorrent" {
   metadata {
     name      = "qbittorrent"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
 
     annotations = {
       "kubernetes.io/ingress.class"    = "nginx"
@@ -285,7 +285,7 @@ resource "kubernetes_ingress_v1" "qbittorrent" {
 resource "kubernetes_secret" "surfshark" {
   metadata {
     name      = "surfshark-openvpn"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   data = {
     OPENVPN_PASSWORD      = data.aws_ssm_parameter.surfshark_openvpn_password.value
