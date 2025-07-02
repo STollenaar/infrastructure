@@ -1,6 +1,6 @@
 resource "helm_release" "csi_nfs" {
   name      = "csi-driver-nfs"
-  namespace = kubernetes_namespace.openebs.metadata.0.name
+  namespace = kubernetes_namespace.openebs.id
 
   repository = "https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts"
   chart      = "csi-driver-nfs"

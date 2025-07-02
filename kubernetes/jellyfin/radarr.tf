@@ -2,7 +2,7 @@ resource "kubernetes_deployment" "radarr" {
   depends_on = [kubernetes_job_v1.radarr_init]
   metadata {
     name      = "radarr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
     labels = {
       "app" = "radarr"
     }
@@ -123,7 +123,7 @@ resource "kubernetes_deployment" "radarr" {
 resource "kubernetes_persistent_volume_claim" "radarr_data" {
   metadata {
     name      = "radarr-data"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     storage_class_name = "nfs-csi-main"
@@ -139,7 +139,7 @@ resource "kubernetes_persistent_volume_claim" "radarr_data" {
 resource "kubernetes_persistent_volume_claim" "radarr_import" {
   metadata {
     name      = "radarr-import-movies"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
@@ -155,7 +155,7 @@ resource "kubernetes_persistent_volume_claim" "radarr_import" {
 resource "kubernetes_service" "radarr" {
   metadata {
     name      = "radarr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     type = "ClusterIP"
@@ -174,7 +174,7 @@ resource "kubernetes_service" "radarr" {
 resource "kubernetes_config_map" "radarr_env" {
   metadata {
     name      = "radarr-env"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   data = {
     "TZ"   = local.timezone
@@ -186,11 +186,11 @@ resource "kubernetes_config_map" "radarr_env" {
 resource "kubernetes_config_map" "radarr_cm" {
   metadata {
     name      = "radarr-config"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   data = {
     "config.xml" = templatefile("${path.module}/conf/radarr_config.xml", {
-      postgres_host = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local"
+      postgres_host = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local"
     })
   }
 }
@@ -200,7 +200,7 @@ resource "kubernetes_job_v1" "radarr_init" {
   depends_on = [kubernetes_stateful_set_v1.postgres]
   metadata {
     name      = "radarr-init"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
     labels = {
       "app" = "radarr"
     }
@@ -219,7 +219,7 @@ resource "kubernetes_job_v1" "radarr_init" {
           command = ["createdb"]
           args = [
             "-h",
-            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local",
+            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local",
             "-U",
             "admin",
             "radarr-main"
@@ -236,7 +236,7 @@ resource "kubernetes_job_v1" "radarr_init" {
           command = ["createdb"]
           args = [
             "-h",
-            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.metadata.0.name}.svc.cluster.local",
+            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local",
             "-U",
             "admin",
             "radarr-logs"
@@ -256,7 +256,7 @@ resource "kubernetes_job_v1" "radarr_init" {
 resource "kubernetes_ingress_v1" "radarr" {
   metadata {
     name      = "radarr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
 
     annotations = {
       "kubernetes.io/ingress.class"    = "nginx"

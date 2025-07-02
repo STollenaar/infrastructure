@@ -2,7 +2,7 @@
 resource "kubernetes_deployment" "flaresolverr" {
   metadata {
     name      = "flaresolverr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
     labels = {
       "app" = "flaresolverr"
     }
@@ -47,7 +47,7 @@ resource "kubernetes_deployment" "flaresolverr" {
 resource "kubernetes_service" "flaresolverr" {
   metadata {
     name      = "flaresolverr"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     type = "ClusterIP"

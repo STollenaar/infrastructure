@@ -16,7 +16,7 @@ resource "kubernetes_namespace" "jellyfin" {
 resource "kubernetes_deployment" "jellyfin" {
   metadata {
     name      = "jellyfin"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
     labels = {
       "app" = "jellyfin"
     }
@@ -134,7 +134,7 @@ resource "kubernetes_deployment" "jellyfin" {
 resource "kubernetes_persistent_volume_claim" "jellyfin_data" {
   metadata {
     name      = "jellyfin-data"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     storage_class_name = "nfs-csi-main"
@@ -150,7 +150,7 @@ resource "kubernetes_persistent_volume_claim" "jellyfin_data" {
 resource "kubernetes_persistent_volume_claim" "jellyfin_movies" {
   metadata {
     name      = "jellyfin-data-movies"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
@@ -166,7 +166,7 @@ resource "kubernetes_persistent_volume_claim" "jellyfin_movies" {
 resource "kubernetes_persistent_volume_claim" "jellyfin_shows" {
   metadata {
     name      = "jellyfin-data-shows"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
@@ -182,7 +182,7 @@ resource "kubernetes_persistent_volume_claim" "jellyfin_shows" {
 resource "kubernetes_service" "jellyfin_web" {
   metadata {
     name      = "jellyfin-web"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     type = "ClusterIP"
@@ -203,7 +203,7 @@ resource "kubernetes_service" "jellyfin_web" {
 resource "kubernetes_service" "jellyfin_discovery" {
   metadata {
     name      = "jellyfin-local-discovery"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     type = "ClusterIP"
@@ -226,7 +226,7 @@ resource "kubernetes_service" "jellyfin_discovery" {
 resource "kubernetes_ingress_v1" "jellyfin" {
   metadata {
     name      = "jellyfin"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
 
     annotations = {
       "kubernetes.io/ingress.class"    = "nginx"
@@ -263,7 +263,7 @@ resource "kubernetes_ingress_v1" "jellyfin" {
 resource "kubernetes_ingress_v1" "jellyfin_public" {
   metadata {
     name      = "jellyfin-public"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
 
     annotations = {
       "kubernetes.io/ingress.class"    = "nginx"
@@ -300,7 +300,7 @@ resource "kubernetes_ingress_v1" "jellyfin_public" {
 resource "kubernetes_config_map" "jellyfin_env" {
   metadata {
     name      = "jellyfin"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   data = {
     "PUID"      = 1000
@@ -313,7 +313,7 @@ resource "kubernetes_config_map" "jellyfin_env" {
 resource "kubernetes_config_map" "jellyfin_restore_db" {
   metadata {
     name      = "jellyfin-restore-db"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   data = {
     "system.xml" = file("${path.module}/conf/jellyfin_system.xml")
@@ -324,7 +324,7 @@ resource "kubernetes_config_map" "jellyfin_restore_db" {
 resource "kubernetes_persistent_volume_claim" "downloads" {
   metadata {
     name      = "media-downloads"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     access_modes       = ["ReadWriteOnce"]

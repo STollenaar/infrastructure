@@ -1,7 +1,7 @@
 resource "kubernetes_stateful_set_v1" "postgres" {
   metadata {
     name      = "postgres"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     service_name = "postgres"
@@ -73,7 +73,7 @@ resource "kubernetes_stateful_set_v1" "postgres" {
 resource "kubernetes_service" "postgres" {
   metadata {
     name      = "postgres"
-    namespace = kubernetes_namespace.jellyfin.metadata.0.name
+    namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     selector = {

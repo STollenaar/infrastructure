@@ -12,7 +12,7 @@ resource "helm_release" "cert_manager" {
   chart       = "cert-manager"
   version     = "v1.18.2"
   repository  = "https://charts.jetstack.io"
-  namespace   = kubernetes_namespace.cert_manager.metadata.0.name
+  namespace   = kubernetes_namespace.cert_manager.id
   wait        = false
   max_history = 50
   values = [templatefile("${path.module}/conf/cert-manager-values.yaml", {
@@ -50,7 +50,7 @@ resource "kubernetes_manifest" "vault_cluster_issuer" {
 resource "kubernetes_secret_v1" "route53_credentials_secret" {
   metadata {
     name      = "route53-credentials-secret"
-    namespace = kubernetes_namespace.cert_manager.metadata.0.name
+    namespace = kubernetes_namespace.cert_manager.id
   }
   data = {
     "access-key-id"     = data.aws_ssm_parameter.route53_user_access_key.value
