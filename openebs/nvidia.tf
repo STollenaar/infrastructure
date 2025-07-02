@@ -13,9 +13,10 @@ resource "helm_release" "nvidia_device_plugin" {
   chart      = "nvidia-device-plugin"
   version    = "0.17.2"
 
-  set {
-    name  = "runtimeClassName"
-    value = kubernetes_runtime_class_v1.nvidia.metadata.0.name
-  }
-
+  set = [
+    {
+      name  = "runtimeClassName"
+      value = kubernetes_runtime_class_v1.nvidia.metadata.0.name
+    }
+  ]
 }
