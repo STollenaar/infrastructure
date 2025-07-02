@@ -19,11 +19,11 @@ data "aws_ssm_parameter" "github_arc_token" {
 }
 
 data "aws_ssm_parameter" "vault_user_access_key" {
-  name = "/iam/vault_user/access_key"
+  name = "/iam/vault_unseal_user/access_key"
 }
 
 data "aws_ssm_parameter" "vault_user_secret_access_key" {
-  name = "/iam/vault_user/secret_access_key"
+  name = "/iam/vault_unseal_user/secret_access_key"
 }
 
 data "aws_ssm_parameter" "route53_user_access_key" {
