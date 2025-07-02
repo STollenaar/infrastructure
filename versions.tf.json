@@ -3,11 +3,11 @@
         "required_providers": {
             "aws": {
                 "source": "hashicorp/aws",
-                "version": "~> 4.20.1"
+                "version": "~> 6.0.0"
             },
             "helm": {
                 "source": "hashicorp/helm",
-                "version": "~> 2.10.1"
+                "version": "~> 3.0.0"
             },
             "kubernetes": {
                 "source": "hashicorp/kubernetes",
@@ -19,7 +19,7 @@
             },
             "vault": {
                 "source": "hashicorp/vault",
-                "version": "~> 3.21.0"
+                "version": "~> 5.0.0"
             },
             "talos": {
                 "source": "siderolabs/talos",

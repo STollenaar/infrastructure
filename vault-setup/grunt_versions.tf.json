@@ -1,1 +1,1 @@
-{"terraform":{"required_providers":{"aws":{"source":"hashicorp/aws","version":"~\u003e 4.20.1"},"hcp":{"source":"hashicorp/hcp","version":"~\u003e 0.75.0"},"vault":{"source":"hashicorp/vault","version":"~\u003e 3.21.0"}}}}
+{"terraform":{"required_providers":{"aws":{"source":"hashicorp/aws","version":"~\u003e 6.0.0"},"vault":{"source":"hashicorp/vault","version":"~\u003e 5.0.0"}}}}
