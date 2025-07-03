@@ -11,8 +11,11 @@ resource "kubernetes_config_map" "renovate_config" {
 
   data = {
     "config.json" = jsonencode({
-      repositories = ["STollenaar/infrastructure"]
-      dryRun       = "full"
+      repositories = [
+        "STollenaar/infrastructure",
+        "STollenaar/statisticsbot",
+      ]
+      dryRun = "full"
     })
   }
 }
@@ -34,9 +37,9 @@ resource "kubernetes_cron_job_v1" "renovate_bot" {
   }
 
   spec {
-    schedule           = "@hourly"
+    schedule           = "30 4 * * 4"
     concurrency_policy = "Forbid"
-    suspend            = true # Paused state
+    suspend            = false
 
     job_template {
       metadata {
