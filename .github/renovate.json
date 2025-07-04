@@ -21,12 +21,11 @@
                 "terragrunt"
             ],
             "ignorePaths": [
-                "**/grunt_*"
+                "**/grunt_providers.tf",
+                "**/grunt_versions.tf",
+                "**/grunt_backend.tf"
             ],
-            "groupName": "terraform providers",
-            "matchPackageNames": [
-                "/.*/"
-            ]
+            "groupName": "terraform providers"
         },
         {
             "matchDatasources": [
