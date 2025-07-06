@@ -10,7 +10,7 @@ resource "kubernetes_namespace" "vault" {
 
 resource "helm_release" "external_secrets" {
   name       = "external-secrets"
-  version    = "0.18.1"
+  version    = "0.18.2"
   namespace  = kubernetes_namespace.vault.id
   repository = "https://charts.external-secrets.io"
   chart      = "external-secrets"
