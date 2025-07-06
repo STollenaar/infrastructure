@@ -30,7 +30,7 @@ resource "kubernetes_deployment" "radarr" {
         }
         init_container {
           name  = "init-config"
-          image = "busybox:1.36.1"
+          image = "busybox:1.37.0"
           args = [
             "/bin/sh",
             "-c",
@@ -55,7 +55,7 @@ resource "kubernetes_deployment" "radarr" {
           }
         }
         container {
-          image = "lscr.io/linuxserver/radarr:5.17.2"
+          image = "lscr.io/linuxserver/radarr:5.26.2"
           name  = "radarr"
           env_from {
             config_map_ref {
