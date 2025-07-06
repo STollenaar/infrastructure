@@ -32,15 +32,6 @@
                 "helm"
             ],
             "groupName": "helm charts"
-        },
-        {
-            "matchManagers": [
-                "terraform"
-            ],
-            "matchDatasources": [
-                "docker"
-            ],
-            "enabled": false
         }
     ],
     "schedule": [
