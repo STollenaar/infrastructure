@@ -27,7 +27,7 @@ resource "kubernetes_deployment" "sonarr" {
       spec {
         init_container {
           name  = "init-config"
-          image = "busybox:1.36.1"
+          image = "busybox:1.37.0"
           args = [
             "/bin/sh",
             "-c",
@@ -52,7 +52,7 @@ resource "kubernetes_deployment" "sonarr" {
           }
         }
         container {
-          image = "lscr.io/linuxserver/sonarr:4.0.12"
+          image = "lscr.io/linuxserver/sonarr:4.0.15"
           name  = "sonarr"
           env_from {
             config_map_ref {

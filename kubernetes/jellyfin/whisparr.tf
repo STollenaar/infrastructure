@@ -27,7 +27,7 @@ resource "kubernetes_deployment" "whisparr" {
       spec {
         init_container {
           name  = "init-config"
-          image = "busybox:1.36.1"
+          image = "busybox:1.37.0"
           args = [
             "/bin/sh",
             "-c",

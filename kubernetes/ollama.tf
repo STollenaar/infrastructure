@@ -48,7 +48,7 @@ resource "kubernetes_deployment" "ollama" {
         runtime_class_name = "nvidia"
         container {
           name  = "ollama"
-          image = "ollama/ollama:0.5.7"
+          image = "ollama/ollama:0.9.5"
           args  = ["serve"]
 
           env {
@@ -177,7 +177,7 @@ resource "kubernetes_job" "ollama_model_creation" {
       spec {
         container {
           name  = "ollama"
-          image = "ollama/ollama:0.5.7"
+          image = "ollama/ollama:0.9.5"
 
           command = [
             "/bin/sh",
