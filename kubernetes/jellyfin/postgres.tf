@@ -26,7 +26,7 @@ resource "kubernetes_stateful_set_v1" "postgres" {
         }
         container {
           name  = "postgres"
-          image = "bitnami/postgresql:17.5.0-debian-12-r16"
+          image = "bitnami/postgresql:16.6.0-debian-12-r2"
           port {
             container_port = 5432
           }

@@ -1,10 +1,10 @@
 
-resource "kubernetes_deployment" "flaresolverr" {
+resource "kubernetes_deployment" "byparr" {
   metadata {
-    name      = "flaresolverr"
+    name      = "byparr"
     namespace = kubernetes_namespace.jellyfin.id
     labels = {
-      "app" = "flaresolverr"
+      "app" = "byparr"
     }
   }
 
@@ -13,14 +13,14 @@ resource "kubernetes_deployment" "flaresolverr" {
 
     selector {
       match_labels = {
-        "app" = "flaresolverr"
+        "app" = "byparr"
       }
     }
 
     template {
       metadata {
         labels = {
-          "app" = "flaresolverr"
+          "app" = "byparr"
         }
       }
 
@@ -29,11 +29,11 @@ resource "kubernetes_deployment" "flaresolverr" {
           fs_group = 1000
         }
         container {
-          image = "ghcr.io/flaresolverr/flaresolverr:v3.3.25"
-          name  = "flaresolverr"
+          image = "ghcr.io/thephaseless/byparr:latest"
+          name  = "byparr"
           port {
             container_port = 8191
-            name           = "flaresolverr"
+            name           = "byparr"
           }
         }
       }
@@ -44,23 +44,23 @@ resource "kubernetes_deployment" "flaresolverr" {
   }
 }
 
-resource "kubernetes_service" "flaresolverr" {
+resource "kubernetes_service" "byparr" {
   metadata {
-    name      = "flaresolverr"
+    name      = "byparr"
     namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
     type = "ClusterIP"
     selector = {
-      "app" = "flaresolverr"
+      "app" = "byparr"
     }
     port {
-      name        = "flaresolverr"
+      name        = "byparr"
       port        = 8191
-      target_port = "flaresolverr"
+      target_port = "byparr"
     }
   }
   depends_on = [
-    kubernetes_deployment.flaresolverr
+    kubernetes_deployment.byparr
   ]
 }
