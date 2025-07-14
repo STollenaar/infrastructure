@@ -29,11 +29,16 @@ resource "kubernetes_deployment" "byparr" {
           fs_group = 1000
         }
         container {
-          image = "ghcr.io/thephaseless/byparr:latest"
+          image = "ghcr.io/thephaseless/byparr:7bdb47618cd61b82814a511eb1ebccc9fc01cd26-amd64"
           name  = "byparr"
           port {
             container_port = 8191
             name           = "byparr"
+          }
+          resources {
+            limits = {
+              "memory" = "2Gi"
+            }
           }
         }
       }
