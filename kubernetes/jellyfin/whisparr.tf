@@ -229,7 +229,7 @@ resource "kubernetes_job_v1" "whisparr_init" {
       spec {
         container {
           name    = "whisparr-main"
-          image   = "bitnami/postgresql:latest"
+          image   = "postgres:16.9-bookworm"
           command = ["createdb"]
           args = [
             "-h",
@@ -246,7 +246,7 @@ resource "kubernetes_job_v1" "whisparr_init" {
         }
         container {
           name    = "whisparr-logs"
-          image   = "bitnami/postgresql:latest"
+          image   = "postgres:16.9-bookworm"
           command = ["createdb"]
           args = [
             "-h",

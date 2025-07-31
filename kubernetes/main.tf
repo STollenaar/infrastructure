@@ -5,7 +5,8 @@ locals {
   ]
 }
 module "jellyfin" {
-  source = "./jellyfin"
+  source     = "./jellyfin"
+#   depends_on = [helm_release.cloudnativepg]
 
   hcp_client = {
     client_id     = data.aws_ssm_parameter.vault_client_id.value

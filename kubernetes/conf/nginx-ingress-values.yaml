@@ -28,6 +28,7 @@ controller:
     proxy-buffering: "on"
     multi-accept: "off"
     proxy-buffer-size: "16k"
+    proxy-busy-buffers-size: "16k"
     keep-alive: "1"
     keep-alive-requests: "20000"
     # enable-underscores-in-headers: ""
