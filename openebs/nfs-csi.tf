@@ -54,3 +54,23 @@ resource "kubernetes_storage_class" "nfs_main" {
     "nolock"
   ]
 }
+
+resource "kubernetes_storage_class" "nfs_main_no_retain" {
+  metadata {
+    name = "nfs-csi-main-no-retain"
+  }
+
+  storage_provisioner = "nfs.csi.k8s.io"
+  volume_binding_mode = "Immediate"
+
+  parameters = {
+    server = "192.168.2.113"
+    share  = "/mnt/main/kubernetes"
+    subDir = "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
+  }
+  reclaim_policy = "Delete"
+  mount_options = [
+    "vers=4",
+    "nolock"
+  ]
+}
