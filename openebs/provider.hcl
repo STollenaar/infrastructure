@@ -1,3 +1,3 @@
 locals {
-  providers = ["kubernetes", "helm", "talos"]
+  providers = ["kubernetes", "helm"]
 }

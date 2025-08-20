@@ -1,0 +1,17 @@
+machine:
+  network:
+    hostname: ${hostname}
+    nameservers:
+      - 192.168.2.1
+      - 142.166.166.166
+      - 1.1.1.1
+      - 8.8.8.8
+    interfaces:
+      - addresses:
+          - ${endpoint}/24
+        interface: ens18
+        routes:
+          - network: 0.0.0.0/0 # The route's network (destination).
+            gateway: 192.168.2.1
+        dhcp: false
+        mtu: 1500
