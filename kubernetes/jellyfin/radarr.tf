@@ -215,7 +215,7 @@ resource "kubernetes_job_v1" "radarr_init" {
       spec {
         container {
           name    = "radarr-main"
-          image   = "postgres:16.9-bookworm"
+          image   = "postgres:17.6-bookworm"
           command = ["createdb"]
           args = [
             "-h",
@@ -232,7 +232,7 @@ resource "kubernetes_job_v1" "radarr_init" {
         }
         container {
           name    = "radarr-logs"
-          image   = "postgres:16.9-bookworm"
+          image   = "postgres:17.6-bookworm"
           command = ["createdb"]
           args = [
             "-h",
