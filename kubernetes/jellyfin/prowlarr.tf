@@ -54,7 +54,7 @@ resource "kubernetes_deployment" "prowlarr" {
         }
 
         container {
-          image = "lscr.io/linuxserver/prowlarr:1.37.0"
+          image = "lscr.io/linuxserver/prowlarr:2.0.5"
           name  = "prowlarr"
           env_from {
             config_map_ref {
@@ -167,7 +167,7 @@ resource "kubernetes_job_v1" "prowlarr_init" {
       spec {
         container {
           name    = "prowlarr-main"
-          image   = "postgres:16.9-bookworm"
+          image   = "postgres:17.6-bookworm"
           command = ["createdb"]
           args = [
             "-h",
@@ -184,7 +184,7 @@ resource "kubernetes_job_v1" "prowlarr_init" {
         }
         container {
           name    = "prowlarr-logs"
-          image   = "postgres:16.9-bookworm"
+          image   = "postgres:17.6-bookworm"
           command = ["createdb"]
           args = [
             "-h",

@@ -122,7 +122,7 @@ resource "kubernetes_job_v1" "bazarr_init" {
       spec {
         container {
           name    = "bazarr-main"
-          image   = "postgres:16.9-bookworm"
+          image   = "postgres:17.6-bookworm"
           command = ["createdb"]
           args = [
             "-h",
