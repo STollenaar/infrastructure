@@ -49,6 +49,15 @@ data "terraform_remote_state" "aws_iam" {
   }
 }
 
+data "terraform_remote_state" "route53" {
+  backend = "s3"
+  config = {
+    region = "ca-central-1"
+    bucket = "stollenaar-terraform-states"
+    key    = "infrastructure/aws/route53/terraform.tfstate"
+  }
+}
+
 data "aws_ssm_parameter" "diplomacy_auth" {
   name            = "/diplomacy/password"
   with_decryption = true

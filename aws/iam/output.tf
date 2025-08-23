@@ -7,6 +7,7 @@ output "iam_users" {
 
 output "iam_roles" {
   value = {
-    vault_ecr_role = aws_iam_role.vault_ecr
+    vault_ecr_role    = aws_iam_role.vault_ecr
+    external_dns_role = aws_iam_role.extenral_dns_role
   }
 }

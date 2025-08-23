@@ -27,3 +27,10 @@ resource "vault_policy" "external_secrets" {
   name   = "external-secrets"
   policy = data.vault_policy_document.external_secrets.hcl
 }
+
+resource "vault_aws_secret_backend_role" "external_dns_role" {
+  backend         = vault_aws_secret_backend.aws_client.path
+  name            = data.terraform_remote_state.iam_state.outputs.iam_roles.external_dns_role.name
+  credential_type = "assumed_role"
+  role_arns       = [data.terraform_remote_state.iam_state.outputs.iam_roles.external_dns_role.arn]
+}

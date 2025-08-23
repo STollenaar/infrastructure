@@ -67,7 +67,7 @@ resource "kubernetes_deployment" "jellyfin" {
             }
           }
           env {
-            name = "NVIDIA_VISIBLE_DEVICES"
+            name  = "NVIDIA_VISIBLE_DEVICES"
             value = "all"
           }
           port {
@@ -266,8 +266,9 @@ resource "kubernetes_ingress_v1" "jellyfin_public" {
     namespace = kubernetes_namespace.jellyfin.id
 
     annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+      "kubernetes.io/ingress.class"               = "nginx"
+      "cert-manager.io/cluster-issuer"            = "letsencrypt-prod"
+      "external-dns.alpha.kubernetes.io/hostname" = "jellyfin.spicedelver.me"
     }
   }
   spec {

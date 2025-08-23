@@ -36,3 +36,14 @@ resource "aws_iam_role_policy" "vault_ecr_role_policy" {
   role   = aws_iam_role.vault_ecr.id
   policy = data.aws_iam_policy_document.vault_ecr_role_policy.json
 }
+
+resource "aws_iam_role" "extenral_dns_role" {
+  name = "external-dns"
+  assume_role_policy = data.aws_iam_policy_document.vault_ecr_assume_role.json
+}
+
+resource "aws_iam_role_policy" "extenral_dns_role_policy" {
+  name = "external-dns"
+  role = aws_iam_role.extenral_dns_role.id
+  policy = data.aws_iam_policy_document.extenral_dns_role_policy.json
+}

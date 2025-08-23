@@ -114,3 +114,48 @@ data "aws_iam_policy_document" "server_assume_role" {
   }
 }
 
+## External DNS ##
+
+data "aws_iam_policy_document" "extenral_dns_role_policy" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "route53:ChangeResourceRecordSets",
+    ]
+
+    resources = [
+      "arn:aws:route53:::hostedzone/*",
+    ]
+
+    condition {
+      test     = "ForAllValues:StringLike"
+      variable = "route53:ChangeResourceRecordSetsNormalizedRecordNames"
+      values   = ["jellyfin.spicedelver.me", "a-jellyfin.spicedelver.me"]
+    }
+
+    condition {
+      test     = "ForAllValues:StringLike"
+      variable = "route53:ChangeResourceRecordSetsActions"
+      values   = ["CREATE", "UPSERT", "DELETE"]
+    }
+
+    condition {
+      test     = "ForAllValues:StringLike"
+      variable = "route53:ChangeResourceRecordSetsRecordTypes"
+      values   = ["A", "AAAA", "MX", "TXT"]    
+    }
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "route53:ListHostedZones",
+      "route53:ListResourceRecordSets",
+      "route53:ListTagsForResources",
+    ]
+
+    resources = ["*"]
+  }
+}
