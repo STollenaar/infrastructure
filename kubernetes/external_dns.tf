@@ -194,7 +194,7 @@ resource "kubernetes_cron_job_v1" "restart_external_dns" {
             }
           }
           spec {
-            service_account_name = kubernetes_service_account_v1.external_dns_public.metadata.0.name
+            service_account_name = kubernetes_service_account_v1.restart_external_dns.metadata.0.name
 
             container {
               name  = "kubectl"
