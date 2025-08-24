@@ -198,7 +198,7 @@ resource "kubernetes_cron_job_v1" "restart_external_dns" {
 
             container {
               name  = "kubectl"
-              image = "rancher/kubectl:v1.33.0"
+              image = "rancher/kubectl:v1.33.4"
 
               command = [
                 "kubectl", "rollout", "restart",

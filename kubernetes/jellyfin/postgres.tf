@@ -26,7 +26,7 @@ resource "kubernetes_stateful_set_v1" "postgres" {
         }
         container {
           name  = "postgres"
-          image = "postgres:16.9-bookworm"
+          image = "postgres:16.10-bookworm"
           port {
             container_port = 5432
           }

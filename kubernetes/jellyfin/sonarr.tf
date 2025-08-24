@@ -212,7 +212,7 @@ resource "kubernetes_job_v1" "sonarr_init" {
       spec {
         container {
           name    = "sonarr-main"
-          image   = "postgres:16.9-bookworm"
+          image   = "postgres:16.10-bookworm"
           command = ["createdb"]
           args = [
             "-h",
@@ -229,7 +229,7 @@ resource "kubernetes_job_v1" "sonarr_init" {
         }
         container {
           name    = "sonarr-logs"
-          image   = "postgres:16.9-bookworm"
+          image   = "postgres:16.10-bookworm"
           command = ["createdb"]
           args = [
             "-h",
