@@ -62,7 +62,7 @@ resource "kubernetes_cron_job_v1" "renovate_bot" {
 
             container {
               name              = "renovate-bot"
-              image             = "405934267152.dkr.ecr.ca-central-1.amazonaws.com/renovate:latest"
+              image             = "${data.terraform_remote_state.ecr.outputs.renovate_repo.repository_url}:latest"
               image_pull_policy = "Always"
 
               env {
@@ -124,33 +124,6 @@ resource "kubernetes_cron_job_v1" "renovate_bot" {
   }
 }
 
-
-resource "kubernetes_manifest" "renovate_vault_backend" {
-  manifest = {
-    apiVersion = "external-secrets.io/v1"
-    kind       = "SecretStore"
-    metadata = {
-      name      = "vault-backend"
-      namespace = kubernetes_namespace_v1.renovate.id
-    }
-    spec = {
-      provider = {
-        vault = {
-          server  = "http://vault.${kubernetes_namespace.vault.id}.svc.cluster.local:8200"
-          path    = "secret"
-          version = "v2"
-          auth = {
-            kubernetes = {
-              mountPath = "kubernetes"
-              role      = "external-secrets"
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
 resource "kubernetes_manifest" "renovate_external_secret" {
   manifest = {
     apiVersion = "external-secrets.io/v1"
@@ -161,8 +134,8 @@ resource "kubernetes_manifest" "renovate_external_secret" {
     }
     spec = {
       secretStoreRef = {
-        name = kubernetes_manifest.renovate_vault_backend.manifest.metadata.name
-        kind = kubernetes_manifest.renovate_vault_backend.manifest.kind
+        name = kubernetes_manifest.vault_backend.manifest.metadata.name
+        kind = kubernetes_manifest.vault_backend.manifest.kind
       }
       target = {
         name = "regcred"

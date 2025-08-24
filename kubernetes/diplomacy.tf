@@ -102,13 +102,13 @@ resource "kubernetes_deployment_v1" "diplomacy_backend" {
         }
         container {
           name  = "diplomacy-backend"
-          image = "405934267152.dkr.ecr.ca-central-1.amazonaws.com/diplomacy:server-0.0.3"
+          image = "${data.terraform_remote_state.ecr.outputs.diplomacy_repo.repository_url}:server-0.0.3"
           env {
             name  = "ConnectionStrings__Database"
             value = "Data Source=5dDiplomacy.db"
           }
           env {
-            name = "Provider"
+            name  = "Provider"
             value = "Sqlite"
           }
           port {
@@ -116,7 +116,7 @@ resource "kubernetes_deployment_v1" "diplomacy_backend" {
             name           = "backend"
           }
           volume_mount {
-            name = "database"
+            name       = "database"
             mount_path = "/app/db"
           }
         }
@@ -178,32 +178,6 @@ resource "kubernetes_config_map" "diplomacy_frontend" {
   }
 }
 
-resource "kubernetes_manifest" "diplomacy_vault_backend" {
-  manifest = {
-    apiVersion = "external-secrets.io/v1"
-    kind       = "SecretStore"
-    metadata = {
-      name      = "vault-backend"
-      namespace = kubernetes_namespace_v1.diplomacy.id
-    }
-    spec = {
-      provider = {
-        vault = {
-          server  = "http://vault.${kubernetes_namespace.vault.id}.svc.cluster.local:8200"
-          path    = "secret"
-          version = "v2"
-          auth = {
-            kubernetes = {
-              mountPath = "kubernetes"
-              role      = "external-secrets"
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
 resource "kubernetes_manifest" "diplomacy_external_secret" {
   manifest = {
     apiVersion = "external-secrets.io/v1"
@@ -214,8 +188,8 @@ resource "kubernetes_manifest" "diplomacy_external_secret" {
     }
     spec = {
       secretStoreRef = {
-        name = kubernetes_manifest.diplomacy_vault_backend.manifest.metadata.name
-        kind = kubernetes_manifest.diplomacy_vault_backend.manifest.kind
+        name = kubernetes_manifest.vault_backend.manifest.metadata.name
+        kind = kubernetes_manifest.vault_backend.manifest.kind
       }
       target = {
         name = "regcred"
@@ -294,8 +268,8 @@ resource "kubernetes_ingress_v1" "diplomacy_ingress_public" {
     name      = "diplomacy-public"
     namespace = kubernetes_namespace_v1.diplomacy.id
     annotations = {
-      "kubernetes.io/ingress.class"        = "nginx"
-      "cert-manager.io/cluster-issuer"     = "letsencrypt-prod"
+      "kubernetes.io/ingress.class"             = "nginx"
+      "cert-manager.io/cluster-issuer"          = "letsencrypt-prod"
       "nginx.ingress.kubernetes.io/auth-type"   = "basic"
       "nginx.ingress.kubernetes.io/auth-secret" = "diplomacy-basic-auth"
       "nginx.ingress.kubernetes.io/auth-realm"  = "Authentication Required"

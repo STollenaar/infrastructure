@@ -31,7 +31,7 @@ data "aws_ssm_parameter" "route53_user_access_key" {
 }
 
 data "aws_ssm_parameter" "github_renovate" {
-    name = "/github/renovate"
+  name = "/github/renovate"
 }
 
 data "aws_ssm_parameter" "route53_user_secret_access_key" {
@@ -55,6 +55,15 @@ data "terraform_remote_state" "route53" {
     region = "ca-central-1"
     bucket = "stollenaar-terraform-states"
     key    = "infrastructure/aws/route53/terraform.tfstate"
+  }
+}
+
+data "terraform_remote_state" "ecr" {
+  backend = "s3"
+  config = {
+    region = "ca-central-1"
+    bucket = "stollenaar-terraform-states"
+    key    = "infrastructure/aws/ecr/terraform.tfstate"
   }
 }
 

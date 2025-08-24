@@ -1,5 +1,5 @@
 locals {
-    vault_image_version = "1.19.0"
+  vault_image_version = "1.19.0"
 }
 
 resource "kubernetes_namespace" "vault" {
@@ -229,10 +229,9 @@ resource "kubernetes_cluster_role_binding" "vault-token-creator-binding" {
 resource "kubernetes_manifest" "vault_backend" {
   manifest = {
     apiVersion = "external-secrets.io/v1"
-    kind       = "SecretStore"
+    kind       = "ClusterSecretStore"
     metadata = {
       name      = "vault-backend"
-      namespace = kubernetes_namespace.vault.id
     }
     spec = {
       provider = {
@@ -262,8 +261,8 @@ resource "kubernetes_manifest" "external_secret" {
     }
     spec = {
       secretStoreRef = {
-        name = "vault-backend"
-        kind = "SecretStore"
+        name = kubernetes_manifest.vault_backend.manifest.metadata.name
+        kind = kubernetes_manifest.vault_backend.manifest.kind
       }
       target = {
         name = "regcred"
