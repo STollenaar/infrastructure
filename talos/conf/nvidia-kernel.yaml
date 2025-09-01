@@ -1,4 +1,6 @@
 machine:
+  install:
+    image: ${image}
   nodeLabels:
     nvidia.com/gpu.present: true
   kernel:

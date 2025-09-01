@@ -1,6 +1,6 @@
 locals {
-  talos_version      = "1.10.0"
-  kubernetes_version = "1.33.0"
+  talos_version      = "1.11.0"
+  kubernetes_version = "1.34.0"
 
   cluster_name     = "talos-proxmox-cluster"
   cluster_endpoint = "https://192.168.2.122:6443"
@@ -47,14 +47,18 @@ data "talos_client_configuration" "config" {
 
 resource "talos_machine_secrets" "secrets" {}
 
+resource "local_file" "talosconfig" {
+  filename = "talosconfig"
+  content  = data.talos_client_configuration.config.talos_config
+}
+
 data "talos_image_factory_extensions_versions" "this" {
   # get the latest talos version
   talos_version = local.talos_version
   filters = {
     names = [
-      "nvidia-open-gpu-kernel-modules-lts",
+      "nonfree-kmod-nvidia-lts",
       "nvidia-container-toolkit-lts",
-      "nvidia-fabricmanager-lts"
     ]
   }
 }
@@ -79,22 +83,23 @@ resource "talos_machine_configuration_apply" "node" {
   machine_configuration_input = each.value.machine_configuration
   client_configuration        = talos_machine_secrets.secrets.client_configuration
 
-  config_patches = concat(
-    [
-      templatefile(
-        "${path.module}/conf/install-hostname.yaml", {
-          hostname = each.key
-          endpoint = local.nodes[index(local.nodes.*.name, each.key)].endpoint
-      }),
-    ],
-    local.nodes[index(local.nodes.*.name, each.key)].role == "controlplane" ? [
-      file("${path.module}/conf/controlplane-scheduling.yaml")
-    ] : [],
-    local.nodes[index(local.nodes.*.name, each.key)].role == "gpu-worker" ? [
-      templatefile("${path.module}/conf/custom-image.yaml", {
-        image = "factory.talos.dev/metal-installer/${talos_image_factory_schematic.this.id}:v${local.talos_version}"
-      }),
-      file("${path.module}/conf/nvidia-kernel.yaml")
-    ] : []
+  config_patches = flatten(
+    concat(
+      [
+        templatefile(
+          "${path.module}/conf/install-hostname.yaml", {
+            hostname = each.key
+            endpoint = local.nodes[index(local.nodes.*.name, each.key)].endpoint
+        }),
+      ],
+      local.nodes[index(local.nodes.*.name, each.key)].role == "controlplane" ? [
+        file("${path.module}/conf/controlplane-scheduling.yaml")
+      ] : [],
+      local.nodes[index(local.nodes.*.name, each.key)].role == "gpu-worker" ? [
+        templatefile("${path.module}/conf/nvidia-kernel.yaml", {
+          image = "factory.talos.dev/metal-installer/${talos_image_factory_schematic.this.id}:v${local.talos_version}"
+        }),
+      ] : []
+    )
   )
 }
