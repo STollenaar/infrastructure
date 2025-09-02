@@ -37,6 +37,26 @@ data "talos_machine_configuration" "config" {
 
   talos_version      = local.talos_version
   kubernetes_version = local.kubernetes_version
+
+  config_patches = flatten(
+    concat(
+      [
+        templatefile(
+          "${path.module}/conf/install-hostname.yaml", {
+            hostname = each.key
+            endpoint = local.nodes[index(local.nodes.*.name, each.key)].endpoint
+        }),
+      ],
+      local.nodes[index(local.nodes.*.name, each.key)].role == "controlplane" ? [
+        file("${path.module}/conf/controlplane-scheduling.yaml")
+      ] : [],
+      local.nodes[index(local.nodes.*.name, each.key)].role == "gpu-worker" ? [
+        templatefile("${path.module}/conf/nvidia-kernel.yaml", {
+          image = "factory.talos.dev/metal-installer/${talos_image_factory_schematic.this.id}:v${local.talos_version}"
+        }),
+      ] : []
+    )
+  )
 }
 
 data "talos_client_configuration" "config" {
@@ -76,30 +96,57 @@ resource "talos_image_factory_schematic" "this" {
 }
 
 resource "talos_machine_configuration_apply" "node" {
-  for_each = data.talos_machine_configuration.config
+  depends_on = [null_resource.upgrade_node, null_resource.upgrade_k8s]
+  for_each   = data.talos_machine_configuration.config
 
   node = local.nodes[index(local.nodes.*.name, each.key)].endpoint
 
   machine_configuration_input = each.value.machine_configuration
   client_configuration        = talos_machine_secrets.secrets.client_configuration
+}
 
-  config_patches = flatten(
-    concat(
-      [
-        templatefile(
-          "${path.module}/conf/install-hostname.yaml", {
-            hostname = each.key
-            endpoint = local.nodes[index(local.nodes.*.name, each.key)].endpoint
-        }),
-      ],
-      local.nodes[index(local.nodes.*.name, each.key)].role == "controlplane" ? [
-        file("${path.module}/conf/controlplane-scheduling.yaml")
-      ] : [],
-      local.nodes[index(local.nodes.*.name, each.key)].role == "gpu-worker" ? [
-        templatefile("${path.module}/conf/nvidia-kernel.yaml", {
-          image = "factory.talos.dev/metal-installer/${talos_image_factory_schematic.this.id}:v${local.talos_version}"
-        }),
-      ] : []
-    )
-  )
+resource "null_resource" "upgrade_node" {
+  for_each = { for v in local.nodes : v.name => v }
+
+  triggers = {
+    talos_version = local.talos_version
+    schematic_id  = each.value.role == "gpu-worker" ? talos_image_factory_schematic.this.id : ""
+  }
+
+  provisioner "local-exec" {
+    command = "flock $LOCK_FILE --command ${path.module}/conf/upgrade-node.sh"
+
+    environment = {
+      LOCK_FILE = "${path.module}/conf/.upgrade-node.lock"
+
+      DESIRED_TALOS_TAG       = "v${self.triggers.talos_version}"
+      DESIRED_TALOS_SCHEMATIC = self.triggers.schematic_id
+
+
+      TALOS_CONFIG_PATH = local_file.talosconfig.filename
+      TALOS_NODE        = each.value.endpoint
+      TIMEOUT           = "10m"
+    }
+  }
+}
+
+resource "null_resource" "upgrade_k8s" {
+    depends_on = [ null_resource.upgrade_node ]
+  triggers = {
+    k8s_version = local.kubernetes_version
+  }
+
+  provisioner "local-exec" {
+    command = "flock $LOCK_FILE --command ${path.module}/conf/upgrade-k8s.sh"
+
+    environment = {
+      LOCK_FILE = "${path.module}/conf/.upgrade-k8s.lock"
+
+      DESIRED_K8S_VERSION = "${self.triggers.k8s_version}"
+
+
+      TALOS_CONFIG_PATH = local_file.talosconfig.filename
+      TALOS_NODES       = join(",", [for k, v in local.control_plane_nodes : v.endpoint])
+    }
+  }
 }

@@ -1,3 +1,5 @@
 .terraform/
 **/terraform.tfstate*
 talosconfig
+.upgrade-node.lock
+.upgrade-k8s.lock
