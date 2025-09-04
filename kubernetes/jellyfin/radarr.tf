@@ -55,7 +55,7 @@ resource "kubernetes_deployment" "radarr" {
           }
         }
         container {
-          image = "lscr.io/linuxserver/radarr:5.26.2"
+          image = "lscr.io/linuxserver/radarr:5.27.5"
           name  = "radarr"
           env_from {
             config_map_ref {
@@ -215,7 +215,7 @@ resource "kubernetes_job_v1" "radarr_init" {
       spec {
         container {
           name    = "radarr-main"
-          image   = "postgres:16.9-bookworm"
+          image   = "postgres:16.10-bookworm"
           command = ["createdb"]
           args = [
             "-h",
@@ -232,7 +232,7 @@ resource "kubernetes_job_v1" "radarr_init" {
         }
         container {
           name    = "radarr-logs"
-          image   = "postgres:16.9-bookworm"
+          image   = "postgres:16.10-bookworm"
           command = ["createdb"]
           args = [
             "-h",

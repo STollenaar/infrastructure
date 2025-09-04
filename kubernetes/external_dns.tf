@@ -101,7 +101,7 @@ resource "kubernetes_deployment" "external_dns_public" {
 
         container {
           name  = "external-dns-public"
-          image = "registry.k8s.io/external-dns/external-dns:v0.18.0"
+          image = "registry.k8s.io/external-dns/external-dns:v0.19.0"
 
           args = [
             "--source=ingress",
@@ -138,7 +138,7 @@ resource "kubernetes_deployment" "external_dns_public" {
 
         container {
           name  = "aws-provider"
-          image = "registry.k8s.io/external-dns/external-dns:v0.18.0"
+          image = "registry.k8s.io/external-dns/external-dns:v0.19.0"
 
           args = [
             "--webhook-server",
@@ -198,7 +198,7 @@ resource "kubernetes_cron_job_v1" "restart_external_dns" {
 
             container {
               name  = "kubectl"
-              image = "rancher/kubectl:v1.33.0"
+              image = "rancher/kubectl:v1.34.0"
 
               command = [
                 "kubectl", "rollout", "restart",
