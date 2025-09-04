@@ -167,7 +167,7 @@ resource "kubernetes_job_v1" "prowlarr_init" {
       spec {
         container {
           name    = "prowlarr-main"
-          image   = "postgres:16.9-bookworm"
+          image   = "postgres:16.10-bookworm"
           command = ["createdb"]
           args = [
             "-h",
@@ -184,7 +184,7 @@ resource "kubernetes_job_v1" "prowlarr_init" {
         }
         container {
           name    = "prowlarr-logs"
-          image   = "postgres:16.9-bookworm"
+          image   = "postgres:16.10-bookworm"
           command = ["createdb"]
           args = [
             "-h",

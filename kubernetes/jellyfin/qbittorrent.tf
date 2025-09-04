@@ -57,7 +57,7 @@ resource "kubernetes_deployment" "qbittorrent" {
           }
         }
         container {
-          image = "ghcr.io/qdm12/gluetun:v3.39"
+          image = "ghcr.io/qdm12/gluetun:v3.40"
           name  = "gluetun"
           env_from {
             config_map_ref {
