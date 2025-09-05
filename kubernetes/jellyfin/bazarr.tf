@@ -123,15 +123,10 @@ resource "kubernetes_job_v1" "bazarr_init" {
         container {
           name    = "bazarr-main"
           image   = "postgres:16.10-bookworm"
-          command = ["createdb"]
+          command = ["/bin/sh", "-c"]
           args = [
-            "-h",
-            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local",
-            "-U",
-            "admin",
-            "bazarr-main"
+            "psql -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'bazarr-main'\" | grep -q 1 || createdb -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin bazarr-main"
           ]
-
           env {
             name  = "PGPASSWORD"
             value = "password"

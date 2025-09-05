@@ -213,15 +213,10 @@ resource "kubernetes_job_v1" "sonarr_init" {
         container {
           name    = "sonarr-main"
           image   = "postgres:16.10-bookworm"
-          command = ["createdb"]
+          command = ["/bin/sh", "-c"]
           args = [
-            "-h",
-            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local",
-            "-U",
-            "admin",
-            "sonarr-main"
+            "psql -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'sonarr-main'\" | grep -q 1 || createdb -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin sonarr-main"
           ]
-
           env {
             name  = "PGPASSWORD"
             value = "password"
@@ -230,15 +225,10 @@ resource "kubernetes_job_v1" "sonarr_init" {
         container {
           name    = "sonarr-logs"
           image   = "postgres:16.10-bookworm"
-          command = ["createdb"]
+          command = ["/bin/sh", "-c"]
           args = [
-            "-h",
-            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local",
-            "-U",
-            "admin",
-            "sonarr-logs"
+            "psql -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'sonarr-logs'\" | grep -q 1 || createdb -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin sonarr-logs"
           ]
-
           env {
             name  = "PGPASSWORD"
             value = "password"

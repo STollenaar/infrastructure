@@ -38,7 +38,7 @@ resource "kubernetes_deployment" "qbittorrent" {
           ]
           env {
             name  = "DESTINATION"
-            value = "/config/config/qBittorrent.conf"
+            value = "/config/qBittorrent/qBittorrent.conf"
           }
           env {
             name  = "SOURCE"
@@ -105,7 +105,7 @@ resource "kubernetes_deployment" "qbittorrent" {
           }
         }
         container {
-          image = "hotio/qbittorrent:release-4.6.6"
+          image = "linuxserver/qbittorrent:4.6.6"
           name  = "qbittorrent"
           env_from {
             config_map_ref {
@@ -115,10 +115,6 @@ resource "kubernetes_deployment" "qbittorrent" {
           port {
             container_port = 8080
             name           = "qbittorrent"
-          }
-          port {
-            container_port = 3000
-            name           = "floodui"
           }
           volume_mount {
             name       = "downloads"
@@ -178,27 +174,6 @@ resource "kubernetes_service" "qbittorrent" {
       name        = "gluetunui"
       port        = 8000
       target_port = "gluetunui"
-    }
-  }
-  depends_on = [
-    kubernetes_deployment.qbittorrent
-  ]
-}
-
-resource "kubernetes_service" "floodui" {
-  metadata {
-    name      = "floodui"
-    namespace = kubernetes_namespace.jellyfin.id
-  }
-  spec {
-    type = "ClusterIP"
-    selector = {
-      "app" = "qbittorrent"
-    }
-    port {
-      name        = "floodui"
-      port        = 3000
-      target_port = "floodui"
     }
   }
   depends_on = [

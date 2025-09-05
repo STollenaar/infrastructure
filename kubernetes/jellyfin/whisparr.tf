@@ -230,15 +230,10 @@ resource "kubernetes_job_v1" "whisparr_init" {
         container {
           name    = "whisparr-main"
           image   = "postgres:16.10-bookworm"
-          command = ["createdb"]
+          command = ["/bin/sh", "-c"]
           args = [
-            "-h",
-            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local",
-            "-U",
-            "admin",
-            "whisparr-main"
+            "psql -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'whisparr-main'\" | grep -q 1 || createdb -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin whisparr-main"
           ]
-
           env {
             name  = "PGPASSWORD"
             value = "password"
@@ -247,15 +242,10 @@ resource "kubernetes_job_v1" "whisparr_init" {
         container {
           name    = "whisparr-logs"
           image   = "postgres:16.10-bookworm"
-          command = ["createdb"]
+          command = ["/bin/sh", "-c"]
           args = [
-            "-h",
-            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local",
-            "-U",
-            "admin",
-            "whisparr-logs"
+            "psql -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'whisparr-logs'\" | grep -q 1 || createdb -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin whisparr-logs"
           ]
-
           env {
             name  = "PGPASSWORD"
             value = "password"

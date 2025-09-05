@@ -216,15 +216,10 @@ resource "kubernetes_job_v1" "radarr_init" {
         container {
           name    = "radarr-main"
           image   = "postgres:16.10-bookworm"
-          command = ["createdb"]
+          command = ["/bin/sh", "-c"]
           args = [
-            "-h",
-            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local",
-            "-U",
-            "admin",
-            "radarr-main"
+            "psql -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'radarr-main'\" | grep -q 1 || createdb -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin radarr-main"
           ]
-
           env {
             name  = "PGPASSWORD"
             value = "password"
@@ -233,15 +228,10 @@ resource "kubernetes_job_v1" "radarr_init" {
         container {
           name    = "radarr-logs"
           image   = "postgres:16.10-bookworm"
-          command = ["createdb"]
+          command = ["/bin/sh", "-c"]
           args = [
-            "-h",
-            "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local",
-            "-U",
-            "admin",
-            "radarr-logs"
+            "psql -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'radarr-logs'\" | grep -q 1 || createdb -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin radarr-logs"
           ]
-
           env {
             name  = "PGPASSWORD"
             value = "password"
