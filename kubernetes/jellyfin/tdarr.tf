@@ -170,7 +170,7 @@ resource "kubernetes_deployment" "tdarr_node" {
                   ]
                 }
               }
-              topology_key = "topology.kubernetes.io/zone"
+              topology_key = "kubernetes.io/hostname"
             }
           }
         }
