@@ -28,34 +28,34 @@ resource "kubernetes_deployment" "qbittorrent" {
         security_context {
           fs_group = 1000
         }
-        init_container {
-          name  = "init-qbittorrent"
-          image = "busybox:1.37.0"
-          args = [
-            "/bin/sh",
-            "-c",
-            file("${path.module}/conf/copyConfig.sh")
-          ]
-          env {
-            name  = "DESTINATION"
-            value = "/config/qBittorrent/qBittorrent.conf"
-          }
-          env {
-            name  = "SOURCE"
-            value = "/tmp/qBittorrent.conf"
-          }
+        # init_container {
+        #   name  = "init-qbittorrent"
+        #   image = "busybox:1.37.0"
+        #   args = [
+        #     "/bin/sh",
+        #     "-c",
+        #     file("${path.module}/conf/copyConfig.sh")
+        #   ]
+        #   env {
+        #     name  = "DESTINATION"
+        #     value = "/config/qBittorrent/qBittorrent.conf"
+        #   }
+        #   env {
+        #     name  = "SOURCE"
+        #     value = "/tmp/qBittorrent.conf"
+        #   }
 
-          volume_mount {
-            name       = "qbit-data"
-            mount_path = "/config"
-          }
+        #   volume_mount {
+        #     name       = "qbit-data"
+        #     mount_path = "/config"
+        #   }
 
-          volume_mount {
-            name       = "config"
-            mount_path = "/tmp/qBittorrent.conf"
-            sub_path   = "qBittorrent.conf"
-          }
-        }
+        #   volume_mount {
+        #     name       = "config"
+        #     mount_path = "/tmp/qBittorrent.conf"
+        #     sub_path   = "qBittorrent.conf"
+        #   }
+        # }
         container {
           image = "ghcr.io/qdm12/gluetun:v3.40"
           name  = "gluetun"
@@ -105,7 +105,7 @@ resource "kubernetes_deployment" "qbittorrent" {
           }
         }
         container {
-          image = "linuxserver/qbittorrent:4.6.6"
+          image = "linuxserver/qbittorrent:5.1.2"
           name  = "qbittorrent"
           env_from {
             config_map_ref {
