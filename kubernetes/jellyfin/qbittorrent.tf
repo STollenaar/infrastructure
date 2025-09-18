@@ -74,6 +74,10 @@ resource "kubernetes_deployment" "qbittorrent" {
             }
           }
           env {
+            name = "DNS_ADDRESS"
+            value = "194.169.169.169"
+          }
+          env {
             name  = "WIREGUARD_ADDRESSES"
             value = "10.14.0.2/16"
           }
