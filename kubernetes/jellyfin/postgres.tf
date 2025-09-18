@@ -150,16 +150,16 @@ resource "kubernetes_service" "postgres" {
 #   }
 # }
 
-# resource "kubernetes_secret_v1" "postgres_superuser" {
-#   metadata {
-#     name      = "postgres-credentials"
-#     namespace = kubernetes_namespace.jellyfin.id
-#   }
+resource "kubernetes_secret_v1" "postgres_superuser" {
+  metadata {
+    name      = "postgres-credentials"
+    namespace = kubernetes_namespace.jellyfin.id
+  }
 
-#   type = "Opaque"
+  type = "Opaque"
 
-#   data = {
-#     username = "admin"
-#     password = "password"
-#   }
-# }
+  data = {
+    username = "admin"
+    password = "password"
+  }
+}
