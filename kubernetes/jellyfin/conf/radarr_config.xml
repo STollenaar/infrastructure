@@ -15,7 +15,7 @@
     <SslCertPassword></SslCertPassword>
     <InstanceName>Radarr</InstanceName>
     <AnalyticsEnabled>False</AnalyticsEnabled>
-    <PostgresUser>admin</PostgresUser>
+    <PostgresUser>postgres</PostgresUser>
     <PostgresPassword>password</PostgresPassword>
     <PostgresPort>5432</PostgresPort>
     <PostgresHost>${postgres_host}</PostgresHost>

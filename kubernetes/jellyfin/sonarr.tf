@@ -187,7 +187,7 @@ resource "kubernetes_config_map" "sonarr_cm" {
   }
   data = {
     "config.xml" = templatefile("${path.module}/conf/sonarr_config.xml", {
-      postgres_host = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local"
+      postgres_host = "postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local"
     })
   }
 }
@@ -215,7 +215,7 @@ resource "kubernetes_job_v1" "sonarr_init" {
           image   = "postgres:16.10-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
-            "psql -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'sonarr-main'\" | grep -q 1 || createdb -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin sonarr-main"
+            "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'sonarr-main'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres sonarr-main"
           ]
           env {
             name  = "PGPASSWORD"
@@ -227,7 +227,7 @@ resource "kubernetes_job_v1" "sonarr_init" {
           image   = "postgres:16.10-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
-            "psql -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'sonarr-logs'\" | grep -q 1 || createdb -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin sonarr-logs"
+            "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'sonarr-logs'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres sonarr-logs"
           ]
           env {
             name  = "PGPASSWORD"

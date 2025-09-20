@@ -143,7 +143,7 @@ resource "kubernetes_config_map" "prowlarr_cm" {
   }
   data = {
     "config.xml" = templatefile("${path.module}/conf/prowlarr_config.xml", {
-      postgres_host = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local"
+      postgres_host = "postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local"
     })
   }
 }
@@ -170,7 +170,7 @@ resource "kubernetes_job_v1" "prowlarr_init" {
           image   = "postgres:16.10-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
-            "psql -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'prowlarr-main'\" | grep -q 1 || createdb -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin prowlarr-main"
+            "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'prowlarr-main'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres prowlarr-main"
           ]
           env {
             name  = "PGPASSWORD"
@@ -182,7 +182,7 @@ resource "kubernetes_job_v1" "prowlarr_init" {
           image   = "postgres:16.10-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
-            "psql -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'prowlarr-logs'\" | grep -q 1 || createdb -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin prowlarr-logs"
+            "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'prowlarr-logs'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres prowlarr-logs"
           ]
           env {
             name  = "PGPASSWORD"

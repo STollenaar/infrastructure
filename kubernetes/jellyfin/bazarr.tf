@@ -94,10 +94,10 @@ resource "kubernetes_config_map" "bazarr_env" {
     PGID              = "1000"
     TZ                = "UTC"
     POSTGRES_ENABLED  = "true"
-    POSTGRES_HOST     = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local"
+    POSTGRES_HOST     = "postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local"
     POSTGRES_PORT     = "5432"
     POSTGRES_DATABASE = "bazarr-main"
-    POSTGRES_USERNAME = "admin"
+    POSTGRES_USERNAME = "postgres"
     POSTGRES_PASSWORD = "password"
   }
 }
@@ -125,7 +125,7 @@ resource "kubernetes_job_v1" "bazarr_init" {
           image   = "postgres:16.10-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
-            "psql -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'bazarr-main'\" | grep -q 1 || createdb -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin bazarr-main"
+            "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'bazarr-main'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres bazarr-main"
           ]
           env {
             name  = "PGPASSWORD"

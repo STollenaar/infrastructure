@@ -190,7 +190,7 @@ resource "kubernetes_config_map" "radarr_cm" {
   }
   data = {
     "config.xml" = templatefile("${path.module}/conf/radarr_config.xml", {
-      postgres_host = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local"
+      postgres_host = "postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local"
     })
   }
 }
@@ -218,7 +218,7 @@ resource "kubernetes_job_v1" "radarr_init" {
           image   = "postgres:16.10-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
-            "psql -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'radarr-main'\" | grep -q 1 || createdb -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin radarr-main"
+            "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'radarr-main'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres radarr-main"
           ]
           env {
             name  = "PGPASSWORD"
@@ -230,7 +230,7 @@ resource "kubernetes_job_v1" "radarr_init" {
           image   = "postgres:16.10-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
-            "psql -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'radarr-logs'\" | grep -q 1 || createdb -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin radarr-logs"
+            "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'radarr-logs'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres radarr-logs"
           ]
           env {
             name  = "PGPASSWORD"

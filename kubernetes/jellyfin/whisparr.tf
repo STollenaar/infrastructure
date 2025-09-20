@@ -204,7 +204,7 @@ resource "kubernetes_config_map" "whisparr_cm" {
   }
   data = {
     "config.xml" = templatefile("${path.module}/conf/whisparr_config.xml", {
-      postgres_host = "${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local"
+      postgres_host = "postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local"
     })
   }
 }
@@ -232,7 +232,7 @@ resource "kubernetes_job_v1" "whisparr_init" {
           image   = "postgres:16.10-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
-            "psql -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'whisparr-main'\" | grep -q 1 || createdb -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin whisparr-main"
+            "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'whisparr-main'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres whisparr-main"
           ]
           env {
             name  = "PGPASSWORD"
@@ -244,7 +244,7 @@ resource "kubernetes_job_v1" "whisparr_init" {
           image   = "postgres:16.10-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
-            "psql -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'whisparr-logs'\" | grep -q 1 || createdb -h ${kubernetes_service.postgres.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U admin whisparr-logs"
+            "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'whisparr-logs'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres whisparr-logs"
           ]
           env {
             name  = "PGPASSWORD"
