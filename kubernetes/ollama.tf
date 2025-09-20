@@ -45,7 +45,22 @@ resource "kubernetes_deployment" "ollama" {
       }
 
       spec {
+        affinity {
+          node_affinity {
+            required_during_scheduling_ignored_during_execution {
+              node_selector_term {
+                match_expressions {
+                  key      = "nvidia.com/gpu.present"
+                  operator = "In"
+                  values   = ["true"]
+                }
+              }
+            }
+          }
+        }
+
         runtime_class_name = "nvidia"
+
         container {
           name  = "ollama"
           image = "ollama/ollama:0.12.0"
