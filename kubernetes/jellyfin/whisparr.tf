@@ -211,7 +211,7 @@ resource "kubernetes_config_map" "whisparr_cm" {
 
 
 resource "kubernetes_job_v1" "whisparr_init" {
-  depends_on = [kubernetes_stateful_set_v1.postgres]
+  depends_on = [kubernetes_manifest.cnpg_cluster]
   metadata {
     name      = "whisparr-init"
     namespace = kubernetes_namespace.jellyfin.id
