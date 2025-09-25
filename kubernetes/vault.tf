@@ -29,7 +29,7 @@ resource "kubernetes_secret" "vault_unseal_user" {
 
 resource "helm_release" "vault" {
   name       = "vault"
-  version    = "0.30.1"
+  version    = "0.31.0"
   namespace  = kubernetes_namespace.vault.id
   repository = "https://helm.releases.hashicorp.com"
   chart      = "vault"
