@@ -56,6 +56,16 @@ resource "aws_route53_record" "proxmox_ip_entry" {
   ]
 }
 
+resource "aws_route53_record" "nas_ip_entry" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "nas.home.spicedelver.me"
+  type    = "A"
+  ttl     = 300
+  records = [
+    "192.168.2.113",
+  ]
+}
+
 resource "aws_route53_record" "cluster_ip_entry" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "cluster.home.spicedelver.me"
