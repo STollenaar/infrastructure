@@ -14,6 +14,10 @@ resource "helm_release" "cloudnativepg" {
 
   set = [
     {
+      name  = "resources.requests.cpu"
+      value = "10m"
+    },
+    {
       name  = "resources.requests.memory"
       value = "64Mi"
     },

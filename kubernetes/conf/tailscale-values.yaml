@@ -19,6 +19,12 @@ operatorConfig:
   hostname: "tailscale-operator"
   nodeSelector:
     kubernetes.io/os: linux
+  resources:
+    requests:
+      cpu: 10m
+      memory: 50Mi
+    limits:
+      memory: 120Mi
 
 
 # proxyConfig contains configuraton that will be applied to any ingress/egress

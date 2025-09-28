@@ -300,7 +300,12 @@ extraEnv: []
 #    memory: 32Mi
 #
 # For more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
-resources: {}
+resources:
+  requests:
+    cpu: 10m
+    memory: 35Mi
+  limits:
+    memory: 60Mi
 
 # Pod Security Context.
 # For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
@@ -396,8 +401,7 @@ nodeSelector:
   kubernetes.io/os: linux
 
 # +docs:ignore
-ingressShim:
-  {}
+ingressShim: {}
 
   # Optional default issuer to use for ingress resources.
   # +docs:property=ingressShim.defaultIssuerName
@@ -777,7 +781,12 @@ webhook:
   #    memory: 32Mi
   #
   # For more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
-  resources: {}
+  resources:
+    requests:
+      cpu: 10m
+      memory: 15Mi
+    limits:
+      memory: 30Mi
 
   # Liveness probe values.
   # For more information, see [Container probes](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes).
@@ -934,8 +943,7 @@ webhook:
 
   # Overrides the mutating webhook and validating webhook so they reach the webhook
   # service using the `url` field instead of a service.
-  url:
-    {}
+  url: {}
     # host:
 
   # Enables default network policies for webhooks.
@@ -1114,7 +1122,12 @@ cainjector:
   #    memory: 32Mi
   #
   # For more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
-  resources: {}
+  resources:
+    requests:
+      cpu: 25m
+      memory: 60Mi
+    limits:
+      memory: 120Mi
 
   # The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with
   # matching labels.

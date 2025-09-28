@@ -17,6 +17,18 @@ resource "helm_release" "nvidia_device_plugin" {
     {
       name  = "runtimeClassName"
       value = kubernetes_runtime_class_v1.nvidia.metadata.0.name
+    },
+    {
+      name  = "resources.requests.memory"
+      value = "30Mi"
+    },
+    {
+      name  = "resources.limits.memory"
+      value = "90Mi"
+    },
+    {
+      name  = "resources.requests.cpu"
+      value = "10m"
     }
   ]
 }

@@ -35,6 +35,15 @@ resource "kubernetes_deployment_v1" "uptime_kuma" {
           port {
             container_port = 3001
           }
+          resources {
+            requests = {
+              cpu    = "10m"
+              memory = "130Mi"
+            }
+            limits = {
+              memory = "260Mi"
+            }
+          }
           volume_mount {
             mount_path = "/app/data"
             name       = "uptime-kuma-storage"

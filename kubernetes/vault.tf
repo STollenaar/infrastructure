@@ -14,6 +14,45 @@ resource "helm_release" "external_secrets" {
   namespace  = kubernetes_namespace.vault.id
   repository = "https://charts.external-secrets.io"
   chart      = "external-secrets"
+
+  set = [
+    {
+        name = "resources.requests.memory"
+        value = "30Mi"
+    },
+    {
+        name = "resources.limits.memory"
+        value = "90Mi"
+    },
+    {
+        name = "resources.requests.cpu"
+        value = "10m"
+    },
+    {
+        name = "webhook.resources.requests.memory"
+        value = "30Mi"
+    },
+    {
+        name = "webhook.resources.limits.memory"
+        value = "90Mi"
+    },
+    {
+        name = "webhook.resources.requests.cpu"
+        value = "10m"
+    },
+    {
+        name = "certController.resources.requests.memory"
+        value = "40Mi"
+    },
+    {
+        name = "certController.resources.limits.memory"
+        value = "90Mi"
+    },
+    {
+        name = "certController.resources.requests.cpu"
+        value = "10m"
+    },
+  ]
 }
 
 resource "kubernetes_secret" "vault_unseal_user" {

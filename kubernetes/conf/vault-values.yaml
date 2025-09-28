@@ -267,14 +267,13 @@ injector:
     pod: {}
     container: {}
 
-  resources: {}
-  # resources:
-  #   requests:
-  #     memory: 256Mi
-  #     cpu: 250m
-  #   limits:
-  #     memory: 256Mi
-  #     cpu: 250m
+  # resources: {}
+  resources:
+    requests:
+      memory: 30Mi
+      cpu: 25m
+    limits:
+      memory: 90Mi
 
   # extraEnvironmentVars is a list of extra environment variables to set in the
   # injector deployment.
@@ -392,14 +391,13 @@ server:
   # Resource requests, limits, etc. for the server cluster placement. This
   # should map directly to the value of the resources field for a PodSpec.
   # By default no direct resource request is made.
-  resources: {}
-  # resources:
-  #   requests:
-  #     memory: 256Mi
-  #     cpu: 250m
-  #   limits:
-  #     memory: 256Mi
-  #     cpu: 250m
+  # resources: {}
+  resources:
+    requests:
+      memory: 80Mi
+      cpu: 30m
+    limits:
+      memory: 200Mi
 
   # Ingress allows ingress services to be created to allow external access
   # from Kubernetes to access Vault pods.

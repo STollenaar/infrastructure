@@ -30,6 +30,33 @@ resource "helm_release" "metallb" {
   name      = "metallb"
   version   = "0.15.2"
   namespace = kubernetes_namespace.metallb_system.id
+
+  set = [
+    {
+      name  = "controller.resources.requests.memory"
+      value = "55Mi"
+    },
+    {
+      name  = "controller.resources.limits.memory"
+      value = "120Mi"
+    },
+    {
+      name  = "controller.resources.requests.cpu"
+      value = "10m"
+    },
+    {
+      name  = "speaker.resources.requests.memory"
+      value = "70Mi"
+    },
+    {
+      name  = "speaker.resources.limits.memory"
+      value = "200Mi"
+    },
+    {
+      name  = "speaker.resources.requests.cpu"
+      value = "15m"
+    },
+  ]
 }
 
 resource "kubernetes_manifest" "metallb_ip_pool" {

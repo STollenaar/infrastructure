@@ -111,6 +111,15 @@ resource "kubernetes_deployment" "external_dns_public" {
             "--registry=txt",
             "--txt-owner-id=${data.terraform_remote_state.route53.outputs.route53.id}",
           ]
+          resources {
+            requests = {
+              cpu    = "10m"
+              memory = "10Mi"
+            }
+            limits = {
+              memory = "30Mi"
+            }
+          }
         }
 
         container {
@@ -133,6 +142,15 @@ resource "kubernetes_deployment" "external_dns_public" {
           port {
             container_port = 8889
             name           = "webhook"
+          }
+          resources {
+            requests = {
+              cpu    = "10m"
+              memory = "10Mi"
+            }
+            limits = {
+              memory = "30Mi"
+            }
           }
         }
 
@@ -162,6 +180,15 @@ resource "kubernetes_deployment" "external_dns_public" {
             name  = "AWS_SHARED_CREDENTIALS_FILE"
             value = "/vault/secrets/aws/credentials"
           }
+          resources {
+            requests = {
+              cpu    = "10m"
+              memory = "10Mi"
+            }
+            limits = {
+              memory = "30Mi"
+            }
+          }
         }
       }
     }
@@ -175,7 +202,7 @@ resource "kubernetes_cron_job_v1" "restart_external_dns" {
   }
 
   spec {
-    schedule                      = "0 * * * *" # every hour at minute 0
+    schedule = "0 * * * *" # every hour at minute 0
     # suspend = true
     successful_jobs_history_limit = 1
     failed_jobs_history_limit     = 1

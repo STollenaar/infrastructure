@@ -32,4 +32,19 @@ resource "helm_release" "github_arc" {
   chart      = "gha-runner-scale-set-controller"
   version    = local.github_arc_version
   values     = []
+  set = [
+    {
+      name  = "resources.requests.memory"
+      value = "40Mi"
+    },
+    {
+      name  = "resources.limits.memory"
+      value = "80Mi"
+    },
+
+    {
+      name  = "resources.requests.cpu"
+      value = "10m"
+    },
+  ]
 }
