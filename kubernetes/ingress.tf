@@ -4,7 +4,7 @@ resource "helm_release" "nginx-ingress" {
 
   chart       = "ingress-nginx"
   repository  = "https://kubernetes.github.io/ingress-nginx"
-  version     = "4.13.2"
+  version     = "4.13.3"
   max_history = 50
 
   # Enable TLSv1.3
