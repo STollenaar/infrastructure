@@ -10,7 +10,7 @@ resource "kubernetes_namespace" "cert_manager" {
 resource "helm_release" "cert_manager" {
   name        = "cert-manager"
   chart       = "cert-manager"
-  version     = "v1.18.2"
+  version     = "v1.19.0"
   repository  = "https://charts.jetstack.io"
   namespace   = kubernetes_namespace.cert_manager.id
   wait        = false
