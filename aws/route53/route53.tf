@@ -49,7 +49,7 @@ resource "aws_route53_record" "private_ip_entry" {
   name    = "*.home.spicedelver.me"
   type    = "A"
   ttl     = 300
-  records = var.ip_range
+  records = [var.ip_range[0]]
 }
 
 resource "aws_route53_record" "proxmox_ip_entry" {

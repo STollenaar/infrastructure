@@ -71,7 +71,6 @@ resource "kubernetes_manifest" "metallb_ip_pool" {
     }
     spec = {
       addresses = [for ip in var.ip_range : "${ip}/32"]
-      #   addresses = [for node in local.worker_nodes : "${node}/32"]
     }
   }
 }
