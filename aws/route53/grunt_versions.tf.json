@@ -1,1 +1,1 @@
-{"terraform":{"required_providers":{"aws":{"source":"hashicorp/aws","version":"~\u003e 6.0.0"}}}}
+{"terraform":{"required_providers":{"aws":{"source":"hashicorp/aws","version":"~\u003e 6.0.0"},"tailscale":{"source":"tailscale/tailscale","version":"~\u003e 0.22.0"}}}}

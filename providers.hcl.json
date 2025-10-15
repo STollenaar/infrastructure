@@ -15,6 +15,10 @@
             "token": "$${data.aws_ssm_parameter.vault_root.value}",
             "address": "https://vault.home.spicedelver.me"
         },
+        "tailscale": {
+            "oauth_client_id": "$${data.aws_ssm_parameter.tailscale_client_id.value}",
+            "oauth_client_secret": "$${data.aws_ssm_parameter.tailscale_client_secret.value}"
+        },
         "talos": {}
     }
 }

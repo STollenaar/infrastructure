@@ -1,8 +1,3 @@
-locals {
-  ip_range = [
-    "192.168.67.123",
-  ]
-}
 module "jellyfin" {
   source     = "./jellyfin"
   depends_on = [helm_release.cloudnativepg]

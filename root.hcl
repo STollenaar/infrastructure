@@ -24,7 +24,15 @@ locals {
     provider = { for k, v in local.raw_providers.provider : k => v if contains(local.providers, k) }
   }
 
+    env_vars = read_terragrunt_config(find_in_parent_folders("env.hcl","env.hcl"))
 }
+
+inputs = merge(
+  {
+    root_dir = get_original_terragrunt_dir()
+  },
+  try(local.env_vars.locals, {})
+)
 
 terraform_binary = "/usr/local/bin/tofu"
 

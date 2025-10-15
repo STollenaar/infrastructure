@@ -21,7 +21,7 @@ resource "kubernetes_storage_class" "nfs_other" {
   volume_binding_mode = "Immediate"
 
   parameters = {
-    server = "192.168.67.125"
+    server = "nas.home.spicedelver.me"
     share  = "/mnt/storage2/kubernetes"
     subDir = "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
   }
@@ -44,7 +44,7 @@ resource "kubernetes_storage_class" "nfs_main" {
   volume_binding_mode = "Immediate"
 
   parameters = {
-    server = "192.168.67.125"
+    server = "nas.home.spicedelver.me"
     share  = "/mnt/main/kubernetes"
     subDir = "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
   }
@@ -64,7 +64,7 @@ resource "kubernetes_storage_class" "nfs_main_no_retain" {
   volume_binding_mode = "Immediate"
 
   parameters = {
-    server = "192.168.67.125"
+    server = "nas.home.spicedelver.me"
     share  = "/mnt/main/kubernetes"
     subDir = "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
   }

@@ -25,24 +25,31 @@ resource "aws_route53_record" "soa" {
   ]
 }
 
-resource "aws_route53_record" "public_ip_entry" {
-  zone_id = aws_route53_zone.main.zone_id
-  name    = "*.spicedelver.me"
-  type    = "A"
-  ttl     = 300
-  records = [
-    "142.167.12.134"
-  ]
-}
+# resource "aws_route53_record" "public_ip_entry" {
+#   zone_id = aws_route53_zone.main.zone_id
+#   name    = "*.spicedelver.me"
+#   type    = "A"
+#   ttl     = 300
+#   records = [
+# resource "aws_route53_record" "public_ip_entry" {
+#   zone_id = aws_route53_zone.main.zone_id
+#   name    = "*.spicedelver.me"
+#   type    = "A"
+#   ttl     = 300
+#   records = [
+#     "142.167.12.134"
+#   ]
+# }
+#     "142.167.12.134"
+#   ]
+# }
 
 resource "aws_route53_record" "private_ip_entry" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "*.home.spicedelver.me"
   type    = "A"
   ttl     = 300
-  records = [
-    "192.168.67.123"
-  ]
+  records = var.ip_range
 }
 
 resource "aws_route53_record" "proxmox_ip_entry" {
@@ -50,10 +57,7 @@ resource "aws_route53_record" "proxmox_ip_entry" {
   name    = "proxmox.home.spicedelver.me"
   type    = "A"
   ttl     = 300
-  records = [
-    "100.72.216.22",
-    "100.76.98.58"
-  ]
+  records = [for d in data.tailscale_devices.homelab.devices : d.addresses[0] if contains(d.tags, "tag:proxmox")]
 }
 
 resource "aws_route53_record" "nas_ip_entry" {
@@ -62,7 +66,7 @@ resource "aws_route53_record" "nas_ip_entry" {
   type    = "A"
   ttl     = 300
   records = [
-    "192.168.67.125",
+    var.nas_ip,
   ]
 }
 
@@ -71,7 +75,5 @@ resource "aws_route53_record" "cluster_ip_entry" {
   name    = "cluster.home.spicedelver.me"
   type    = "A"
   ttl     = 300
-  records = [
-    "192.168.67.122",
-  ]
+  records = var.controlplane_ip
 }

@@ -1,3 +1,3 @@
 locals {
-  providers = ["aws"]
+  providers = ["aws", "tailscale"]
 }
