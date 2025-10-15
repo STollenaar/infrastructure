@@ -41,7 +41,7 @@ resource "aws_route53_record" "private_ip_entry" {
   type    = "A"
   ttl     = 300
   records = [
-    "192.168.2.123"
+    "192.168.67.123"
   ]
 }
 
@@ -62,7 +62,7 @@ resource "aws_route53_record" "nas_ip_entry" {
   type    = "A"
   ttl     = 300
   records = [
-    "192.168.2.113",
+    "192.168.67.125",
   ]
 }
 
@@ -72,6 +72,6 @@ resource "aws_route53_record" "cluster_ip_entry" {
   type    = "A"
   ttl     = 300
   records = [
-    "192.168.2.122",
+    "192.168.67.122",
   ]
 }

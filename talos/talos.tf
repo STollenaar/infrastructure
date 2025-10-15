@@ -3,22 +3,22 @@ locals {
   kubernetes_version = "1.34.0"
 
   cluster_name     = "talos-proxmox-cluster"
-  cluster_endpoint = "https://192.168.2.122:6443"
+  cluster_endpoint = "https://192.168.67.122:6443"
 
   nodes = [
     {
       name     = "talos-7zr-i5q"
-      endpoint = "192.168.2.122"
+      endpoint = "192.168.67.122"
       role     = "controlplane"
     },
     {
       name     = "talos-e5t-zk5"
-      endpoint = "192.168.2.118"
+      endpoint = "192.168.67.123"
       role     = "worker"
     },
     {
       name     = "talos-iso-cgi"
-      endpoint = "192.168.2.123"
+      endpoint = "192.168.67.124"
       role     = "gpu-worker"
     }
   ]
