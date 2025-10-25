@@ -59,17 +59,14 @@ resource "kubernetes_deployment" "jellyfin" {
         }
         runtime_class_name = "nvidia"
         container {
-          image = "linuxserver/jellyfin:10.11.0"
+          image = "jellyfin/jellyfin:10.10.7"
           name  = "jellyfin"
           env_from {
             config_map_ref {
               name = kubernetes_config_map.jellyfin_env.metadata.0.name
             }
           }
-          env {
-            name  = "NVIDIA_VISIBLE_DEVICES"
-            value = "all"
-          }
+          
           port {
             name           = "web"
             container_port = 8096
@@ -83,8 +80,20 @@ resource "kubernetes_deployment" "jellyfin" {
             container_port = 1900
           }
           volume_mount {
+            name       = "cache"
+            mount_path = "/config/cache"
+          }
+          volume_mount {
+            name       = "config"
+            mount_path = "/config/config"
+          }
+          volume_mount {
             name       = "data"
-            mount_path = "/config"
+            mount_path = "/config/data"
+          }
+          volume_mount {
+            name       = "log"
+            mount_path = "/config/log"
           }
           volume_mount {
             name       = "movies"
@@ -96,9 +105,27 @@ resource "kubernetes_deployment" "jellyfin" {
           }
         }
         volume {
+          name = "cache"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.jellyfin_cache.metadata.0.name
+          }
+        }
+        volume {
+          name = "config"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.jellyfin_config.metadata.0.name
+          }
+        }
+        volume {
           name = "data"
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim.jellyfin_data.metadata.0.name
+          }
+        }
+        volume {
+          name = "log"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.jellyfin_log.metadata.0.name
           }
         }
         volume {
@@ -134,6 +161,54 @@ resource "kubernetes_deployment" "jellyfin" {
 resource "kubernetes_persistent_volume_claim" "jellyfin_data" {
   metadata {
     name      = "jellyfin-data"
+    namespace = kubernetes_namespace.jellyfin.id
+  }
+  spec {
+    storage_class_name = "nfs-csi-main"
+    access_modes       = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        storage = "10Gi"
+      }
+    }
+  }
+}
+
+resource "kubernetes_persistent_volume_claim" "jellyfin_cache" {
+  metadata {
+    name      = "jellyfin-cache"
+    namespace = kubernetes_namespace.jellyfin.id
+  }
+  spec {
+    storage_class_name = "nfs-csi-main"
+    access_modes       = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        storage = "10Gi"
+      }
+    }
+  }
+}
+
+resource "kubernetes_persistent_volume_claim" "jellyfin_config" {
+  metadata {
+    name      = "jellyfin-config"
+    namespace = kubernetes_namespace.jellyfin.id
+  }
+  spec {
+    storage_class_name = "nfs-csi-main"
+    access_modes       = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        storage = "10Gi"
+      }
+    }
+  }
+}
+
+resource "kubernetes_persistent_volume_claim" "jellyfin_log" {
+  metadata {
+    name      = "jellyfin-log"
     namespace = kubernetes_namespace.jellyfin.id
   }
   spec {
@@ -308,6 +383,12 @@ resource "kubernetes_config_map" "jellyfin_env" {
     "PGID"      = 1000
     "LOG_LEVEL" = "debug"
     "TZ"        = local.timezone
+
+    NVIDIA_VISIBLE_DEVICES = "all"
+    JELLYFIN_CACHE_DIR = "/config/cache"
+    JELLYFIN_CONFIG_DIR = "/config/config"
+    JELLYFIN_DATA_DIR = "/config/data"
+    JELLYFIN_LOG_DIR = "/config/log"
   }
 }
 

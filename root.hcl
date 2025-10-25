@@ -34,7 +34,7 @@ inputs = merge(
   try(local.env_vars.locals, {})
 )
 
-terraform_binary = "/usr/local/bin/tofu"
+terraform_binary = "/usr/bin/tofu"
 
 remote_state {
   backend = "s3"

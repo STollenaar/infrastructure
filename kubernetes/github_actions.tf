@@ -1,5 +1,5 @@
 locals {
-  github_arc_version = "0.11.0"
+  github_arc_version = "0.13.0"
 }
 
 resource "kubernetes_namespace_v1" "github_actions_runner" {
