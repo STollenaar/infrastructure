@@ -3,21 +3,21 @@ locals {
   nodes = [
     {
       name     = "talos-7zr-i5q"
-      endpoint = "192.168.1.122"
+      endpoint = "192.168.5.122"
       role     = "controlplane"
     },
     {
       name     = "talos-e5t-zk5"
-      endpoint = "192.168.1.123"
+      endpoint = "192.168.5.123"
       role     = "worker"
     },
     {
       name     = "talos-iso-cgi"
-      endpoint = "192.168.1.124"
+      endpoint = "192.168.5.124"
       role     = "gpu-worker"
     }
   ]
-  nas_ip = "192.168.1.125"
+  nas_ip = "192.168.5.125"
 
   ip_range = [for n in local.nodes : n.endpoint if n.role != "controlplane"]
 
