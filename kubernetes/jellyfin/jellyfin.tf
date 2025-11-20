@@ -59,7 +59,7 @@ resource "kubernetes_deployment" "jellyfin" {
         }
         runtime_class_name = "nvidia"
         container {
-          image = "jellyfin/jellyfin:10.11.2"
+          image = "jellyfin/jellyfin:10.11.3"
           name  = "jellyfin"
           env_from {
             config_map_ref {
