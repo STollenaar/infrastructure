@@ -27,7 +27,7 @@ resource "kubernetes_deployment" "bazarr" {
       spec {
         container {
           name  = "bazarr"
-          image = "linuxserver/bazarr:latest"
+          image = "linuxserver/bazarr:1.5.3"
 
           port {
             container_port = 6767

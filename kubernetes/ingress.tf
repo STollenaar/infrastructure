@@ -1,4 +1,4 @@
-resource "helm_release" "nginx-ingress" {
+resource "helm_release" "nginx_ingress" {
   depends_on = [kubernetes_manifest.metallb_ip_pool]
   name       = "nginx-ingress"
 
@@ -12,6 +12,7 @@ resource "helm_release" "nginx-ingress" {
     load_balancer_main_ip = var.ip_range[0]
   })]
 }
+
 # resource "kubernetes_ingress_v1" "ingress" {
 #   metadata {
 #     name      = "default-ingress"

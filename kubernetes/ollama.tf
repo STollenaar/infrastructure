@@ -71,6 +71,11 @@ resource "kubernetes_deployment" "ollama" {
             value = "mistral"
           }
 
+          env {
+            name  = "OLLAMA_NEW_ENGINE"
+            value = "1"
+          }
+
           resources {
             limits = {
               memory = "16Gi"
