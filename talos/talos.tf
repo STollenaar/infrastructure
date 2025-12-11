@@ -33,7 +33,10 @@ data "talos_machine_configuration" "config" {
         templatefile("${path.module}/conf/nvidia-kernel.yaml", {
           image = "factory.talos.dev/metal-installer/${talos_image_factory_schematic.this.id}:v${local.talos_version}"
         }),
-      ] : []
+      ] : [],
+      var.nodes[index(var.nodes.*.name, each.key)].role == "gpu-worker" ? [
+        file("${path.module}/conf/usbserial.yaml"),
+      ] : [],
     )
   )
 }

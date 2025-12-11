@@ -1,0 +1,6 @@
+machine:
+  kernel:
+    modules:
+      - name: usbserial
+      - name: cp210x
+      - name: cdc_acm

@@ -1,6 +1,12 @@
 resource "kubernetes_namespace" "ollama" {
   metadata {
     name = "ollama"
+
+    labels = {
+      "pod-security.kubernetes.io/enforce" = "privileged"
+      "pod-security.kubernetes.io/audit"   = "privileged"
+      "pod-security.kubernetes.io/warn"    = "privileged"
+    }
   }
 }
 
