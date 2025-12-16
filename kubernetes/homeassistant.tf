@@ -51,7 +51,7 @@ resource "kubernetes_deployment_v1" "homeassistant" {
 
         container {
           name  = "homeassistant"
-          image = "ghcr.io/home-assistant/home-assistant:stable"
+          image = "ghcr.io/home-assistant/home-assistant:2025.12.3"
 
           port {
             container_port = 8123
@@ -72,11 +72,38 @@ resource "kubernetes_deployment_v1" "homeassistant" {
           }
         }
 
+        container {
+          name  = "matter"
+          image = "ghcr.io/matter-js/python-matter-server:8.1.2"
+
+          port {
+            container_port = 5580
+          }
+
+          # recommended for Home Assistant
+          security_context {
+            privileged = true
+          }
+                    volume_mount {
+            name       = "matter-data"
+            mount_path = "/data"
+          }
+
+        }
+
         volume {
           name = "config"
 
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim_v1.ha_data.metadata[0].name
+          }
+        }
+
+        volume {
+          name = "matter-data"
+
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim_v1.matter_data.metadata[0].name
           }
         }
 
@@ -115,6 +142,23 @@ resource "kubernetes_service_v1" "homeassistant" {
 resource "kubernetes_persistent_volume_claim_v1" "ha_data" {
   metadata {
     name      = "homeassistant-config"
+    namespace = kubernetes_namespace_v1.homeassistant.id
+  }
+
+  spec {
+    access_modes = ["ReadWriteOnce"]
+
+    resources {
+      requests = {
+        storage = "10Gi"
+      }
+    }
+  }
+}
+
+resource "kubernetes_persistent_volume_claim_v1" "matter_data" {
+  metadata {
+    name      = "matter-data"
     namespace = kubernetes_namespace_v1.homeassistant.id
   }
 
