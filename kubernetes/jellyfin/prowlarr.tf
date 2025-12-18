@@ -54,7 +54,7 @@ resource "kubernetes_deployment" "prowlarr" {
         }
 
         container {
-          image = "linuxserver/prowlarr:2.1.5"
+          image = "linuxserver/prowlarr:2.3.0"
           name  = "prowlarr"
           env_from {
             config_map_ref {

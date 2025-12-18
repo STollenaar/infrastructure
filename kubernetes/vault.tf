@@ -190,7 +190,7 @@ resource "kubernetes_cron_job_v1" "vault_ecr_token" {
             service_account_name = kubernetes_service_account_v1.internal_app_sa.metadata.0.name
             container {
               name    = "ecr-refresher"
-              image   = "amazon/aws-cli:2.32.3"
+              image   = "amazon/aws-cli:2.32.20"
               command = ["bash", "-c", file("${path.module}/conf/vault-ecr.sh")]
               env {
                 name  = "AWS_SHARED_CREDENTIALS_FILE"
