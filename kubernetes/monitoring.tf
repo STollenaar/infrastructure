@@ -42,7 +42,7 @@ resource "helm_release" "prometheus_operator" {
 
   chart       = "kube-prometheus-stack"
   repository  = "https://prometheus-community.github.io/helm-charts"
-  version     = "79.7.1"
+  version     = "80.5.0"
   namespace   = kubernetes_namespace.monitoring.id
   timeout     = 300
   wait        = false
