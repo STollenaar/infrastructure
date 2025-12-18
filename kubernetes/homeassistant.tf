@@ -72,38 +72,10 @@ resource "kubernetes_deployment_v1" "homeassistant" {
           }
         }
 
-        container {
-          name  = "matter"
-          image = "ghcr.io/matter-js/python-matter-server:8.1.2"
-
-          port {
-            container_port = 5580
-          }
-
-          # recommended for Home Assistant
-          security_context {
-            privileged = true
-          }
-                    volume_mount {
-            name       = "matter-data"
-            mount_path = "/data"
-          }
-
-        }
-
         volume {
           name = "config"
-
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim_v1.ha_data.metadata[0].name
-          }
-        }
-
-        volume {
-          name = "matter-data"
-
-          persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim_v1.matter_data.metadata[0].name
           }
         }
 
@@ -112,6 +84,74 @@ resource "kubernetes_deployment_v1" "homeassistant" {
           host_path {
             path = "/dev/serial/by-id/usb-SONOFF_SONOFF_Dongle_Plus_MG24_5890910df69aef11ac9db89061ce3355-if00-port0"
             type = "CharDevice"
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_deployment_v1" "matter" {
+  metadata {
+    name      = "matter"
+    namespace = kubernetes_namespace_v1.homeassistant.id
+    labels = {
+      app = "matter"
+    }
+  }
+
+  spec {
+    replicas = 1
+
+    selector {
+      match_labels = {
+        app = "matter"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          app = "matter"
+        }
+      }
+
+      spec {
+        affinity {
+          node_affinity {
+            required_during_scheduling_ignored_during_execution {
+              node_selector_term {
+                match_expressions {
+                  key      = "kubernetes.io/hostname"
+                  operator = "In"
+                  values   = ["talos-iso-cgi"]
+                }
+              }
+            }
+          }
+        }
+
+        container {
+          name  = "matter"
+          image = "ghcr.io/matter-js/python-matter-server:8.1.2"
+
+          port {
+            container_port = 5580
+          }
+
+          security_context {
+            privileged = true
+          }
+          volume_mount {
+            name       = "matter-data"
+            mount_path = "/data"
+          }
+        }
+
+        volume {
+          name = "matter-data"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim_v1.matter_data.metadata[0].name
           }
         }
       }
@@ -133,6 +173,26 @@ resource "kubernetes_service_v1" "homeassistant" {
     port {
       port        = 8123
       target_port = 8123
+    }
+
+    type = "ClusterIP"
+  }
+}
+
+resource "kubernetes_service_v1" "matter" {
+  metadata {
+    name      = "matter"
+    namespace = kubernetes_namespace_v1.homeassistant.id
+  }
+
+  spec {
+    selector = {
+      app = "matter"
+    }
+
+    port {
+      port        = 5580
+      target_port = 5580
     }
 
     type = "ClusterIP"
@@ -216,7 +276,7 @@ resource "kubernetes_ingress_v1" "homeassistant" {
 
 resource "kubernetes_config_map_v1" "homeassistant" {
   metadata {
-    name = "homeassistant"
+    name      = "homeassistant"
     namespace = kubernetes_namespace_v1.homeassistant.id
   }
   data = {
