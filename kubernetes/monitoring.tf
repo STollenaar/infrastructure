@@ -128,7 +128,7 @@ resource "helm_release" "loki" {
 
   repository = "https://grafana.github.io/helm-charts"
   chart      = "loki"
-  version    = "6.46.0"
+  version    = "6.49.0"
 
   values = [templatefile("${path.module}/conf/loki-values.yaml", {})]
 }
