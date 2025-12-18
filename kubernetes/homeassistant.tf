@@ -147,6 +147,7 @@ resource "kubernetes_deployment_v1" "matter" {
             mount_path = "/data"
           }
         }
+        host_network = true
 
         volume {
           name = "matter-data"

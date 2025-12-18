@@ -102,7 +102,7 @@ resource "kubernetes_deployment_v1" "diplomacy_backend" {
         }
         container {
           name  = "diplomacy-backend"
-          image = "${data.terraform_remote_state.ecr.outputs.diplomacy_repo.repository_url}:server-0.0.3"
+          image = "${var.ecr_repositories.diplomacy_repo}:server-0.0.3"
           env {
             name  = "ConnectionStrings__Database"
             value = "Data Source=5dDiplomacy.db"
@@ -188,8 +188,8 @@ resource "kubernetes_manifest" "diplomacy_external_secret" {
     }
     spec = {
       secretStoreRef = {
-        name = kubernetes_manifest.vault_backend.manifest.metadata.name
-        kind = kubernetes_manifest.vault_backend.manifest.kind
+        name = var.vault_backend.name
+        kind = var.vault_backend.kind
       }
       target = {
         name = "regcred"

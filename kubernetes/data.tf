@@ -6,14 +6,6 @@ data "aws_ssm_parameter" "vault_client_secret" {
   name = "/vault/serviceprincipals/talos/client_secret"
 }
 
-data "aws_ssm_parameter" "factorio_username" {
-  name = "/factorio/username"
-}
-
-data "aws_ssm_parameter" "factorio_token" {
-  name = "/factorio/token"
-}
-
 data "aws_ssm_parameter" "tailscale_client_id" {
   name = "/tailscale/client/id"
 }
@@ -73,9 +65,4 @@ data "terraform_remote_state" "ecr" {
     bucket = "stollenaar-terraform-states"
     key    = "infrastructure/aws/ecr/terraform.tfstate"
   }
-}
-
-data "aws_ssm_parameter" "diplomacy_auth" {
-  name            = "/diplomacy/password"
-  with_decryption = true
 }
