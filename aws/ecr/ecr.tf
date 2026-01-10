@@ -4,6 +4,7 @@ locals {
     "diplomacy",
     "renovate",
     "external-ip",
+    "stable-diffusion"
   ]
 }
 
