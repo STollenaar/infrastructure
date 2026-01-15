@@ -16,3 +16,10 @@ output "github_arc" {
     version     = local.github_arc_version
   }
 }
+
+output "discordbots" {
+  value = {
+    namespace   = kubernetes_namespace_v1.discordbots
+    secret_name = kubernetes_manifest.discordbots_external_secret.manifest.spec.target.name
+  }
+}
