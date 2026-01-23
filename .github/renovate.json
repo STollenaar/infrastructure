@@ -32,7 +32,13 @@
                 "helm"
             ],
             "groupName": "helm charts"
-        }
+        },
+        {
+            "packagePatterns": [
+                "^(gh|ls)cr\\.io\\/linuxserver\\/"
+            ],
+            "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-ls(?<revision>\\d+)$"
+    }
     ],
     "schedule": [
         "at any time"
