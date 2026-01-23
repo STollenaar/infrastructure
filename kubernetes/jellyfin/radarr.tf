@@ -55,7 +55,7 @@ resource "kubernetes_deployment" "radarr" {
           }
         }
         container {
-          image = "linuxserver/radarr:5.28.0"
+          image = "linuxserver/radarr:6.0.4"
           name  = "radarr"
           env_from {
             config_map_ref {
@@ -215,7 +215,7 @@ resource "kubernetes_job_v1" "radarr_init" {
       spec {
         container {
           name    = "radarr-main"
-          image   = "postgres:16.11-bookworm"
+          image   = "postgres:18.1-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
             "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'radarr-main'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres radarr-main"
@@ -227,7 +227,7 @@ resource "kubernetes_job_v1" "radarr_init" {
         }
         container {
           name    = "radarr-logs"
-          image   = "postgres:16.11-bookworm"
+          image   = "postgres:18.1-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
             "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'radarr-logs'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres radarr-logs"

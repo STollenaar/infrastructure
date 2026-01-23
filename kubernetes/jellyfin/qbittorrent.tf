@@ -109,7 +109,7 @@ resource "kubernetes_deployment" "qbittorrent" {
           }
         }
         container {
-          image = "linuxserver/qbittorrent:5.1.4"
+          image = "linuxserver/qbittorrent:20.04.1"
           name  = "qbittorrent"
           env_from {
             config_map_ref {
