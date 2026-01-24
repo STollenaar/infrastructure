@@ -52,7 +52,7 @@ resource "kubernetes_deployment" "sonarr" {
           }
         }
         container {
-          image = "linuxserver/sonarr:4.0.16"
+          image = "ghcr.io/linuxserver/sonarr:4.0.16"
           name  = "sonarr"
           env_from {
             config_map_ref {
