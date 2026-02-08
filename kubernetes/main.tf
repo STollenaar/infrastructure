@@ -19,3 +19,7 @@ module "games" {
     diplomacy_repo = data.terraform_remote_state.ecr.outputs.diplomacy_repo.repository_url
   }
 }
+
+module "homeassistant" {
+    source = "./homeassistant"
+}
