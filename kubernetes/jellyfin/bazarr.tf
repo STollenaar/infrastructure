@@ -122,7 +122,7 @@ resource "kubernetes_job_v1" "bazarr_init" {
       spec {
         container {
           name    = "bazarr-main"
-          image   = "postgres:16.11-bookworm"
+          image   = "postgres:16.12-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
             "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'bazarr-main'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres bazarr-main"
