@@ -27,3 +27,12 @@ resource "helm_release" "cloudnativepg" {
     },
   ]
 }
+
+resource "helm_release" "barman_cloud" {
+  name      = "plugin-barman-cloud"
+  namespace = kubernetes_namespace.cnpg_system.metadata.0.name
+
+  repository = "https://cloudnative-pg.github.io/charts"
+  chart      = "plugin-barman-cloud"
+  version    = "0.5.0"
+}
