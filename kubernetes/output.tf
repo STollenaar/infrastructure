@@ -3,10 +3,7 @@ output "vault_namespace" {
 }
 
 output "ollama" {
-  value = {
-    namespace = kubernetes_namespace.ollama
-    service   = kubernetes_service.ollama
-  }
+  value = module.ollama.ollama
 }
 
 output "github_arc" {

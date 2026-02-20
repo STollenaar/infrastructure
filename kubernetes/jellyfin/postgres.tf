@@ -60,17 +60,36 @@ resource "kubernetes_manifest" "cnpg_cluster" {
 
       # Configure the barman object plugin via the Cluster's plugins array.
       # The operator will load this plugin and use it for WAL archiving/backups.
+      backup = {
+        barmanObjectStore = {
+          destinationPath = "s3://stollenaar-discordbots/jellyfin/postgres"
+          # credentialsSecret = kubernetes_secret_v1.postgres_backup.metadata.0.name
+          s3Credentials = {
+            accessKeyId = {
+              name = kubernetes_secret_v1.postgres_backup.metadata.0.name
+              key  = "ACCESS_KEY_ID"
+            }
+            secretAccessKey = {
+              name = kubernetes_secret_v1.postgres_backup.metadata.0.name
+              key  = "ACCESS_SECRET_KEY"
+            }
+          }
+          endpointURL = "s3.ca-east-006.backblazeb2.com"
+          wal = {
+            compression = "gzip"
+          }
+        }
+      }
       plugins = [
         {
-          name          = "barman-cloud.cloudnative-pg.io"
-          enabled       = true
-          isWALArchiver = true
+          name    = "barman-cloud.cloudnative-pg.io"
+          enabled = true
           parameters = {
             bucket            = "stollenaar-discordbots"
-            endpoint          = "s3.ca-east-006.backblazeb2.com"
             region            = "ca-east-006"
             s3ForcePathStyle  = "true"
             credentialsSecret = kubernetes_secret_v1.postgres_backup.metadata.0.name
+            endpoint          = "s3.ca-east-006.backblazeb2.com"
           }
         }
       ]
@@ -123,10 +142,10 @@ resource "kubernetes_manifest" "postgres_daily_full_backup" {
       }
       method = "plugin"
       pluginConfiguration = {
-        name = "barman-object"
-        parameters = {
-          # Plugin-specific overrides can be provided here if needed.
-        }
+        name = "barman-cloud.cloudnative-pg.io"
+        # parameters = {
+        # Plugin-specific overrides can be provided here if needed.
+        # }
       }
       immediate = false
       suspend   = false
