@@ -18,45 +18,10 @@ resource "kubernetes_manifest" "cnpg_cluster" {
       monitoring = {
         enablePodMonitor = true
       }
-      bootstrap = {
-        initdb = {
-          owner    = "admin"
-          database = "postgres"
-          import = {
-            type = "monolith"
-            databases = [
-              "bazarr-main",
-              "prowlarr-logs",
-              "prowlarr-main",
-              "radarr-logs",
-              "radarr-main",
-              "sonarr-logs",
-              "sonarr-main",
-            ]
-            source = {
-              externalCluster = "jellyfin"
-            }
-          }
-        }
-      }
       storage = {
         storageClass = "nfs-csi-main"
         size         = "20Gi"
       }
-      externalClusters = [
-        {
-          name = "jellyfin"
-          connectionParameters = {
-            host   = "postgres-rw.${kubernetes_namespace.jellyfin.id}"
-            user   = "admin"
-            dbname = "postgres"
-          }
-          password = {
-            name = kubernetes_secret_v1.postgres_superuser.metadata.0.name
-            key  = "password"
-          }
-        }
-      ]
 
       # Configure the barman object plugin via the Cluster's plugins array.
       # The operator will load this plugin and use it for WAL archiving/backups.
@@ -74,7 +39,7 @@ resource "kubernetes_manifest" "cnpg_cluster" {
               key  = "ACCESS_SECRET_KEY"
             }
           }
-          endpointURL = "s3.ca-east-006.backblazeb2.com"
+          endpointURL = "https://s3.ca-east-006.backblazeb2.com"
           wal = {
             compression = "gzip"
           }
@@ -85,11 +50,12 @@ resource "kubernetes_manifest" "cnpg_cluster" {
           name    = "barman-cloud.cloudnative-pg.io"
           enabled = true
           parameters = {
-            bucket            = "stollenaar-discordbots"
-            region            = "ca-east-006"
-            s3ForcePathStyle  = "true"
-            credentialsSecret = kubernetes_secret_v1.postgres_backup.metadata.0.name
-            endpoint          = "s3.ca-east-006.backblazeb2.com"
+            # bucket            = "stollenaar-discordbots"
+            # region            = "ca-east-006"
+            # s3ForcePathStyle  = "true"
+            # credentialsSecret = kubernetes_secret_v1.postgres_backup.metadata.0.name
+            # endpoint          = "s3.ca-east-006.backblazeb2.com"
+            barmanObjectName = "backblaze"
           }
         }
       ]
@@ -126,6 +92,36 @@ resource "kubernetes_secret_v1" "postgres_backup" {
   }
 }
 
+resource "kubernetes_manifest" "barman_object_store" {
+  manifest = {
+    apiVersion = "barmancloud.cnpg.io/v1"
+    kind       = "ObjectStore"
+    metadata = {
+      name      = "backblaze"
+      namespace = kubernetes_namespace.jellyfin.id
+    }
+    spec = {
+      configuration = {
+        endpointURL     = "https://s3.ca-east-006.backblazeb2.com"
+        destinationPath = "s3://stollenaar-discordbots/jellyfin/postgres"
+        # credentialsSecret = kubernetes_secret_v1.postgres_backup.metadata.0.name
+        s3Credentials = {
+          accessKeyId = {
+            name = kubernetes_secret_v1.postgres_backup.metadata.0.name
+            key  = "ACCESS_KEY_ID"
+          }
+          secretAccessKey = {
+            name = kubernetes_secret_v1.postgres_backup.metadata.0.name
+            key  = "ACCESS_SECRET_KEY"
+          }
+        }
+        wal = {
+          compression = "gzip"
+        }
+      }
+    }
+  }
+}
 
 resource "kubernetes_manifest" "postgres_daily_full_backup" {
   manifest = {
