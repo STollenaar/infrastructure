@@ -229,7 +229,7 @@ resource "kubernetes_job_v1" "whisparr_init" {
       spec {
         container {
           name    = "whisparr-main"
-          image   = "postgres:16.12-bookworm"
+          image   = "postgres:16.13-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
             "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'whisparr-main'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres whisparr-main"
@@ -241,7 +241,7 @@ resource "kubernetes_job_v1" "whisparr_init" {
         }
         container {
           name    = "whisparr-logs"
-          image   = "postgres:16.12-bookworm"
+          image   = "postgres:16.13-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
             "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'whisparr-logs'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres whisparr-logs"
