@@ -212,7 +212,7 @@ resource "kubernetes_job_v1" "sonarr_init" {
       spec {
         container {
           name    = "sonarr-main"
-          image   = "postgres:16.13-bookworm"
+          image   = "postgres:18.3-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
             "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'sonarr-main'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres sonarr-main"
@@ -224,7 +224,7 @@ resource "kubernetes_job_v1" "sonarr_init" {
         }
         container {
           name    = "sonarr-logs"
-          image   = "postgres:16.13-bookworm"
+          image   = "postgres:18.3-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
             "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'sonarr-logs'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres sonarr-logs"
