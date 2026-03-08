@@ -1,5 +1,5 @@
 locals {
-  talos_version      = "1.11.0"
+  talos_version      = "1.12.4"
   kubernetes_version = "1.34.0"
 
   control_plane_nodes = { for v in var.nodes : v.name => v if v.role == "controlplane" }
@@ -92,7 +92,7 @@ resource "null_resource" "upgrade_node" {
 
   triggers = {
     talos_version = local.talos_version
-    schematic_id  = each.value.role == "gpu-worker" ? talos_image_factory_schematic.this.id : ""
+    schematic_id  = each.value.role == "gpu-worker" ? "factory.talos.dev/metal-installer/${talos_image_factory_schematic.this.id}" : "ghcr.io/siderolabs/installer"
   }
 
   provisioner "local-exec" {
