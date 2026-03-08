@@ -135,6 +135,11 @@ resource "kubernetes_job_v1" "bazarr_init" {
       }
     }
   }
+  lifecycle {
+    ignore_changes = [
+      spec.0.template.0.spec.0.container.0.image
+    ]
+  }
 }
 
 resource "kubernetes_persistent_volume_claim" "bazarr_config" {

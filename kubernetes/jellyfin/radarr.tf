@@ -240,6 +240,11 @@ resource "kubernetes_job_v1" "radarr_init" {
       }
     }
   }
+  lifecycle {
+    ignore_changes = [
+      spec.0.template.0.spec.0.container.0.image
+    ]
+  }
 }
 
 
