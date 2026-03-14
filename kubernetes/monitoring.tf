@@ -63,7 +63,7 @@ resource "helm_release" "nvidia_gpu_exporter" {
 
   values = [<<EOF
 image:
-    tag: 1.3.1
+    tag: 1.4.1
     repository: 405934267152.dkr.ecr.ca-central-1.amazonaws.com/nvidia-exporter
 imagePullSecrets:
 - name: ${kubernetes_manifest.monitoring_external_secret.manifest.spec.target.name}

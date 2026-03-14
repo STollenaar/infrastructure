@@ -1124,10 +1124,10 @@ cainjector:
   # For more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
   resources:
     requests:
-      cpu: 25m
-      memory: 60Mi
+      cpu: 10m
+      memory: 32Mi
     limits:
-      memory: 120Mi
+      memory: 128Mi
 
   # The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with
   # matching labels.
