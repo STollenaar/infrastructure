@@ -15,3 +15,6 @@ machine:
             gateway: 192.168.5.1
         dhcp: false
         mtu: 1500
+  kubelet:
+    extraArgs:
+      rotate-server-certificates: true
