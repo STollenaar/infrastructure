@@ -83,8 +83,16 @@ resource "talos_machine_configuration_apply" "node" {
 
   node = var.nodes[index(var.nodes.*.name, each.key)].endpoint
 
+  apply_mode                  = "staged"
   machine_configuration_input = each.value.machine_configuration
   client_configuration        = talos_machine_secrets.secrets.client_configuration
+}
+
+resource "local_file" "machine_configs" {
+  for_each = data.talos_machine_configuration.config
+
+  filename = "${var.nodes[index(var.nodes.*.name, each.key)].name}.yaml"
+  content  = each.value.machine_configuration
 }
 
 resource "null_resource" "upgrade_node" {
@@ -113,7 +121,7 @@ resource "null_resource" "upgrade_node" {
 }
 
 resource "null_resource" "upgrade_k8s" {
-    depends_on = [ null_resource.upgrade_node ]
+  depends_on = [null_resource.upgrade_node]
   triggers = {
     k8s_version = local.kubernetes_version
   }
