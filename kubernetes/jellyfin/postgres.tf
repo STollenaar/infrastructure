@@ -27,24 +27,6 @@ resource "kubernetes_manifest" "cnpg_cluster" {
       # The operator will load this plugin and use it for WAL archiving/backups.
       backup = {
         retentionPolicy = "7d"
-        barmanObjectStore = {
-          destinationPath = "s3://stollenaar-discordbots/jellyfin/postgres"
-          # credentialsSecret = kubernetes_secret_v1.postgres_backup.metadata.0.name
-          s3Credentials = {
-            accessKeyId = {
-              name = kubernetes_secret_v1.postgres_backup.metadata.0.name
-              key  = "ACCESS_KEY_ID"
-            }
-            secretAccessKey = {
-              name = kubernetes_secret_v1.postgres_backup.metadata.0.name
-              key  = "ACCESS_SECRET_KEY"
-            }
-          }
-          endpointURL = "https://s3.ca-east-006.backblazeb2.com"
-          wal = {
-            compression = "gzip"
-          }
-        }
       }
       plugins = [
         {
@@ -102,10 +84,10 @@ resource "kubernetes_manifest" "barman_object_store" {
       namespace = kubernetes_namespace.jellyfin.id
     }
     spec = {
+      retentionPolicy = "7d"
       configuration = {
         endpointURL     = "https://s3.ca-east-006.backblazeb2.com"
         destinationPath = "s3://stollenaar-discordbots/jellyfin/postgres"
-        # credentialsSecret = kubernetes_secret_v1.postgres_backup.metadata.0.name
         s3Credentials = {
           accessKeyId = {
             name = kubernetes_secret_v1.postgres_backup.metadata.0.name
@@ -117,7 +99,8 @@ resource "kubernetes_manifest" "barman_object_store" {
           }
         }
         wal = {
-          compression = "gzip"
+          compression  = "gzip"
+          maxParallel  = 8
         }
       }
     }

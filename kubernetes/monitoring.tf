@@ -132,3 +132,17 @@ resource "helm_release" "loki" {
 
   values = [templatefile("${path.module}/conf/loki-values.yaml", {})]
 }
+
+
+resource "helm_release" "hubble_timescape" {
+  name      = "hubble-timescape"
+  namespace = "kube-system"
+
+  version    = "1.18.5"
+  chart      = "hubble-timescape"
+  repository = "https://helm.isovalent.com"
+
+  values = [templatefile("${path.module}/conf/hubble-timescape-values.yaml", {})]
+
+}
+
