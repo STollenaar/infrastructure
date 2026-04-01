@@ -26,6 +26,7 @@ resource "kubernetes_manifest" "cnpg_cluster" {
       # Configure the barman object plugin via the Cluster's plugins array.
       # The operator will load this plugin and use it for WAL archiving/backups.
       backup = {
+        retentionPolicy = "7d"
         barmanObjectStore = {
           destinationPath = "s3://stollenaar-discordbots/jellyfin/postgres"
           # credentialsSecret = kubernetes_secret_v1.postgres_backup.metadata.0.name
