@@ -42,7 +42,7 @@ resource "helm_release" "prometheus_operator" {
 
   chart       = "kube-prometheus-stack"
   repository  = "https://prometheus-community.github.io/helm-charts"
-  version     = "82.16.1"
+  version     = "82.18.0"
   namespace   = kubernetes_namespace.monitoring.id
   timeout     = 300
   wait        = false
@@ -138,7 +138,7 @@ resource "helm_release" "hubble_timescape" {
   name      = "hubble-timescape"
   namespace = "kube-system"
 
-  version    = "1.18.5"
+  version    = "1.18.7"
   chart      = "hubble-timescape"
   repository = "https://helm.isovalent.com"
 
