@@ -101,7 +101,7 @@ resource "kubernetes_deployment" "external_dns_public" {
 
         container {
           name  = "external-dns-public"
-          image = "registry.k8s.io/external-dns/external-dns:v0.20.0"
+          image = "registry.k8s.io/external-dns/external-dns:v0.21.0"
 
           args = [
             "--source=ingress",
@@ -156,7 +156,7 @@ resource "kubernetes_deployment" "external_dns_public" {
 
         container {
           name  = "aws-provider"
-          image = "registry.k8s.io/external-dns/external-dns:v0.20.0"
+          image = "registry.k8s.io/external-dns/external-dns:v0.21.0"
 
           args = [
             "--webhook-server",

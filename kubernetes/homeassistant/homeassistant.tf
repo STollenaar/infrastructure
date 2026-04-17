@@ -40,7 +40,7 @@ resource "kubernetes_deployment_v1" "homeassistant" {
 
         container {
           name  = "homeassistant"
-          image = "ghcr.io/home-assistant/home-assistant:2026.4.0"
+          image = "ghcr.io/home-assistant/home-assistant:2026.4.3"
 
           port {
             container_port = 8123
