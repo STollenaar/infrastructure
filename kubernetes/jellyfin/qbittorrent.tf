@@ -191,10 +191,11 @@ resource "kubernetes_config_map" "qbittorrent_env" {
     namespace = kubernetes_namespace.jellyfin.id
   }
   data = {
-    "PUID"       = 1000
-    "PGID"       = 1000
-    "TZ"         = local.timezone
-    "FLOOD_AUTH" = "true"
+    "PUID"                  = 1000
+    "PGID"                  = 1000
+    "TZ"                    = local.timezone
+    "FLOOD_AUTH"            = "true"
+    "FIREWALL_INPUT_PORTS"  = "8080,8000"
   }
 }
 

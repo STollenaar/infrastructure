@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LiveTvOptions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <GuideDays>7</GuideDays>
+    <RecordingPath />
+    <MovieRecordingPath />
+    <SeriesRecordingPath />
+    <EnableRecordingSubfolders>true</EnableRecordingSubfolders>
+    <EnableOriginalAudioWithEncodedRecordings>false</EnableOriginalAudioWithEncodedRecordings>
+    <TunerHosts>
+        <TunerHostInfo>
+            <Id>NTVPlus.ca@SD</Id>
+            <Url>http://localhost:3000/tuner.m3u</Url>
+            <Type>m3u</Type>
+            <FriendlyName>NTV+</FriendlyName>
+            <ImportFavoritesOnly>false</ImportFavoritesOnly>
+            <AllowHWTranscoding>true</AllowHWTranscoding>
+            <AllowFmp4TranscodingContainer>false</AllowFmp4TranscodingContainer>
+            <AllowStreamSharing>true</AllowStreamSharing>
+            <FallbackMaxStreamingBitrate>30000000</FallbackMaxStreamingBitrate>
+            <EnableStreamLooping>false</EnableStreamLooping>
+            <Source />
+            <TunerCount>1</TunerCount>
+            <UserAgent />
+            <IgnoreDts>false</IgnoreDts>
+        </TunerHostInfo>
+    </TunerHosts>
+    <ListingProviders />
+    <EnableRecordingEncoding>false</EnableRecordingEncoding>
+    <RecordingPostProcessor />
+    <RecordingPostProcessorArguments>"{path}"</RecordingPostProcessorArguments>
+    <SaveRecordingNFO>true</SaveRecordingNFO>
+    <SaveRecordingImages>true</SaveRecordingImages>
+</LiveTvOptions>

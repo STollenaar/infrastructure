@@ -58,6 +58,46 @@ resource "kubernetes_deployment" "jellyfin" {
           fs_group = 1000
         }
         runtime_class_name = "nvidia"
+        init_container {
+          name    = "seed-livetv"
+          image   = "busybox:1.36"
+          command = ["sh", "-c", "[ -e /config/config/livetv.xml ] || cp /seed/livetv.xml /config/config/livetv.xml"]
+          security_context {
+            run_as_user  = 1000
+            run_as_group = 1000
+          }
+          volume_mount {
+            name       = "config"
+            mount_path = "/config/config"
+          }
+          volume_mount {
+            name       = "livetv"
+            mount_path = "/seed"
+          }
+        }
+        container {
+          name  = "epg"
+          image = "ghcr.io/iptv-org/epg:master"
+          port {
+            name           = "epg"
+            container_port = 3000
+          }
+          volume_mount {
+            name       = "epg-channels"
+            mount_path = "/epg/public/channels.xml"
+            sub_path   = "channels.xml"
+          }
+          volume_mount {
+            name       = "epg-site-ntv-ca"
+            mount_path = "/epg/sites/ntv.ca/ntv.ca.config.js"
+            sub_path   = "ntv.ca.config.js"
+          }
+          volume_mount {
+            name       = "jellyfin-tuner-m3u"
+            mount_path = "/epg/public/tuner.m3u"
+            sub_path   = "tuner.m3u"
+          }
+        }
         container {
           image = "jellyfin/jellyfin:10.11.6"
           name  = "jellyfin"
@@ -147,6 +187,46 @@ resource "kubernetes_deployment" "jellyfin" {
             items {
               key  = "system.xml"
               path = "system.xml"
+            }
+          }
+        }
+        volume {
+          name = "livetv"
+          config_map {
+            name = kubernetes_config_map.jellyfin_livetv.metadata.0.name
+            items {
+              key  = "livetv.xml"
+              path = "livetv.xml"
+            }
+          }
+        }
+        volume {
+          name = "epg-channels"
+          config_map {
+            name = kubernetes_config_map.jellyfin_epg_channels.metadata.0.name
+            items {
+              key  = "channels.xml"
+              path = "channels.xml"
+            }
+          }
+        }
+        volume {
+          name = "epg-site-ntv-ca"
+          config_map {
+            name = kubernetes_config_map.jellyfin_epg_site_ntv.metadata.0.name
+            items {
+              key  = "ntv.ca.config.js"
+              path = "ntv.ca.config.js"
+            }
+          }
+        }
+        volume {
+          name = "jellyfin-tuner-m3u"
+          config_map {
+            name = kubernetes_config_map.jellyfin_tuner_m3u.metadata.0.name
+            items {
+              key  = "tuner.m3u"
+              path = "tuner.m3u"
             }
           }
         }
@@ -399,6 +479,46 @@ resource "kubernetes_config_map" "jellyfin_restore_db" {
   }
   data = {
     "system.xml" = file("${path.module}/conf/jellyfin_system.xml")
+  }
+}
+
+resource "kubernetes_config_map" "jellyfin_livetv" {
+  metadata {
+    name      = "jellyfin-livetv"
+    namespace = kubernetes_namespace.jellyfin.id
+  }
+  data = {
+    "livetv.xml" = file("${path.module}/conf/jellyfin_livetv.xml")
+  }
+}
+
+resource "kubernetes_config_map" "jellyfin_epg_channels" {
+  metadata {
+    name      = "jellyfin-epg-channels"
+    namespace = kubernetes_namespace.jellyfin.id
+  }
+  data = {
+    "channels.xml" = file("${path.module}/conf/jellyfin_epg_channels.xml")
+  }
+}
+
+resource "kubernetes_config_map" "jellyfin_epg_site_ntv" {
+  metadata {
+    name      = "jellyfin-epg-site-ntv-ca"
+    namespace = kubernetes_namespace.jellyfin.id
+  }
+  data = {
+    "ntv.ca.config.js" = file("${path.module}/conf/ntv.ca.config.js")
+  }
+}
+
+resource "kubernetes_config_map" "jellyfin_tuner_m3u" {
+  metadata {
+    name      = "jellyfin-tuner-m3u"
+    namespace = kubernetes_namespace.jellyfin.id
+  }
+  data = {
+    "tuner.m3u" = file("${path.module}/conf/jellyfin_tuner.m3u")
   }
 }
 
