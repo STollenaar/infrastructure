@@ -42,7 +42,7 @@ resource "helm_release" "prometheus_operator" {
 
   chart       = "kube-prometheus-stack"
   repository  = "https://prometheus-community.github.io/helm-charts"
-  version     = "82.16.1"
+  version     = "84.1.1"
   namespace   = kubernetes_namespace.monitoring.id
   timeout     = 300
   wait        = false
@@ -128,7 +128,7 @@ resource "helm_release" "loki" {
 
   repository = "https://grafana.github.io/helm-charts"
   chart      = "loki"
-  version    = "6.55.0"
+  version    = "7.0.0"
 
   values = [templatefile("${path.module}/conf/loki-values.yaml", {})]
 }
