@@ -9,12 +9,12 @@ locals {
     {
       name     = "talos-e5t-zk5"
       endpoint = "192.168.5.123"
-      role     = "worker"
+      role     = "gpu-worker"
     },
     {
       name     = "talos-iso-cgi"
       endpoint = "192.168.5.124"
-      role     = "gpu-worker"
+      role     = "worker"
     }
   ]
   nas_ip = "192.168.5.125"

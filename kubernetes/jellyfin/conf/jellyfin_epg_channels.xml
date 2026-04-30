@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <channels>
     <channel site="ntv.ca" lang="en" xmltv_id="NTVPlus.ca" site_id="ntv-plus">NTV+</channel>
+    <channel site="pluto.tv" lang="en" xmltv_id="GlobalNational.ca" site_id="62cbef9ebb857100072fc187">Global National</channel>
 </channels>

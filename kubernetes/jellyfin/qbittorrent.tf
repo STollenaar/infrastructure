@@ -104,7 +104,7 @@ resource "kubernetes_deployment" "qbittorrent" {
           }
           resources {
             limits = {
-              "squat.ai/tun" = "1"
+              "devic.es/tun" = "1"
             }
           }
         }

@@ -784,9 +784,9 @@ webhook:
   resources:
     requests:
       cpu: 10m
-      memory: 15Mi
+      memory: 32Mi
     limits:
-      memory: 30Mi
+      memory: 64Mi
 
   # Liveness probe values.
   # For more information, see [Container probes](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes).
