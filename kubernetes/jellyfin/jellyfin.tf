@@ -60,7 +60,7 @@ resource "kubernetes_deployment" "jellyfin" {
         runtime_class_name = "nvidia"
         init_container {
           name    = "seed-livetv"
-          image   = "busybox:1.36"
+          image   = "busybox:1.37"
           command = ["sh", "-c", "[ -e /config/config/livetv.xml ] || cp /seed/livetv.xml /config/config/livetv.xml"]
           security_context {
             run_as_user  = 1000
@@ -99,7 +99,7 @@ resource "kubernetes_deployment" "jellyfin" {
           }
         }
         container {
-          image = "jellyfin/jellyfin:10.11.7"
+          image = "jellyfin/jellyfin:10.11.8"
           name  = "jellyfin"
           env_from {
             config_map_ref {
