@@ -37,6 +37,9 @@ resource "kubernetes_deployment" "ollama" {
 
   spec {
     replicas = 1
+    strategy {
+      type = "Recreate"
+    }
     selector {
       match_labels = {
         app = "ollama"
@@ -174,6 +177,11 @@ resource "kubernetes_job" "ollama_model_creation" {
     }
 
     backoff_limit = 4
+  }
+  lifecycle {
+    ignore_changes = [
+      spec.0.template.0.spec.0.container.0.image
+    ]
   }
 }
 
