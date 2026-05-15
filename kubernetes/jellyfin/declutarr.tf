@@ -21,17 +21,27 @@ resource "kubernetes_deployment" "decluttarr" {
         labels = {
           app = "decluttarr"
         }
+        annotations = {
+          "checksum/config" = sha256(kubernetes_config_map_v1.decluttarr_config.data["config.yaml"])
+        }
       }
 
       spec {
         container {
           name  = "decluttarr"
-          image = "ghcr.io/manimatter/decluttarr:latest"
+          image = "ghcr.io/manimatter/decluttarr:v2.1.0"
 
-          env_from {
-            config_map_ref {
-              name = kubernetes_config_map_v1.decluttarr_config.metadata[0].name
-            }
+          env {
+            name  = "TZ"
+            value = local.timezone
+          }
+          env {
+            name  = "PUID"
+            value = "1000"
+          }
+          env {
+            name  = "PGID"
+            value = "1000"
           }
 
           env_from {
@@ -40,8 +50,43 @@ resource "kubernetes_deployment" "decluttarr" {
             }
           }
 
+          volume_mount {
+            name       = "config"
+            mount_path = "/app/config/config.yaml"
+            sub_path   = "config.yaml"
+          }
+          volume_mount {
+            name       = "movies"
+            mount_path = "/movies"
+          }
+          volume_mount {
+            name       = "tv"
+            mount_path = "/tv"
+          }
+
+
           image_pull_policy = "Always"
         }
+
+        volume {
+          name = "config"
+          config_map {
+            name = kubernetes_config_map_v1.decluttarr_config.metadata[0].name
+          }
+        }
+        volume {
+          name = "movies"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.jellyfin_movies.metadata.0.name
+          }
+        }
+        volume {
+          name = "tv"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.jellyfin_shows.metadata.0.name
+          }
+        }
+
 
         restart_policy = "Always"
       }
@@ -59,39 +104,53 @@ resource "kubernetes_config_map_v1" "decluttarr_config" {
   }
 
   data = {
-    "TZ"                           = local.timezone
-    PUID                           = "1000"
-    PGID                           = "1000"
-    LOG_LEVEL                      = "INFO"
-    REMOVE_TIMER                   = "10"
-    REMOVE_FAILED                  = "True"
-    REMOVE_FAILED_IMPORTS          = "True"
-    REMOVE_METADATA_MISSING        = "True"
-    REMOVE_MISSING_FILES           = "True"
-    REMOVE_ORPHANS                 = "True"
-    REMOVE_SLOW                    = "True"
-    REMOVE_STALLED                 = "True"
-    REMOVE_UNMONITORED             = "True"
-    RUN_PERIODIC_RESCANS           = <<EOF
-{
-  "SONARR": {"MISSING": true, "CUTOFF_UNMET": true, "MAX_CONCURRENT_SCANS": 3, "MIN_DAYS_BEFORE_RESCAN": 7},
-  "RADARR": {"MISSING": true, "CUTOFF_UNMET": true, "MAX_CONCURRENT_SCANS": 3, "MIN_DAYS_BEFORE_RESCAN": 7}
-}
-EOF
-    PERMITTED_ATTEMPTS             = "3"
-    NO_STALLED_REMOVAL_QBIT_TAG    = "Don't Kill"
-    MIN_DOWNLOAD_SPEED             = "100"
-    FAILED_IMPORT_MESSAGE_PATTERNS = <<EOF
-[
-  "Not a Custom Format upgrade for existing",
-  "Not an upgrade for existing"
-]
-EOF
-    IGNORED_DOWNLOAD_CLIENTS       = "[\"emulerr\"]"
+    "config.yaml" = <<-EOT
+      general:
+        log_level: INFO
+        test_run: false
+        timer: 10
+        ignored_download_clients:
+          - emulerr
+        protected_tag: "Don't Kill"
 
-    RADARR_URL      = "http://${kubernetes_service.radarr.metadata.0.name}:7878"
-    SONARR_URL      = "http://${kubernetes_service.sonarr.metadata.0.name}:8989"
-    QBITTORRENT_URL = "http://${kubernetes_service.qbittorrent.metadata.0.name}:8080"
+      job_defaults:
+        max_strikes: 3
+        min_days_between_searches: 7
+        max_concurrent_searches: 3
+
+      jobs:
+        remove_bad_files:
+        remove_failed_downloads:
+        remove_failed_imports:
+          message_patterns:
+            - "Not a Custom Format upgrade for existing*"
+            - "Not an upgrade for existing*"
+            - "*Found potentially dangerous file with extension*"
+            - "Invalid video file*"
+            - "No files found are eligible for import*"
+        remove_metadata_missing:
+        remove_missing_files:
+        remove_orphans:
+        remove_stalled:
+            max_strikes: 3
+        remove_unmonitored:
+        search_unmet_cutoff:
+        search_missing:
+
+      instances:
+        sonarr:
+          - base_url: "http://${kubernetes_service.sonarr.metadata.0.name}:8989"
+            api_key: !ENV SONARR_KEY
+        radarr:
+          - base_url: "http://${kubernetes_service.radarr.metadata.0.name}:7878"
+            api_key: !ENV RADARR_KEY
+
+      download_clients:
+        qbittorrent:
+          - base_url: "http://${kubernetes_service.qbittorrent.metadata.0.name}:8080"
+            username: !ENV QBITTORRENT_USERNAME
+            password: !ENV QBITTORRENT_PASSWORD
+    EOT
   }
 }
 
