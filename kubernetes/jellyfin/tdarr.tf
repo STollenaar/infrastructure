@@ -176,7 +176,7 @@ resource "kubernetes_deployment" "tdarr_node" {
         }
 
         container {
-          image = "ghcr.io/haveagitgat/tdarr_node:2.73.01"
+          image = "ghcr.io/haveagitgat/tdarr_node:2.74.01"
           name  = "tdarr-node"
           env_from {
             config_map_ref {
