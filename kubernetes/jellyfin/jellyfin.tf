@@ -106,7 +106,7 @@ resource "kubernetes_deployment" "jellyfin" {
               name = kubernetes_config_map.jellyfin_env.metadata.0.name
             }
           }
-          
+
           port {
             name           = "web"
             container_port = 8096
@@ -159,7 +159,7 @@ resource "kubernetes_deployment" "jellyfin" {
         volume {
           name = "data"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.jellyfin_data.metadata.0.name
+            claim_name = kubernetes_persistent_volume_claim.jellyfin_data_local.metadata.0.name
           }
         }
         volume {
@@ -252,6 +252,23 @@ resource "kubernetes_persistent_volume_claim" "jellyfin_data" {
       }
     }
   }
+}
+
+resource "kubernetes_persistent_volume_claim" "jellyfin_data_local" {
+  metadata {
+    name      = "jellyfin-data-local"
+    namespace = kubernetes_namespace.jellyfin.id
+  }
+  spec {
+    storage_class_name = "openebs-hostpath"
+    access_modes       = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        storage = "10Gi"
+      }
+    }
+  }
+  wait_until_bound = false
 }
 
 resource "kubernetes_persistent_volume_claim" "jellyfin_cache" {
@@ -465,10 +482,10 @@ resource "kubernetes_config_map" "jellyfin_env" {
     "TZ"        = local.timezone
 
     NVIDIA_VISIBLE_DEVICES = "all"
-    JELLYFIN_CACHE_DIR = "/config/cache"
-    JELLYFIN_CONFIG_DIR = "/config/config"
-    JELLYFIN_DATA_DIR = "/config/data"
-    JELLYFIN_LOG_DIR = "/config/log"
+    JELLYFIN_CACHE_DIR     = "/config/cache"
+    JELLYFIN_CONFIG_DIR    = "/config/config"
+    JELLYFIN_DATA_DIR      = "/config/data"
+    JELLYFIN_LOG_DIR       = "/config/log"
   }
 }
 

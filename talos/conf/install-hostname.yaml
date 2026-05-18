@@ -16,6 +16,15 @@ machine:
         dhcp: false
         mtu: 1500
   kubelet:
+    extraMounts:
+          #Default Hostpath directory
+        - destination: /var/openebs/local
+          type: bind
+          source: /var/openebs/local
+          options:
+            - rbind
+            - rshared
+            - rw
     extraArgs:
       rotate-server-certificates: true
 cluster:
