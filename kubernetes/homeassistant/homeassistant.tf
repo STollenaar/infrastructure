@@ -50,14 +50,14 @@ resource "kubernetes_deployment_v1" "homeassistant" {
             mount_path = "/config"
             name       = "config"
           }
-          volume_mount {
-            name       = "zigbee"
-            mount_path = "/dev/zigbee"
-          }
 
-          # recommended for Home Assistant
-          security_context {
-            privileged = true
+          # Zigbee dongle is provided by generic-device-plugin (devic.es/zigbee),
+          # mounted at /dev/ttyUSB0 to match the ZHA integration config.
+          # This replaces privileged + host_path passthrough.
+          resources {
+            limits = {
+              "devic.es/zigbee" = 1
+            }
           }
         }
 
@@ -65,14 +65,6 @@ resource "kubernetes_deployment_v1" "homeassistant" {
           name = "config"
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim_v1.ha_data.metadata[0].name
-          }
-        }
-
-        volume {
-          name = "zigbee"
-          host_path {
-            path = "/dev/serial/by-id/usb-SONOFF_SONOFF_Dongle_Plus_MG24_5890910df69aef11ac9db89061ce3355-if00-port0"
-            type = "CharDevice"
           }
         }
       }

@@ -100,7 +100,7 @@ resource "kubernetes_deployment" "rtlamr2mqtt" {
         # Needed for direct USB access on most clusters
         container {
           name  = "rtlamr2mqtt"
-          image = "allangood/rtlamr2mqtt:latest"
+          image = "allangood/rtlamr2mqtt:2026.5.9"
 
           # Mount config file
           volume_mount {
@@ -110,24 +110,17 @@ resource "kubernetes_deployment" "rtlamr2mqtt" {
             read_only  = true
           }
 
-          # Mount USB bus from node
-          volume_mount {
-            name       = "usb"
-            mount_path = "/dev/bus/usb"
-          }
-
-          security_context {
-            privileged = true
-          }
-
+          # RTL-SDR (Realtek 0bda:2838) is provided by generic-device-plugin
+          # (devic.es/rtlsdr). This replaces privileged + /dev/bus/usb passthrough.
           resources {
             requests = {
               cpu    = "100m"
               memory = "128Mi"
             }
             limits = {
-              cpu    = "500m"
-              memory = "512Mi"
+              cpu               = "500m"
+              memory            = "512Mi"
+              "devic.es/rtlsdr" = 1
             }
           }
         }
@@ -136,14 +129,6 @@ resource "kubernetes_deployment" "rtlamr2mqtt" {
           name = "config"
           config_map {
             name = kubernetes_config_map.cfg.metadata[0].name
-          }
-        }
-
-        volume {
-          name = "usb"
-          host_path {
-            path = "/dev/bus/usb"
-            type = "Directory"
           }
         }
       }

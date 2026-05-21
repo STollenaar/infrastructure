@@ -47,6 +47,26 @@ resource "kubernetes_daemonset" "generic_device_plugin" {
                 paths:
                   - path: /dev/net/tun
             EOT
+            ,
+            "--device",
+            <<-EOT
+            name: zigbee
+            groups:
+              - count: 1
+                paths:
+                  - path: /dev/serial/by-id/usb-SONOFF_SONOFF_Dongle_Plus_MG24_5890910df69aef11ac9db89061ce3355-if00-port0
+                    mountPath: /dev/ttyUSB0
+            EOT
+            ,
+            "--device",
+            <<-EOT
+            name: rtlsdr
+            groups:
+              - count: 1
+                usb:
+                  - vendor: "0bda"
+                    product: "2838"
+            EOT
           ]
 
           resources {
