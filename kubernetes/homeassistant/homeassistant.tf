@@ -10,6 +10,10 @@ resource "kubernetes_deployment_v1" "homeassistant" {
   spec {
     replicas = 1
 
+    strategy {
+      type = "Recreate"
+    }
+
     selector {
       match_labels = {
         app = "homeassistant"
