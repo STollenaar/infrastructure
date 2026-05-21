@@ -99,7 +99,7 @@ resource "kubernetes_deployment" "jellyfin" {
           }
         }
         container {
-          image = "jellyfin/jellyfin:10.11.8"
+          image = "jellyfin/jellyfin:10.11.9"
           name  = "jellyfin"
           env_from {
             config_map_ref {
