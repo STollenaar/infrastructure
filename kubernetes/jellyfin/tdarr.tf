@@ -46,7 +46,7 @@ resource "kubernetes_deployment" "tdarr" {
         runtime_class_name = "nvidia"
 
         container {
-          image = "ghcr.io/haveagitgat/tdarr:2.73.01"
+          image = "ghcr.io/haveagitgat/tdarr:2.74.01"
           name  = "tdarr-server"
           env_from {
             config_map_ref {

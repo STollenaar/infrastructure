@@ -28,7 +28,7 @@ resource "helm_release" "metallb" {
 
   chart     = "metallb"
   name      = "metallb"
-  version   = "0.15.3"
+  version   = "0.16.0"
   namespace = kubernetes_namespace.metallb_system.id
 
   set = [
