@@ -122,7 +122,7 @@ resource "kubernetes_stateful_set_v1" "kubehound_mongo" {
       spec {
         container {
           name  = "mongodb"
-          image = "mongo:6.0.28"
+          image = "mongo:8.3.2"
           port {
             container_port = 27017
           }
@@ -226,7 +226,7 @@ resource "kubernetes_deployment_v1" "kubehound_graph" {
       spec {
         container {
           name  = "kubegraph"
-          image = "ghcr.io/datadog/kubehound-graph:v1.6.7"
+          image = "ghcr.io/datadog/kubehound-graph:v2.0.1"
           port {
             name           = "gremlin"
             container_port = 8182
