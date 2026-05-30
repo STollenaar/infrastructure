@@ -25,7 +25,7 @@ resource "kubernetes_deployment" "jellyseerr" {
 
       spec {
         container {
-          image = "fallenbagel/jellyseerr:2.7.3"
+          image = "ghcr.io/seerr-team/seerr:sha-c04172a"
           name  = "jellyseerr"
           env_from {
             config_map_ref {
