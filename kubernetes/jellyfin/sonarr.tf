@@ -27,7 +27,7 @@ resource "kubernetes_deployment" "sonarr" {
       spec {
         init_container {
           name  = "init-config"
-          image = "busybox:1.37.0"
+          image = "busybox:1.38.0"
           args = [
             "/bin/sh",
             "-c",

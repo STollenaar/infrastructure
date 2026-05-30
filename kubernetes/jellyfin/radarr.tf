@@ -30,7 +30,7 @@ resource "kubernetes_deployment" "radarr" {
         }
         init_container {
           name  = "init-config"
-          image = "busybox:1.37.0"
+          image = "busybox:1.38.0"
           args = [
             "/bin/sh",
             "-c",
