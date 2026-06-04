@@ -38,7 +38,7 @@ resource "kubernetes_deployment" "jellyswarrm" {
 
           env {
             name  = "JELLYSWARRM_PASSWORD"
-            value = "jellyswarrm" # ⚠️ Change this in production!
+            value = random_password.jellyswarrm_server_password.result
           }
 
           volume_mount {
@@ -130,4 +130,52 @@ resource "kubernetes_ingress_v1" "jellyswarrm" {
       secret_name = "jellyswarrm-tls"
     }
   }
+}
+
+resource "kubernetes_ingress_v1" "jellyswarrm_public" {
+  metadata {
+    name      = "jellyswarrm-public"
+    namespace = kubernetes_namespace.jellyfin.id
+
+    annotations = {
+      "kubernetes.io/ingress.class"               = "nginx"
+      "cert-manager.io/cluster-issuer"            = "letsencrypt-prod"
+      "external-dns.alpha.kubernetes.io/hostname" = "jellyswarrm.spicedelver.me"
+    }
+  }
+  spec {
+    ingress_class_name = "nginx"
+    rule {
+      host = "jellyswarrm.spicedelver.me"
+      http {
+        path {
+          path = "/"
+          backend {
+            service {
+              name = kubernetes_service.jellyswarrm.metadata.0.name
+              port {
+                number = 3000
+              }
+            }
+          }
+        }
+      }
+    }
+    tls {
+      hosts = [
+        "jellyswarrm.spicedelver.me"
+      ]
+      secret_name = "jellyswarrm-public-tls"
+    }
+  }
+}
+
+resource "random_password" "jellyswarrm_server_password" {
+  length = 10
+}
+
+resource "aws_ssm_parameter" "jellyswarrm_server_password" {
+  name  = "/jellyswarrm/server_password"
+  type  = "SecureString"
+  value = random_password.jellyswarrm_server_password.result
 }

@@ -131,7 +131,7 @@ data "aws_iam_policy_document" "extenral_dns_role_policy" {
     condition {
       test     = "ForAllValues:StringLike"
       variable = "route53:ChangeResourceRecordSetsNormalizedRecordNames"
-      values   = ["jellyfin.spicedelver.me", "a-jellyfin.spicedelver.me"]
+      values   = ["jellyfin.spicedelver.me", "a-jellyfin.spicedelver.me", "jellyswarrm.spicedelver.me", "a-jellyswarrm.spicedelver.me"]
     }
 
     condition {
