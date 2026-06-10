@@ -10,7 +10,7 @@ resource "kubernetes_namespace" "vault" {
 
 resource "helm_release" "external_secrets" {
   name       = "external-secrets"
-  version    = "2.5.0"
+  version    = "2.6.0"
   namespace  = kubernetes_namespace.vault.id
   repository = "https://charts.external-secrets.io"
   chart      = "external-secrets"
@@ -68,7 +68,7 @@ resource "kubernetes_secret" "vault_unseal_user" {
 
 resource "helm_release" "vault" {
   name       = "vault"
-  version    = "0.32.0"
+  version    = "0.33.0"
   namespace  = kubernetes_namespace.vault.id
   repository = "https://helm.releases.hashicorp.com"
   chart      = "vault"
