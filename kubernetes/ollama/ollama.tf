@@ -87,7 +87,7 @@ resource "kubernetes_deployment" "ollama" {
 
           resources {
             limits = {
-              memory = "16Gi"
+              memory = "10Gi"
             }
             requests = {
               memory = "8Gi"

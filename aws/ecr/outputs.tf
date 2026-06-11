@@ -17,3 +17,8 @@ output "renovate_repo" {
   value = aws_ecr_repository.registries["renovate"]
   sensitive = true
 }
+
+output "pennymoon_repo" {
+  value = aws_ecr_repository.registries["pennymoon"]
+  sensitive = true
+}

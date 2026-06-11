@@ -4,25 +4,9 @@ locals {
     "diplomacy",
     "renovate",
     "external-ip",
-    "stable-diffusion"
+    "stable-diffusion",
+    "pennymoon"
   ]
-}
-
-moved {
-  from = aws_ecr_repository.diplomacy
-  to = aws_ecr_repository.registries["diplomacy"]
-}
-moved {
-  from = aws_ecr_repository.discord_bots
-  to = aws_ecr_repository.registries["discordbots"]
-}
-moved {
-  from = aws_ecr_repository.renovate
-  to = aws_ecr_repository.registries["renovate"]
-}
-moved {
-  from = aws_ecr_repository.external_ip
-  to = aws_ecr_repository.registries["external-ip"]
 }
 
 resource "aws_ecr_repository" "registries" {
