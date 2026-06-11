@@ -15,7 +15,7 @@ resource "helm_release" "local_pv" {
 
   repository = "https://openebs.github.io/dynamic-localpv-provisioner"
   chart      = "localpv-provisioner"
-  version    = "4.5.0"
+  version    = "4.5.1"
 
   values = [templatefile("${path.module}/conf/openebs-values.yaml", {})]
 }
