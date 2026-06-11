@@ -122,7 +122,7 @@ resource "kubernetes_stateful_set_v1" "kubehound_mongo" {
       spec {
         container {
           name  = "mongodb"
-          image = "mongo:8.3.3"
+          image = "mongo:6.0.28"
           port {
             container_port = 27017
           }
