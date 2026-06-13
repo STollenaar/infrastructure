@@ -10,7 +10,7 @@ resource "helm_release" "cloudnativepg" {
 
   repository = "https://cloudnative-pg.github.io/charts"
   chart      = "cloudnative-pg"
-  version    = "0.28.2"
+  version    = "0.28.3"
 
   set = [
     {
@@ -34,5 +34,5 @@ resource "helm_release" "barman_cloud" {
 
   repository = "https://cloudnative-pg.github.io/charts"
   chart      = "plugin-barman-cloud"
-  version    = "0.6.0"
+  version    = "0.7.0"
 }
