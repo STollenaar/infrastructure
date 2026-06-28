@@ -1,34 +1,22 @@
-resource "kubernetes_runtime_class_v1" "nvidia" {
-  metadata {
-    name = "nvidia"
-  }
-
-  handler = "nvidia"
-}
-
-resource "helm_release" "nvidia_device_plugin" {
-  name       = "nvidia-device-plugin"
+resource "helm_release" "nvidia_operator" {
+  name       = "nvidia-gpu-operator"
   namespace  = "kube-system"
-  repository = "https://nvidia.github.io/k8s-device-plugin"
-  chart      = "nvidia-device-plugin"
-  version    = "0.19.3"
+  repository = "https://helm.ngc.nvidia.com/nvidia"
+  chart      = "gpu-operator"
+  version    = "v26.3.1"
 
   set = [
     {
-      name  = "runtimeClassName"
-      value = kubernetes_runtime_class_v1.nvidia.metadata.0.name
+      name  = "driver.enabled"
+      value = false
     },
     {
-      name  = "resources.requests.memory"
-      value = "30Mi"
+      name  = "toolkit.enabled"
+      value = false
     },
     {
-      name  = "resources.limits.memory"
-      value = "90Mi"
+      name  = "hostPaths.driverInstallDir"
+      value = "/usr/local"
     },
-    {
-      name  = "resources.requests.cpu"
-      value = "10m"
-    }
   ]
 }

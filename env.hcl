@@ -23,5 +23,5 @@ locals {
 
   controlplane_ip = [for n in local.nodes : n.endpoint if n.role == "controlplane"]
 
-  cluster_endpoint = "https://${local.controlplane_ip[0]}"
+  cluster_endpoint = "https://${local.controlplane_ip[0]}:6443"
 }

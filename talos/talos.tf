@@ -1,6 +1,6 @@
 locals {
-  talos_version      = "1.12.4"
-  kubernetes_version = "1.34.0"
+  talos_version      = "1.13.5"
+  kubernetes_version = "1.36.1"
 
   control_plane_nodes = { for v in var.nodes : v.name => v if v.role == "controlplane" }
   worker_nodes        = { for v in var.nodes : v.name => v if strcontains(v.role, "worker") }
