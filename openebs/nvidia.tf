@@ -3,7 +3,7 @@ resource "helm_release" "nvidia_operator" {
   namespace  = "kube-system"
   repository = "https://helm.ngc.nvidia.com/nvidia"
   chart      = "gpu-operator"
-  version    = "v26.3.1"
+  version    = "v26.3.3"
 
   set = [
     {
