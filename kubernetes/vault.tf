@@ -70,7 +70,7 @@ resource "kubernetes_secret" "vault_unseal_user" {
 
 resource "helm_release" "vault" {
   name       = "vault"
-  version    = "0.33.0"
+  version    = "0.34.0"
   namespace  = kubernetes_namespace.vault.id
   repository = "https://helm.releases.hashicorp.com"
   chart      = "vault"
@@ -194,7 +194,7 @@ resource "kubernetes_cron_job_v1" "vault_ecr_token" {
             service_account_name = kubernetes_service_account_v1.internal_app_sa.metadata.0.name
             container {
               name    = "ecr-refresher"
-              image   = "amazon/aws-cli:2.35.11"
+              image   = "amazon/aws-cli:2.35.14"
               command = ["bash", "-c", file("${path.module}/conf/vault-ecr.sh")]
               env {
                 name  = "AWS_SHARED_CREDENTIALS_FILE"
