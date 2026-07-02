@@ -31,6 +31,8 @@ resource "helm_release" "metallb" {
   version   = "0.16.1"
   namespace = kubernetes_namespace.metallb_system.id
 
+  max_history = 5
+
   set = [
     {
       name  = "frr-k8s.prometheus.serviceMonitor.enabled"

@@ -6,6 +6,8 @@ resource "helm_release" "csi_nfs" {
   chart      = "csi-driver-nfs"
   version    = "4.13.3"
 
+  max_history = 5
+
   #   values = [templatefile("${path.module}/conf/nfs-csi-values.yaml", {
   #     nfs_path           = "/mnt/storage/kubernetes"
   #     storage_class_name = "nfs-csi-movies"

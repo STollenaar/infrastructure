@@ -17,5 +17,7 @@ resource "helm_release" "local_pv" {
   chart      = "localpv-provisioner"
   version    = "4.5.1"
 
+  max_history = 5
+
   values = [templatefile("${path.module}/conf/openebs-values.yaml", {})]
 }

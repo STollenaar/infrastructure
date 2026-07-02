@@ -46,7 +46,7 @@ resource "helm_release" "prometheus_operator" {
   namespace   = kubernetes_namespace.monitoring.id
   timeout     = 300
   wait        = false
-  max_history = 50
+  max_history = 5
 
   values = [
     templatefile("${path.module}/conf/prometheus-operator-values.yaml",
@@ -60,6 +60,8 @@ resource "helm_release" "nvidia_gpu_exporter" {
   chart      = "nvidia-gpu-exporter"
   version    = "1.0.0" # Update to the latest version if needed
   namespace  = kubernetes_namespace.monitoring.id
+
+  max_history = 5
 
   values = [<<EOF
 image:
@@ -129,6 +131,8 @@ resource "helm_release" "loki" {
   repository = "https://grafana.github.io/helm-charts"
   chart      = "loki"
   version    = "7.0.0"
+
+  max_history = 5
 
   values = [templatefile("${path.module}/conf/loki-values.yaml", {})]
 }

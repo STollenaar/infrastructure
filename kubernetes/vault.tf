@@ -15,6 +15,8 @@ resource "helm_release" "external_secrets" {
   repository = "https://charts.external-secrets.io"
   chart      = "external-secrets"
 
+  max_history = 5
+
   set = [
     {
       name  = "resources.requests.memory"
@@ -72,6 +74,8 @@ resource "helm_release" "vault" {
   namespace  = kubernetes_namespace.vault.id
   repository = "https://helm.releases.hashicorp.com"
   chart      = "vault"
+
+  max_history = 5
 
   values = [templatefile("${path.module}/conf/vault-values.yaml", {
     kms_key_id          = aws_kms_key.vault.key_id,

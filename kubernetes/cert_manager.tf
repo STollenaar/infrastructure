@@ -14,7 +14,7 @@ resource "helm_release" "cert_manager" {
   repository  = "https://charts.jetstack.io"
   namespace   = kubernetes_namespace.cert_manager.id
   wait        = false
-  max_history = 50
+  max_history = 5
   values = [templatefile("${path.module}/conf/cert-manager-values.yaml", {
   })]
 

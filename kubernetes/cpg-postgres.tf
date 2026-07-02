@@ -12,6 +12,8 @@ resource "helm_release" "cloudnativepg" {
   chart      = "cloudnative-pg"
   version    = "0.28.3"
 
+  max_history = 5
+
   set = [
     {
       name  = "resources.requests.cpu"
@@ -35,4 +37,6 @@ resource "helm_release" "barman_cloud" {
   repository = "https://cloudnative-pg.github.io/charts"
   chart      = "plugin-barman-cloud"
   version    = "0.7.0"
+
+  max_history = 5
 }

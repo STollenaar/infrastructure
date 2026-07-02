@@ -9,4 +9,5 @@ resource "helm_release" "cilium" {
   values = [file("${path.module}/conf/cilium-enterprise-values.yaml")]
   wait   = false
   timeout = 1200
+  max_history = 10
 }

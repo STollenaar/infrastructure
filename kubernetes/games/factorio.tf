@@ -12,6 +12,8 @@ resource "helm_release" "factorio" {
   chart      = "factorio-server-charts"
   version    = "2.5.2"
 
+  max_history = 5
+
   values = [templatefile("${path.module}/conf/factorio-values.yaml", {
     server_password = random_password.server_password.result
     account_secret  = kubernetes_secret_v1.factorio_secret.metadata.0.name

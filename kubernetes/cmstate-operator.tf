@@ -26,6 +26,8 @@ resource "helm_release" "cmstate_operator" {
   repository = "https://stollenaar.github.io/cmstate-injector-operator"
   chart      = "cmstate-operator"
 
+  max_history = 5
+
   values = [templatefile("${path.module}/conf/cmstate-operator-values.yaml", {
     ca_secret   = "${kubernetes_namespace.cmstate_operator.id}/${kubernetes_secret_v1.vault_cert_issuer.metadata.0.name}"
     cert_secret = kubernetes_secret_v1.vault_cert_issuer.metadata.0.name

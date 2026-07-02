@@ -31,6 +31,7 @@ resource "helm_release" "github_arc" {
   repository = "oci://ghcr.io/actions/actions-runner-controller-charts"
   chart      = "gha-runner-scale-set-controller"
   version    = local.github_arc_version
+  max_history = 5
   values     = []
   set = [
     {

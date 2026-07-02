@@ -17,6 +17,7 @@ resource "helm_release" "tailscale" {
   namespace  = kubernetes_namespace.tailscale.id
   chart      = "tailscale-operator"
   repository = "https://pkgs.tailscale.com/helmcharts"
+  max_history = 5
   values     = [file("${path.module}/conf/tailscale-values.yaml")]
 }
 

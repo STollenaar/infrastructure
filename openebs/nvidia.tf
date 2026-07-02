@@ -5,6 +5,8 @@ resource "helm_release" "nvidia_operator" {
   chart      = "gpu-operator"
   version    = "v26.3.1"
 
+  max_history = 5
+
   set = [
     {
       name  = "driver.enabled"
