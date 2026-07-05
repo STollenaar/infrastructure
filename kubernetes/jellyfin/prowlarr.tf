@@ -19,6 +19,9 @@ resource "kubernetes_deployment" "prowlarr" {
 
     template {
       metadata {
+        annotations = {
+          "configmap-hash" = sha256(jsonencode(kubernetes_config_map.prowlarr_custom_indexers.data))
+        }
         labels = {
           "app" = "prowlarr"
         }
@@ -68,6 +71,10 @@ resource "kubernetes_deployment" "prowlarr" {
             name       = "data"
             mount_path = "/config"
           }
+          volume_mount {
+            name       = "custom-indexers"
+            mount_path = "/config/Definitions/Custom"
+          }
         }
         volume {
           name = "config"
@@ -79,6 +86,12 @@ resource "kubernetes_deployment" "prowlarr" {
           name = "data"
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim.prowlarr_data.metadata.0.name
+          }
+        }
+        volume {
+          name = "custom-indexers"
+          config_map {
+            name = kubernetes_config_map.prowlarr_custom_indexers.metadata.0.name
           }
         }
       }
@@ -148,6 +161,16 @@ resource "kubernetes_config_map" "prowlarr_cm" {
   }
 }
 
+resource "kubernetes_config_map" "prowlarr_custom_indexers" {
+  metadata {
+    name      = "prowlarr-custom-indexers"
+    namespace = kubernetes_namespace.jellyfin.id
+  }
+  data = { for f in fileset("${path.module}/conf/prowlarrCustomIndexers", "*") : f => templatefile("${path.module}/conf/prowlarrCustomIndexers/${f}", {
+    proxy = "${kubernetes_service.byparr.metadata.0.name}.${kubernetes_namespace.jellyfin.id}.svc.cluster.local:8889"
+  }) }
+}
+
 resource "kubernetes_job_v1" "prowlarr_init" {
   depends_on = [kubernetes_manifest.cnpg_cluster]
   metadata {
@@ -194,8 +217,8 @@ resource "kubernetes_job_v1" "prowlarr_init" {
   }
   lifecycle {
     ignore_changes = [
-        spec.0.template.0.spec.0.container.0.image,
-        spec.0.template.0.spec.0.container.1.image
+      spec.0.template.0.spec.0.container.0.image,
+      spec.0.template.0.spec.0.container.1.image
     ]
   }
 }

@@ -10,7 +10,7 @@ resource "kubernetes_manifest" "discordbots_external_secret" {
     kind       = "ExternalSecret"
     metadata = {
       name      = "ecr-auth"
-      namespace = kubernetes_namespace_v1.discordbots.metadata.0.name
+      namespace = kubernetes_namespace_v1.discordbots.id
     }
     spec = {
       secretStoreRef = {

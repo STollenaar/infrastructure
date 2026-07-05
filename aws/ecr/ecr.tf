@@ -1,5 +1,6 @@
 locals {
   registries = [
+    "byparr-proxy",
     "discordbots",
     "diplomacy",
     "renovate",

@@ -1,21 +1,26 @@
-resource "kubernetes_namespace_v1" "pennymoon" {
+resource "kubernetes_namespace" "jellyfin" {
   metadata {
-    name = "pennymoon"
+    name = "jellyfin"
+    labels = {
+      "pod-security.kubernetes.io/audit"   = "privileged"
+      "pod-security.kubernetes.io/enforce" = "privileged"
+      "pod-security.kubernetes.io/warn"    = "privileged"
+    }
   }
 }
 
-resource "kubernetes_manifest" "pennymoon_external_secret" {
+resource "kubernetes_manifest" "jellyfin_external_secret" {
   manifest = {
     apiVersion = "external-secrets.io/v1"
     kind       = "ExternalSecret"
     metadata = {
       name      = "ecr-auth"
-      namespace = kubernetes_namespace_v1.pennymoon.id
+      namespace = kubernetes_namespace.jellyfin.id
     }
     spec = {
       secretStoreRef = {
-        name = kubernetes_manifest.vault_backend.manifest.metadata.name
-        kind = kubernetes_manifest.vault_backend.manifest.kind
+        name = var.vault_backend.name
+        kind = var.vault_backend.kind
       }
       target = {
         name = "regcred"

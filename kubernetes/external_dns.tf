@@ -296,7 +296,7 @@ resource "kubernetes_manifest" "external_dns_secret" {
     kind       = "ExternalSecret"
     metadata = {
       name      = "ecr-auth"
-      namespace = kubernetes_namespace_v1.external_dns.metadata.0.name
+      namespace = kubernetes_namespace_v1.external_dns.id
     }
     spec = {
       secretStoreRef = {

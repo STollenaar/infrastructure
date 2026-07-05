@@ -1,6 +1,11 @@
 module "jellyfin" {
   source     = "./jellyfin"
   depends_on = [helm_release.cloudnativepg]
+
+  vault_backend = {
+    kind = kubernetes_manifest.vault_backend.manifest.kind
+    name = kubernetes_manifest.vault_backend.manifest.metadata.name
+  }
 }
 
 module "games" {
