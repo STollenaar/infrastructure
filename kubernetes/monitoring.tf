@@ -42,7 +42,7 @@ resource "helm_release" "prometheus_operator" {
 
   chart       = "kube-prometheus-stack"
   repository  = "https://prometheus-community.github.io/helm-charts"
-  version     = "87.5.1"
+  version     = "87.10.1"
   namespace   = kubernetes_namespace.monitoring.id
   timeout     = 300
   wait        = false
@@ -58,7 +58,7 @@ resource "helm_release" "nvidia_gpu_exporter" {
   name       = "nvidia-gpu-exporter"
   repository = "https://utkuozdemir.org/helm-charts"
   chart      = "nvidia-gpu-exporter"
-  version    = "1.0.0" # Update to the latest version if needed
+  version    = "1.0.2" # Update to the latest version if needed
   namespace  = kubernetes_namespace.monitoring.id
 
   max_history = 5
