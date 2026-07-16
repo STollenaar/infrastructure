@@ -75,3 +75,8 @@ controller:
         topologyKey: kubernetes.io/hostname
 defaultBackend:
   replicaCount: 3
+
+# Raw UDP passthrough (rendered into the udp-services ConfigMap and exposed on the
+# controller's LoadBalancer). Space Engineers dedicated server game port.
+udp:
+  "27016": "spaceengineers/spaceengineers-game:27016"

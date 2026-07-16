@@ -23,7 +23,7 @@ output "discordbots" {
 
 output "pennymoon" {
   value = {
-    namespace    = kubernetes_namespace_v1.pennymoon
+    namespace   = kubernetes_namespace_v1.pennymoon
     secret_name = kubernetes_manifest.pennymoon_external_secret.manifest.spec.target.name
   }
 }

@@ -11,14 +11,14 @@ resource "kubernetes_namespace" "tailscale" {
 }
 
 resource "helm_release" "tailscale" {
-  depends_on = [kubernetes_secret.tailscale]
-  name       = "tailscale"
-  version    = "1.98.4"
-  namespace  = kubernetes_namespace.tailscale.id
-  chart      = "tailscale-operator"
-  repository = "https://pkgs.tailscale.com/helmcharts"
+  depends_on  = [kubernetes_secret.tailscale]
+  name        = "tailscale"
+  version     = "1.98.4"
+  namespace   = kubernetes_namespace.tailscale.id
+  chart       = "tailscale-operator"
+  repository  = "https://pkgs.tailscale.com/helmcharts"
   max_history = 5
-  values     = [file("${path.module}/conf/tailscale-values.yaml")]
+  values      = [file("${path.module}/conf/tailscale-values.yaml")]
 }
 
 ## For syncing secrets from hcp vault secrets:

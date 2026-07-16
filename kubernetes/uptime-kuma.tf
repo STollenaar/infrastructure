@@ -59,9 +59,9 @@ resource "kubernetes_deployment_v1" "uptime_kuma" {
     }
   }
   lifecycle {
-    ignore_changes = [ 
-        spec.0.replicas
-     ]
+    ignore_changes = [
+      spec.0.replicas
+    ]
   }
 }
 

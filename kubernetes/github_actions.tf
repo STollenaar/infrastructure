@@ -26,13 +26,13 @@ resource "kubernetes_secret_v1" "controller_manager" {
 }
 
 resource "helm_release" "github_arc" {
-  name       = "github-arc"
-  namespace  = kubernetes_namespace_v1.github_actions_runner.id
-  repository = "oci://ghcr.io/actions/actions-runner-controller-charts"
-  chart      = "gha-runner-scale-set-controller"
-  version    = local.github_arc_version
+  name        = "github-arc"
+  namespace   = kubernetes_namespace_v1.github_actions_runner.id
+  repository  = "oci://ghcr.io/actions/actions-runner-controller-charts"
+  chart       = "gha-runner-scale-set-controller"
+  version     = local.github_arc_version
   max_history = 5
-  values     = []
+  values      = []
   set = [
     {
       name  = "resources.requests.memory"

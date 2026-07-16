@@ -21,14 +21,14 @@ module "games" {
 }
 
 module "homeassistant" {
-    source = "./homeassistant"
+  source = "./homeassistant"
 }
 
 module "ollama" {
-    source = "./ollama"
+  source = "./ollama"
 
-    vault_backend ={
-        kind = kubernetes_manifest.vault_backend.manifest.kind
-        name = kubernetes_manifest.vault_backend.manifest.metadata.name
-    }
+  vault_backend = {
+    kind = kubernetes_manifest.vault_backend.manifest.kind
+    name = kubernetes_manifest.vault_backend.manifest.metadata.name
+  }
 }
