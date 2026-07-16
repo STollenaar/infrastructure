@@ -418,16 +418,16 @@ rconAPI:
   httpPort: 30110
   grpcPort: 30111
 
+  # Left disabled during the move to the NGINX Ingress Controller. This was still
+  # on the chart's placeholder hostname (factorio.example.com) with TLS off, so it
+  # never routed real traffic. To expose the RCON API, add a VirtualServer in
+  # factorio.tf against the factorio-factorio-server-charts-rcon-api service
+  # (http on 30110, grpc on 30111 -- a grpc upstream requires type: grpc and TLS).
   ingress:
-    enabled: true
-    hostname: "factorio.example.com"
-    className: "nginx"
-    annotations:
-      nginx.ingress.kubernetes.io/ssl-redirect: "true"
-      nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+    enabled: false
+    annotations: {}
     tls:
       enabled: false
-      secretName: "cert-factorio.example.com"
 
 ## @param map_gen_settings.width Map width in tiles; 0 means infinite
 ## @param map_gen_settings.height Map height in tiles; 0 means infinite

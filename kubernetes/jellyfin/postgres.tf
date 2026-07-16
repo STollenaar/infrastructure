@@ -99,8 +99,8 @@ resource "kubernetes_manifest" "barman_object_store" {
           }
         }
         wal = {
-          compression  = "gzip"
-          maxParallel  = 8
+          compression = "gzip"
+          maxParallel = 8
         }
       }
     }

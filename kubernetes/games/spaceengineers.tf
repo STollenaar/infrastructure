@@ -256,35 +256,70 @@ resource "kubernetes_service_v1" "spaceengineers_web" {
   }
 }
 
-resource "kubernetes_ingress_v1" "spaceengineers" {
-  metadata {
-    name      = "spaceengineers"
-    namespace = kubernetes_namespace_v1.spaceengineers.id
-    annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+resource "kubernetes_manifest" "spaceengineers_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "spaceengineers"
+      namespace = kubernetes_namespace_v1.spaceengineers.id
+    }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "spaceengineers.home.spicedelver.me"
+      tls = {
+        secret = "spaceengineers-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
+        }
+      }
+      upstreams = [{
+        name    = "spaceengineers-web"
+        service = kubernetes_service_v1.spaceengineers_web.metadata.0.name
+        port    = local.spaceengineers_web_port
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "spaceengineers-web"
+        }
+      }]
     }
   }
-  spec {
-    ingress_class_name = "nginx"
-    tls {
-      hosts       = ["spaceengineers.home.spicedelver.me"]
-      secret_name = "spaceengineers-tls"
+}
+
+# Raw UDP passthrough for the game port. This replaces the old ingress-nginx
+# "udp-services" ConfigMap entry; the matching listener is declared in
+# conf/nginx-ingress-values.yaml.
+resource "kubernetes_manifest" "spaceengineers_game_transportserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "TransportServer"
+    metadata = {
+      name      = "spaceengineers-game"
+      namespace = kubernetes_namespace_v1.spaceengineers.id
     }
-    rule {
-      host = "spaceengineers.home.spicedelver.me"
-      http {
-        path {
-          path = "/"
-          backend {
-            service {
-              name = kubernetes_service_v1.spaceengineers_web.metadata.0.name
-              port {
-                number = local.spaceengineers_web_port
-              }
-            }
-          }
-        }
+    spec = {
+      ingressClassName = "nginx"
+      listener = {
+        name     = "spaceengineers-game-udp"
+        protocol = "UDP"
+      }
+      upstreams = [{
+        name    = "spaceengineers-game"
+        service = kubernetes_service_v1.spaceengineers_game.metadata.0.name
+        port    = local.spaceengineers_game_port
+      }]
+      # The dedicated server holds long-lived UDP sessions; the NGINX default of
+      # 10m would drop idle players mid-session.
+      sessionParameters = {
+        timeout = "60m"
+      }
+      action = {
+        pass = "spaceengineers-game"
       }
     }
   }

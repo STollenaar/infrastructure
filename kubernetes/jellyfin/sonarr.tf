@@ -239,46 +239,44 @@ resource "kubernetes_job_v1" "sonarr_init" {
   }
   lifecycle {
     ignore_changes = [
-        spec.0.template.0.spec.0.container.0.image,
-        spec.0.template.0.spec.0.container.1.image
+      spec.0.template.0.spec.0.container.0.image,
+      spec.0.template.0.spec.0.container.1.image
     ]
   }
 }
 
 
-resource "kubernetes_ingress_v1" "sonarr" {
-  metadata {
-    name      = "sonarr"
-    namespace = kubernetes_namespace.jellyfin.id
-
-    annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+resource "kubernetes_manifest" "sonarr_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "sonarr"
+      namespace = kubernetes_namespace.jellyfin.id
     }
-  }
-  spec {
-    ingress_class_name = "nginx"
-    rule {
-      host = "sonarr.home.spicedelver.me"
-      http {
-        path {
-          path = "/"
-          backend {
-            service {
-              name = kubernetes_service.sonarr.metadata.0.name
-              port {
-                number = 8989
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "sonarr.home.spicedelver.me"
+      tls = {
+        secret = "sonarr-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
-    }
-    tls {
-      hosts = [
-        "sonarr.home.spicedelver.me"
-      ]
-      secret_name = "sonarr-tls"
+      upstreams = [{
+        name    = "sonarr"
+        service = kubernetes_service.sonarr.metadata.0.name
+        port    = 8989
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "sonarr"
+        }
+      }]
     }
   }
 }

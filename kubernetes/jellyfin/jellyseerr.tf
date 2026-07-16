@@ -103,76 +103,74 @@ resource "kubernetes_service" "jellyseerr" {
 }
 
 
-resource "kubernetes_ingress_v1" "jellyseerr" {
-  metadata {
-    name      = "jellyseerr"
-    namespace = kubernetes_namespace.jellyfin.id
-
-    annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+resource "kubernetes_manifest" "jellyseerr_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "jellyseerr"
+      namespace = kubernetes_namespace.jellyfin.id
     }
-  }
-  spec {
-    ingress_class_name = "nginx"
-    rule {
-      host = "jellyseerr.home.spicedelver.me"
-      http {
-        path {
-          path = "/"
-          backend {
-            service {
-              name = kubernetes_service.jellyseerr.metadata.0.name
-              port {
-                number = 5055
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "jellyseerr.home.spicedelver.me"
+      tls = {
+        secret = "jellyseerr-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
-    }
-    tls {
-      hosts = [
-        "jellyseerr.home.spicedelver.me"
-      ]
-      secret_name = "jellyseerr-tls"
+      upstreams = [{
+        name    = "jellyseerr"
+        service = kubernetes_service.jellyseerr.metadata.0.name
+        port    = 5055
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "jellyseerr"
+        }
+      }]
     }
   }
 }
 
-resource "kubernetes_ingress_v1" "jellyseer_public" {
-  metadata {
-    name      = "jellyseerr-public"
-    namespace = kubernetes_namespace.jellyfin.id
-
-    annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+# Public host, but external-dns does not manage its record: the old Ingress had no
+# external-dns hostname annotation, so spec.externalDNS is deliberately unset.
+resource "kubernetes_manifest" "jellyseerr_public_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "jellyseerr-public"
+      namespace = kubernetes_namespace.jellyfin.id
     }
-  }
-  spec {
-    ingress_class_name = "nginx"
-    rule {
-      host = "jellyseerr.spicedelver.me"
-      http {
-        path {
-          path = "/"
-          backend {
-            service {
-              name = kubernetes_service.jellyseerr.metadata.0.name
-              port {
-                number = 5055
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "jellyseerr.spicedelver.me"
+      tls = {
+        secret = "jellyseerr-public-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
-    }
-    tls {
-      hosts = [
-        "jellyseerr.spicedelver.me"
-      ]
-      secret_name = "jellyseerr-public-tls"
+      upstreams = [{
+        name    = "jellyseerr"
+        service = kubernetes_service.jellyseerr.metadata.0.name
+        port    = 5055
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "jellyseerr"
+        }
+      }]
     }
   }
 }

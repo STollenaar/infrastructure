@@ -164,6 +164,9 @@ resource "kubernetes_stateful_set_v1" "kubehound_mongo" {
       }
     }
   }
+  lifecycle {
+    ignore_changes = [spec.0.replicas]
+  }
 }
 
 resource "kubernetes_service_v1" "kubehound_mongo" {
@@ -265,6 +268,9 @@ resource "kubernetes_deployment_v1" "kubehound_graph" {
         }
       }
     }
+  }
+  lifecycle {
+    ignore_changes = [spec.0.replicas]
   }
 }
 
@@ -390,6 +396,9 @@ resource "kubernetes_deployment_v1" "kubehound_ui" {
       }
     }
   }
+  lifecycle {
+    ignore_changes = [spec.0.replicas]
+  }
 }
 
 resource "kubernetes_service_v1" "kubehound_ui" {
@@ -408,37 +417,37 @@ resource "kubernetes_service_v1" "kubehound_ui" {
   }
 }
 
-resource "kubernetes_ingress_v1" "kubehound_ui" {
-  metadata {
-    name      = "kubehound-ui"
-    namespace = kubernetes_namespace_v1.kubehound.id
-    annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+resource "kubernetes_manifest" "kubehound_ui_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "kubehound-ui"
+      namespace = kubernetes_namespace_v1.kubehound.id
     }
-  }
-  spec {
-    ingress_class_name = "nginx"
-    rule {
-      host = local.kubehound_host
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-          backend {
-            service {
-              name = kubernetes_service_v1.kubehound_ui.metadata.0.name
-              port {
-                number = 8888
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = local.kubehound_host
+      tls = {
+        secret = "kubehound-ui-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
-    }
-    tls {
-      hosts       = [local.kubehound_host]
-      secret_name = "kubehound-ui-tls"
+      upstreams = [{
+        name    = "kubehound-ui"
+        service = kubernetes_service_v1.kubehound_ui.metadata.0.name
+        port    = 8888
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "kubehound-ui"
+        }
+      }]
     }
   }
 }

@@ -85,6 +85,47 @@ resource "helm_release" "vault" {
   })]
 }
 
+# Replaces the Ingress the Vault chart used to render (server.ingress).
+# server.ingress.activeService only appends the "-active" suffix in HA mode, and
+# server.ha.enabled is false here, so this targets the plain vault service --
+# which is what the chart's Ingress resolved to as well.
+resource "kubernetes_manifest" "vault_virtualserver" {
+  depends_on = [helm_release.vault]
+
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "vault"
+      namespace = kubernetes_namespace.vault.id
+    }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "vault.home.spicedelver.me"
+      tls = {
+        secret = "vault-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
+        }
+      }
+      upstreams = [{
+        name    = "vault"
+        service = helm_release.vault.name
+        port    = 8200
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "vault"
+        }
+      }]
+    }
+  }
+}
+
 resource "kubernetes_job_v1" "vault_init" {
   depends_on = [helm_release.vault]
   metadata {

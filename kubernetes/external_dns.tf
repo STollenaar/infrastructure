@@ -30,10 +30,19 @@ resource "kubernetes_cluster_role" "external_dns" {
     verbs      = ["get", "watch", "list"]
   }
 
+  # NGINX Ingress Controller renders VirtualServer.spec.externalDNS into
+  # DNSEndpoint resources, which are what external-dns now reads instead of
+  # Ingress objects.
   rule {
-    api_groups = ["extensions", "networking.k8s.io"]
-    resources  = ["ingresses"]
+    api_groups = ["externaldns.nginx.org"]
+    resources  = ["dnsendpoints"]
     verbs      = ["get", "watch", "list"]
+  }
+
+  rule {
+    api_groups = ["externaldns.nginx.org"]
+    resources  = ["dnsendpoints/status"]
+    verbs      = ["update"]
   }
 }
 
@@ -100,12 +109,21 @@ resource "kubernetes_deployment" "external_dns_public" {
         service_account_name = kubernetes_service_account_v1.external_dns_public.metadata.0.name
 
         container {
-          name  = "external-dns-public"
-          image = "registry.k8s.io/external-dns/external-dns:v0.21.0"
+          name = "external-dns-public"
+          # Pinned: do not upgrade to v0.21.0+ without reworking DNS discovery.
+          # v0.21.0 rewrote the crd source onto controller-runtime, hardcoding its
+          # own externaldns.k8s.io/v1alpha1 DNSEndpoint type and silently ignoring
+          # --crd-source-apiversion. It cannot read the externaldns.nginx.org/v1
+          # DNSEndpoints that NGINX Ingress Controller emits, and crashloops on a
+          # failed restmapping instead. v0.20.0 still honors the flag.
+          image = "registry.k8s.io/external-dns/external-dns:v0.20.0"
 
+          # Hosts opt in via VirtualServer.spec.externalDNS.enable, which replaces
+          # the old external-dns.alpha.kubernetes.io/hostname annotation filter.
           args = [
-            "--source=ingress",
-            "--annotation-filter=external-dns.alpha.kubernetes.io/hostname",
+            "--source=crd",
+            "--crd-source-apiversion=externaldns.nginx.org/v1",
+            "--crd-source-kind=DNSEndpoint",
             "--provider=webhook",
             "--webhook-provider-url=http://127.0.0.1:8889",
             "--registry=txt",
@@ -155,13 +173,21 @@ resource "kubernetes_deployment" "external_dns_public" {
         }
 
         container {
-          name  = "aws-provider"
-          image = "registry.k8s.io/external-dns/external-dns:v0.21.0"
+          name = "aws-provider"
+          # Pinned: do not upgrade to v0.21.0+ without reworking DNS discovery.
+          # v0.21.0 rewrote the crd source onto controller-runtime, hardcoding its
+          # own externaldns.k8s.io/v1alpha1 DNSEndpoint type and silently ignoring
+          # --crd-source-apiversion. It cannot read the externaldns.nginx.org/v1
+          # DNSEndpoints that NGINX Ingress Controller emits, and crashloops on a
+          # failed restmapping instead. v0.20.0 still honors the flag.
+          image = "registry.k8s.io/external-dns/external-dns:v0.20.0"
 
           args = [
             "--webhook-server",
             "--provider=aws",
-            "--source=ingress",
+            "--source=crd",
+            "--crd-source-apiversion=externaldns.nginx.org/v1",
+            "--crd-source-kind=DNSEndpoint",
             "--aws-zone-type=public",
             "--registry=txt",
             "--metrics-address=:7980",

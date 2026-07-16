@@ -403,19 +403,14 @@ server:
   # from Kubernetes to access Vault pods.
   # If deployment is on OpenShift, the following block is ignored.
   # In order to expose the service, use the route section below
+  # Replaced by the VirtualServer in vault.tf. The chart only knows how to emit an
+  # Ingress, so routing for vault.home.spicedelver.me is defined there instead.
   ingress:
-    enabled: true
+    enabled: false
     labels:
       {}
       # traffic: external
-    annotations:
-      # |
-      kubernetes.io/ingress.class: nginx
-      cert-manager.io/cluster-issuer: "letsencrypt-prod"
-      # kubernetes.io/tls-acme: "true"
-      #   or
-      # kubernetes.io/ingress.class: nginx
-      # kubernetes.io/tls-acme: "true"
+    annotations: {}
 
     # Optionally use ingressClassName instead of deprecated annotation.
     # See: https://kubernetes.io/docs/concepts/services-networking/ingress/#deprecated-annotation

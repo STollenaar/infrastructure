@@ -384,77 +384,75 @@ resource "kubernetes_service" "jellyfin_discovery" {
   }
 }
 
-resource "kubernetes_ingress_v1" "jellyfin" {
-  metadata {
-    name      = "jellyfin"
-    namespace = kubernetes_namespace.jellyfin.id
-
-    annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+resource "kubernetes_manifest" "jellyfin_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "jellyfin"
+      namespace = kubernetes_namespace.jellyfin.id
     }
-  }
-  spec {
-    ingress_class_name = "nginx"
-    rule {
-      host = "jellyfin.home.spicedelver.me"
-      http {
-        path {
-          path = "/"
-          backend {
-            service {
-              name = kubernetes_service.jellyfin_web.metadata.0.name
-              port {
-                number = 8096
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "jellyfin.home.spicedelver.me"
+      tls = {
+        secret = "jellyfin-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
-    }
-    tls {
-      hosts = [
-        "jellyfin.home.spicedelver.me"
-      ]
-      secret_name = "jellyfin-tls"
+      upstreams = [{
+        name    = "jellyfin"
+        service = kubernetes_service.jellyfin_web.metadata.0.name
+        port    = 8096
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "jellyfin"
+        }
+      }]
     }
   }
 }
 
-resource "kubernetes_ingress_v1" "jellyfin_public" {
-  metadata {
-    name      = "jellyfin-public"
-    namespace = kubernetes_namespace.jellyfin.id
-
-    annotations = {
-      "kubernetes.io/ingress.class"               = "nginx"
-      "cert-manager.io/cluster-issuer"            = "letsencrypt-prod"
-      "external-dns.alpha.kubernetes.io/hostname" = "jellyfin.spicedelver.me"
+resource "kubernetes_manifest" "jellyfin_public_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "jellyfin-public"
+      namespace = kubernetes_namespace.jellyfin.id
     }
-  }
-  spec {
-    ingress_class_name = "nginx"
-    rule {
-      host = "jellyfin.spicedelver.me"
-      http {
-        path {
-          path = "/"
-          backend {
-            service {
-              name = kubernetes_service.jellyfin_web.metadata.0.name
-              port {
-                number = 8096
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "jellyfin.spicedelver.me"
+      externalDNS = {
+        enable = true
+      }
+      tls = {
+        secret = "jellyfin-public-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
-    }
-    tls {
-      hosts = [
-        "jellyfin.spicedelver.me"
-      ]
-      secret_name = "jellyfin-public-tls"
+      upstreams = [{
+        name    = "jellyfin"
+        service = kubernetes_service.jellyfin_web.metadata.0.name
+        port    = 8096
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "jellyfin"
+        }
+      }]
     }
   }
 }

@@ -242,46 +242,44 @@ resource "kubernetes_job_v1" "radarr_init" {
   }
   lifecycle {
     ignore_changes = [
-        spec.0.template.0.spec.0.container.0.image,
-        spec.0.template.0.spec.0.container.1.image
+      spec.0.template.0.spec.0.container.0.image,
+      spec.0.template.0.spec.0.container.1.image
     ]
   }
 }
 
 
-resource "kubernetes_ingress_v1" "radarr" {
-  metadata {
-    name      = "radarr"
-    namespace = kubernetes_namespace.jellyfin.id
-
-    annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+resource "kubernetes_manifest" "radarr_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "radarr"
+      namespace = kubernetes_namespace.jellyfin.id
     }
-  }
-  spec {
-    ingress_class_name = "nginx"
-    rule {
-      host = "radarr.home.spicedelver.me"
-      http {
-        path {
-          path = "/"
-          backend {
-            service {
-              name = kubernetes_service.radarr.metadata.0.name
-              port {
-                number = 7878
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "radarr.home.spicedelver.me"
+      tls = {
+        secret = "radarr-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
-    }
-    tls {
-      hosts = [
-        "radarr.home.spicedelver.me"
-      ]
-      secret_name = "radarr-tls"
+      upstreams = [{
+        name    = "radarr"
+        service = kubernetes_service.radarr.metadata.0.name
+        port    = 7878
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "radarr"
+        }
+      }]
     }
   }
 }

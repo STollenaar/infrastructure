@@ -54,6 +54,45 @@ resource "helm_release" "prometheus_operator" {
   ]
 }
 
+# Replaces the Ingress the kube-prometheus-stack chart used to render
+# (grafana.ingress).
+resource "kubernetes_manifest" "grafana_virtualserver" {
+  depends_on = [helm_release.prometheus_operator]
+
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "grafana"
+      namespace = kubernetes_namespace.monitoring.id
+    }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "grafana.home.spicedelver.me"
+      tls = {
+        secret = "grafana-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
+        }
+      }
+      upstreams = [{
+        name    = "grafana"
+        service = "${helm_release.prometheus_operator.name}-grafana"
+        port    = 80
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "grafana"
+        }
+      }]
+    }
+  }
+}
+
 resource "helm_release" "nvidia_gpu_exporter" {
   name       = "nvidia-gpu-exporter"
   repository = "https://utkuozdemir.org/helm-charts"

@@ -212,43 +212,45 @@ resource "kubernetes_manifest" "diplomacy_external_secret" {
   }
 }
 
-resource "kubernetes_ingress_v1" "diplomacy" {
-  metadata {
-    name      = "diplomacy"
-    namespace = kubernetes_namespace_v1.diplomacy.id
-
-    annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+resource "kubernetes_manifest" "diplomacy_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "diplomacy"
+      namespace = kubernetes_namespace_v1.diplomacy.id
     }
-  }
-  spec {
-    ingress_class_name = "nginx"
-    tls {
-      hosts = [
-        "diplomacy.home.spicedelver.me"
-      ]
-      secret_name = "diplomacy-tls"
-    }
-    rule {
-      host = "diplomacy.home.spicedelver.me"
-      http {
-        path {
-          path = "/"
-          backend {
-            service {
-              name = kubernetes_service_v1.diplomacy_frontend.metadata.0.name
-              port {
-                number = 8080
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "diplomacy.home.spicedelver.me"
+      tls = {
+        secret = "diplomacy-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
+      upstreams = [{
+        name    = "diplomacy-frontend"
+        service = kubernetes_service_v1.diplomacy_frontend.metadata.0.name
+        port    = 8080
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "diplomacy-frontend"
+        }
+      }]
     }
   }
 }
 
+// The NGINX Ingress Controller basicAuth policy requires the nginx.org/htpasswd
+// secret type with the htpasswd file under the "htpasswd" key, rather than the
+// Opaque/"auth" layout that ingress-nginx expected. The SSM value itself is an
+// unchanged htpasswd file.
 resource "kubernetes_secret_v1" "diplomacy_basic_auth" {
   metadata {
     name      = "diplomacy-basic-auth"
@@ -256,50 +258,66 @@ resource "kubernetes_secret_v1" "diplomacy_basic_auth" {
   }
 
   data = {
-    "auth" = data.aws_ssm_parameter.diplomacy_auth.value
+    "htpasswd" = data.aws_ssm_parameter.diplomacy_auth.value
   }
 
-  type = "Opaque"
+  type = "nginx.org/htpasswd"
+}
+
+resource "kubernetes_manifest" "diplomacy_basic_auth_policy" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "Policy"
+    metadata = {
+      name      = "diplomacy-basic-auth"
+      namespace = kubernetes_namespace_v1.diplomacy.id
+    }
+    spec = {
+      basicAuth = {
+        secret = kubernetes_secret_v1.diplomacy_basic_auth.metadata.0.name
+        realm  = "Authentication Required"
+      }
+    }
+  }
 }
 
 
-resource "kubernetes_ingress_v1" "diplomacy_ingress_public" {
-  metadata {
-    name      = "diplomacy-public"
-    namespace = kubernetes_namespace_v1.diplomacy.id
-    annotations = {
-      "kubernetes.io/ingress.class"             = "nginx"
-      "cert-manager.io/cluster-issuer"          = "letsencrypt-prod"
-      "nginx.ingress.kubernetes.io/auth-type"   = "basic"
-      "nginx.ingress.kubernetes.io/auth-secret" = "diplomacy-basic-auth"
-      "nginx.ingress.kubernetes.io/auth-realm"  = "Authentication Required"
+# Public host, but external-dns does not manage its record: the old Ingress had no
+# external-dns hostname annotation, so spec.externalDNS is deliberately unset.
+resource "kubernetes_manifest" "diplomacy_public_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "diplomacy-public"
+      namespace = kubernetes_namespace_v1.diplomacy.id
     }
-  }
-
-  spec {
-    ingress_class_name = "nginx"
-    rule {
-      host = "diplomacy.spicedelver.me"
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-          backend {
-            service {
-              name = kubernetes_service_v1.diplomacy_frontend.metadata.0.name
-              port {
-                number = 8080
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "diplomacy.spicedelver.me"
+      policies = [{
+        name = kubernetes_manifest.diplomacy_basic_auth_policy.manifest.metadata.name
+      }]
+      tls = {
+        secret = "diplomacy-tls-public"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
-    }
-    tls {
-      hosts = [
-        "diplomacy.spicedelver.me"
-      ]
-      secret_name = "diplomacy-tls-public"
+      upstreams = [{
+        name    = "diplomacy-frontend"
+        service = kubernetes_service_v1.diplomacy_frontend.metadata.0.name
+        port    = 8080
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "diplomacy-frontend"
+        }
+      }]
     }
   }
 }

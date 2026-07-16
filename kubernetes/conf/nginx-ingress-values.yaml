@@ -1,82 +1,80 @@
 controller:
-  # image:
-  #   chroot: true
-  # containerSecurityContext:
-    # runAsUser: 101
-    # allowPrivilegeEscalation: true
-    # readOnlyRootFilesystem: false
-    # capabilities:
-    #   drop:
-    #     - ALL
-    #   add:
-    #     - NET_BIND_SERVICE
-    #     - SYS_CHROOT
+  # Serves VirtualServer / VirtualServerRoute / TransportServer / Policy.
+  enableCustomResources: true
+
+  # Lets VirtualServer.spec.tls.cert-manager drive certificate issuance, so hosts
+  # keep working the way the old cert-manager.io/cluster-issuer annotation did.
+  enableCertManager: true
+
+  # Lets VirtualServer.spec.externalDNS emit DNSEndpoint resources for
+  # external-dns to consume. See external_dns.tf.
+  enableExternalDNS: true
+
+  ingressClass:
+    name: nginx
+    create: true
+    setAsDefaultIngress: false
+
   config:
-    ssl-protocols: TLSv1.3 TLSv1.2
-    load-balance: ewma
-    allow-snippet-annotations: "true"
-    # disable-access-log: "true"
-    enable-vts-status: "true"
-    error-log-level: "error"
-    hsts: "false"
-    # large-client-header-buffers: "4 8K"
-    # log-format-upstream: "$status $body_bytes_sent $http_referer"
-    # server-name-hash-bucket-size: "1024"
-    # server-name-hash-max-size: "1024"
-    server-tokens: "false"
-    worker-processes: "auto"
-    proxy-buffering: "on"
-    multi-accept: "off"
-    proxy-buffer-size: "16k"
-    proxy-busy-buffers-size: "16k"
-    keep-alive: "1"
-    keep-alive-requests: "20000"
-    # enable-underscores-in-headers: ""
-    # proxy-buffers-size: ""
-    # proxy-buffers: ""
-  # admissionWebhooks:
-  #   patch:
-  #     podAnnotations:
-  #       sidecar.istio.io/inject: "false"
-  podAnnotations: {}
+    entries:
+      ssl-protocols: TLSv1.3 TLSv1.2
+      # ingress-nginx served HTTP/2 by default; NGINX Ingress Controller does not.
+      http2: "true"
+      # The old config asked for "ewma", which only exists in ingress-nginx's Lua
+      # balancer. This is the closest supported equivalent.
+      lb-method: random two least_conn
+      error-log-level: error
+      hsts: "false"
+      server-tokens: "false"
+      worker-processes: "auto"
+      proxy-buffering: "true"
+      proxy-buffer-size: 16k
+      # Load-bearing, do not drop: with proxy_buffers left at its default 8 4k,
+      # nginx derives proxy_busy_buffers_size as 2 * proxy-buffer-size (32k), which
+      # exceeds the "total proxy_buffers minus one buffer" limit of 28k and makes
+      # the reload fail outright. Pinning it to 16k satisfies both bounds.
+      proxy-busy-buffers-size: 16k
+      keepalive-timeout: 1s
+      keepalive-requests: "20000"
+
+  globalConfiguration:
+    create: true
+    spec:
+      listeners:
+        - name: spaceengineers-game-udp
+          port: ${spaceengineers_game_port}
+          protocol: UDP
+
   service:
     annotations: {}
     loadBalancerIP: ${load_balancer_main_ip}
-      # If you want NLB instead of ELB, enable this!
     externalTrafficPolicy: Local
+
   replicaCount: 2
-  stats:
-    enabled: true
-  metrics:
-    enabled: true
+
   resources:
     requests:
       cpu: 250m
       memory: 256Mi
+
   affinity:
-    # An example of preferred pod anti-affinity, weight is in the range 1-100
     podAntiAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
-      - podAffinityTerm:
-          labelSelector:
-            matchExpressions:
-            - key: app.kubernetes.io/name
-              operator: In
-              values:
-              - 'nginx-ingress'
-            - key: app.kubernetes.io/instance
-              operator: In
-              values:
-              - 'nginx-ingress'
-            - key: app.kubernetes.io/component
-              operator: In
-              values:
-              - controller
-        topologyKey: kubernetes.io/hostname
-defaultBackend:
-  replicaCount: 3
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                    - "nginx-ingress"
+                - key: app.kubernetes.io/instance
+                  operator: In
+                  values:
+                    - "nginx-ingress"
+          topologyKey: kubernetes.io/hostname
 
-# Raw UDP passthrough (rendered into the udp-services ConfigMap and exposed on the
-# controller's LoadBalancer). Space Engineers dedicated server game port.
-udp:
-  "27016": "spaceengineers/spaceengineers-game:27016"
+# Replaces the old controller.stats/controller.metrics (enable-vts-status) setup.
+# Like the old chart, this exposes metrics without creating a ServiceMonitor.
+prometheus:
+  create: true
+  port: 9113

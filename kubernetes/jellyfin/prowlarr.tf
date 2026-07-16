@@ -223,39 +223,37 @@ resource "kubernetes_job_v1" "prowlarr_init" {
   }
 }
 
-resource "kubernetes_ingress_v1" "prowlarr" {
-  metadata {
-    name      = "prowlarr"
-    namespace = kubernetes_namespace.jellyfin.id
-
-    annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+resource "kubernetes_manifest" "prowlarr_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "prowlarr"
+      namespace = kubernetes_namespace.jellyfin.id
     }
-  }
-  spec {
-    ingress_class_name = "nginx"
-    rule {
-      host = "prowlarr.home.spicedelver.me"
-      http {
-        path {
-          path = "/"
-          backend {
-            service {
-              name = kubernetes_service.prowlarr.metadata.0.name
-              port {
-                number = 9696
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "prowlarr.home.spicedelver.me"
+      tls = {
+        secret = "prowlarr-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
-    }
-    tls {
-      hosts = [
-        "prowlarr.home.spicedelver.me"
-      ]
-      secret_name = "prowlarr-tls"
+      upstreams = [{
+        name    = "prowlarr"
+        service = kubernetes_service.prowlarr.metadata.0.name
+        port    = 9696
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "prowlarr"
+        }
+      }]
     }
   }
 }

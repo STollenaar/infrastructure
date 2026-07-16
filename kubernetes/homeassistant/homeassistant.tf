@@ -115,43 +115,37 @@ resource "kubernetes_persistent_volume_claim_v1" "ha_data" {
 }
 
 
-resource "kubernetes_ingress_v1" "homeassistant" {
-  metadata {
-    name      = "homeassistant"
-    namespace = kubernetes_namespace_v1.homeassistant.id
-
-    annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+resource "kubernetes_manifest" "homeassistant_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "homeassistant"
+      namespace = kubernetes_namespace_v1.homeassistant.id
     }
-  }
-
-  spec {
-    ingress_class_name = "nginx"
-    rule {
-      host = "assistant.home.spicedelver.me"
-
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-
-          backend {
-            service {
-              name = kubernetes_service_v1.homeassistant.metadata.0.name
-              port {
-                number = 8123
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "assistant.home.spicedelver.me"
+      tls = {
+        secret = "assistant-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
-    }
-    tls {
-      hosts = [
-        "assistant.home.spicedelver.me"
-      ]
-      secret_name = "assistant-tls"
+      upstreams = [{
+        name    = "homeassistant"
+        service = kubernetes_service_v1.homeassistant.metadata.0.name
+        port    = 8123
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "homeassistant"
+        }
+      }]
     }
   }
 }

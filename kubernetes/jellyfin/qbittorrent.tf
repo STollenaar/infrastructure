@@ -74,7 +74,7 @@ resource "kubernetes_deployment" "qbittorrent" {
             }
           }
           env {
-            name = "DNS_ADDRESS"
+            name  = "DNS_ADDRESS"
             value = "194.169.169.169"
           }
           env {
@@ -191,11 +191,11 @@ resource "kubernetes_config_map" "qbittorrent_env" {
     namespace = kubernetes_namespace.jellyfin.id
   }
   data = {
-    "PUID"                  = 1000
-    "PGID"                  = 1000
-    "TZ"                    = local.timezone
-    "FLOOD_AUTH"            = "true"
-    "FIREWALL_INPUT_PORTS"  = "8080,8000"
+    "PUID"                 = 1000
+    "PGID"                 = 1000
+    "TZ"                   = local.timezone
+    "FLOOD_AUTH"           = "true"
+    "FIREWALL_INPUT_PORTS" = "8080,8000"
   }
 }
 
@@ -225,39 +225,37 @@ resource "kubernetes_persistent_volume_claim" "qbit_data" {
   }
 }
 
-resource "kubernetes_ingress_v1" "qbittorrent" {
-  metadata {
-    name      = "qbittorrent"
-    namespace = kubernetes_namespace.jellyfin.id
-
-    annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+resource "kubernetes_manifest" "qbittorrent_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "qbittorrent"
+      namespace = kubernetes_namespace.jellyfin.id
     }
-  }
-  spec {
-    ingress_class_name = "nginx"
-    rule {
-      host = "qbittorrent.home.spicedelver.me"
-      http {
-        path {
-          path = "/"
-          backend {
-            service {
-              name = kubernetes_service.qbittorrent.metadata.0.name
-              port {
-                number = 8080
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "qbittorrent.home.spicedelver.me"
+      tls = {
+        secret = "qbittorrent-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
-    }
-    tls {
-      hosts = [
-        "qbittorrent.home.spicedelver.me"
-      ]
-      secret_name = "qbittorrent-tls"
+      upstreams = [{
+        name    = "qbittorrent"
+        service = kubernetes_service.qbittorrent.metadata.0.name
+        port    = 8080
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "qbittorrent"
+        }
+      }]
     }
   }
 }

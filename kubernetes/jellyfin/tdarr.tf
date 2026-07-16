@@ -388,39 +388,37 @@ resource "kubernetes_config_map" "tdarr_node_env" {
   }
 }
 
-resource "kubernetes_ingress_v1" "tdarr" {
-  metadata {
-    name      = "tdarr"
-    namespace = kubernetes_namespace.jellyfin.id
-
-    annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+resource "kubernetes_manifest" "tdarr_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "tdarr"
+      namespace = kubernetes_namespace.jellyfin.id
     }
-  }
-  spec {
-    ingress_class_name = "nginx"
-    rule {
-      host = "tdarr.home.spicedelver.me"
-      http {
-        path {
-          path = "/"
-          backend {
-            service {
-              name = kubernetes_service.tdarr.metadata.0.name
-              port {
-                number = 8265
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "tdarr.home.spicedelver.me"
+      tls = {
+        secret = "tdarr-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
-    }
-    tls {
-      hosts = [
-        "tdarr.home.spicedelver.me"
-      ]
-      secret_name = "tdarr-tls"
+      upstreams = [{
+        name    = "tdarr"
+        service = kubernetes_service.tdarr.metadata.0.name
+        port    = 8265
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "tdarr"
+        }
+      }]
     }
   }
 }

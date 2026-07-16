@@ -130,41 +130,37 @@ resource "kubernetes_service" "litellm" {
   }
 }
 
-resource "kubernetes_ingress_v1" "litellm_ingress" {
-  metadata {
-    name      = "litellm-ingress"
-    namespace = kubernetes_namespace.ollama.id
-    annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+resource "kubernetes_manifest" "litellm_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "litellm"
+      namespace = kubernetes_namespace.ollama.id
     }
-  }
-
-  spec {
-    rule {
-      host = "ollama.home.spicedelver.me"
-
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-
-          backend {
-            service {
-              name = kubernetes_service.litellm.metadata.0.name
-              port {
-                number = 4000
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "ollama.home.spicedelver.me"
+      tls = {
+        secret = "ollama-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
-    }
-    tls {
-      hosts = [
-        "ollama.home.spicedelver.me"
-      ]
-      secret_name = "ollama-tls"
+      upstreams = [{
+        name    = "litellm"
+        service = kubernetes_service.litellm.metadata.0.name
+        port    = 4000
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "litellm"
+        }
+      }]
     }
   }
 }

@@ -97,78 +97,74 @@ resource "kubernetes_persistent_volume_claim_v1" "uptime_kuma_pvc" {
   }
 }
 
-resource "kubernetes_ingress_v1" "uptime_kuma_ingress" {
-  metadata {
-    name      = "uptime-kuma"
-    namespace = kubernetes_namespace_v1.uptime_kuma.id
-    annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+resource "kubernetes_manifest" "uptime_kuma_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "uptime-kuma"
+      namespace = kubernetes_namespace_v1.uptime_kuma.id
     }
-  }
-
-  spec {
-    ingress_class_name = "nginx"
-    rule {
-      host = "status.home.spicedelver.me"
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-          backend {
-            service {
-              name = kubernetes_service_v1.uptime_kuma.metadata.0.name
-              port {
-                number = 3001
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "status.home.spicedelver.me"
+      tls = {
+        secret = "uptime-kuma-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
-    }
-    tls {
-      hosts = [
-        "status.home.spicedelver.me",
-      ]
-      secret_name = "uptime-kuma-tls"
+      upstreams = [{
+        name    = "uptime-kuma"
+        service = kubernetes_service_v1.uptime_kuma.metadata.0.name
+        port    = 3001
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "uptime-kuma"
+        }
+      }]
     }
   }
 }
 
-resource "kubernetes_ingress_v1" "uptime_kuma_ingress_public" {
-  metadata {
-    name      = "uptime-kuma-public"
-    namespace = kubernetes_namespace_v1.uptime_kuma.id
-    annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+# Public host, but external-dns does not manage its record: the old Ingress had no
+# external-dns hostname annotation, so spec.externalDNS is deliberately unset.
+resource "kubernetes_manifest" "uptime_kuma_public_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "uptime-kuma-public"
+      namespace = kubernetes_namespace_v1.uptime_kuma.id
     }
-  }
-
-  spec {
-    ingress_class_name = "nginx"
-    rule {
-      host = "status.spicedelver.me"
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-          backend {
-            service {
-              name = kubernetes_service_v1.uptime_kuma.metadata.0.name
-              port {
-                number = 3001
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "status.spicedelver.me"
+      tls = {
+        secret = "uptime-kuma-tls-public"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
-    }
-    tls {
-      hosts = [
-        "status.spicedelver.me"
-      ]
-      secret_name = "uptime-kuma-tls-public"
+      upstreams = [{
+        name    = "uptime-kuma"
+        service = kubernetes_service_v1.uptime_kuma.metadata.0.name
+        port    = 3001
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "uptime-kuma"
+        }
+      }]
     }
   }
 }

@@ -178,39 +178,37 @@ resource "kubernetes_service" "bazarr" {
   }
 }
 
-resource "kubernetes_ingress_v1" "bazarr" {
-  metadata {
-    name      = "bazarr"
-    namespace = kubernetes_namespace.jellyfin.id
-
-    annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+resource "kubernetes_manifest" "bazarr_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "bazarr"
+      namespace = kubernetes_namespace.jellyfin.id
     }
-  }
-  spec {
-    ingress_class_name = "nginx"
-    rule {
-      host = "bazarr.home.spicedelver.me"
-      http {
-        path {
-          path = "/"
-          backend {
-            service {
-              name = kubernetes_service.bazarr.metadata.0.name
-              port {
-                number = 6767
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "bazarr.home.spicedelver.me"
+      tls = {
+        secret = "bazarr-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
-    }
-    tls {
-      hosts = [
-        "bazarr.home.spicedelver.me"
-      ]
-      secret_name = "bazarr-tls"
+      upstreams = [{
+        name    = "bazarr"
+        service = kubernetes_service.bazarr.metadata.0.name
+        port    = 6767
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "bazarr"
+        }
+      }]
     }
   }
 }

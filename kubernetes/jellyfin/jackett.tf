@@ -108,39 +108,37 @@ resource "kubernetes_service" "jackett" {
   }
 }
 
-resource "kubernetes_ingress_v1" "jackett" {
-  metadata {
-    name      = "jackett"
-    namespace = kubernetes_namespace.jellyfin.id
-
-    annotations = {
-      "kubernetes.io/ingress.class"    = "nginx"
-      "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
+resource "kubernetes_manifest" "jackett_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "jackett"
+      namespace = kubernetes_namespace.jellyfin.id
     }
-  }
-  spec {
-    ingress_class_name = "nginx"
-    rule {
-      host = "jackett.home.spicedelver.me"
-      http {
-        path {
-          path = "/"
-          backend {
-            service {
-              name = kubernetes_service.jackett.metadata.0.name
-              port {
-                number = 9117
-              }
-            }
-          }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "jackett.home.spicedelver.me"
+      tls = {
+        secret = "jackett-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
         }
       }
-    }
-    tls {
-      hosts = [
-        "jackett.home.spicedelver.me"
-      ]
-      secret_name = "jackett-tls"
+      upstreams = [{
+        name    = "jackett"
+        service = kubernetes_service.jackett.metadata.0.name
+        port    = 9117
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "jackett"
+        }
+      }]
     }
   }
 }
