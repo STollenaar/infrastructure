@@ -151,6 +151,9 @@ resource "kubernetes_manifest" "jellyseerr_public_virtualserver" {
     spec = {
       ingressClassName = "nginx"
       host             = "jellyseerr.spicedelver.me"
+      externalDNS = {
+        enable = true
+      }
       tls = {
         secret = "jellyseerr-public-tls"
         "cert-manager" = {

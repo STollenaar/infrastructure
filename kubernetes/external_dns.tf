@@ -116,7 +116,7 @@ resource "kubernetes_deployment" "external_dns_public" {
           # --crd-source-apiversion. It cannot read the externaldns.nginx.org/v1
           # DNSEndpoints that NGINX Ingress Controller emits, and crashloops on a
           # failed restmapping instead. v0.20.0 still honors the flag.
-          image = "registry.k8s.io/external-dns/external-dns:v0.21.0"
+          image = "registry.k8s.io/external-dns/external-dns:v0.20.0"
 
           # Hosts opt in via VirtualServer.spec.externalDNS.enable, which replaces
           # the old external-dns.alpha.kubernetes.io/hostname annotation filter.
@@ -180,7 +180,7 @@ resource "kubernetes_deployment" "external_dns_public" {
           # --crd-source-apiversion. It cannot read the externaldns.nginx.org/v1
           # DNSEndpoints that NGINX Ingress Controller emits, and crashloops on a
           # failed restmapping instead. v0.20.0 still honors the flag.
-          image = "registry.k8s.io/external-dns/external-dns:v0.21.0"
+          image = "registry.k8s.io/external-dns/external-dns:v0.20.0"
 
           args = [
             "--webhook-server",

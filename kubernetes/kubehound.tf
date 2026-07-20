@@ -463,6 +463,7 @@ resource "kubernetes_cron_job_v1" "kubehound_scan" {
   }
   spec {
     schedule                      = "0 3 * * 0"
+    suspend                       = true
     concurrency_policy            = "Forbid"
     successful_jobs_history_limit = 1
     failed_jobs_history_limit     = 3
