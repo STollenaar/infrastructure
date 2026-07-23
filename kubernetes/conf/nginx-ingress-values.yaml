@@ -1,7 +1,7 @@
 controller:
   # Serves VirtualServer / VirtualServerRoute / TransportServer / Policy.
   enableCustomResources: true
-
+  externalDNSGroupVersion: externaldns.k8s.io/v1alpha1
   # Lets VirtualServer.spec.tls.cert-manager drive certificate issuance, so hosts
   # keep working the way the old cert-manager.io/cluster-issuer annotation did.
   enableCertManager: true
