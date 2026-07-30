@@ -24,7 +24,7 @@ resource "kubernetes_deployment" "jellyswarrm" {
 
       spec {
         container {
-          image = "ghcr.io/llukas22/jellyswarrm:0.2.1"
+          image = "ghcr.io/llukas22/jellyswarrm:0.3.0"
           name  = "jellyswarrm"
 
           port {
