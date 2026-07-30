@@ -16,7 +16,7 @@ module "games" {
     name = kubernetes_manifest.vault_backend.manifest.metadata.name
   }
   ecr_repositories = {
-    diplomacy_repo = data.terraform_remote_state.ecr.outputs.diplomacy_repo.repository_url
+    diplomacy_repo            = data.terraform_remote_state.ecr.outputs.diplomacy_repo.repository_url
   }
 }
 

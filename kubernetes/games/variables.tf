@@ -7,6 +7,6 @@ variable "vault_backend" {
 
 variable "ecr_repositories" {
   type = object({
-    diplomacy_repo = string
+    diplomacy_repo            = string
   })
 }

@@ -9,16 +9,16 @@ output "diplomacy_repo" {
 }
 
 output "external_ip_repo" {
-  value = aws_ecr_repository.registries["external-ip"]
+  value     = aws_ecr_repository.registries["external-ip"]
   sensitive = true
 }
 
 output "renovate_repo" {
-  value = aws_ecr_repository.registries["renovate"]
+  value     = aws_ecr_repository.registries["renovate"]
   sensitive = true
 }
 
 output "pennymoon_repo" {
-  value = aws_ecr_repository.registries["pennymoon"]
+  value     = aws_ecr_repository.registries["pennymoon"]
   sensitive = true
 }

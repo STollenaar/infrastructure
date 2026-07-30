@@ -91,3 +91,33 @@ resource "kubernetes_manifest" "letsencrypt_cluster_issuer" {
     }
   }
 }
+
+ resource "kubernetes_role" "cert_manager_tokenrequest" {
+    metadata {
+      name      = "cert-manager-tokenrequest"
+      namespace = kubernetes_namespace.cert_manager.id
+    }
+    rule {
+      api_groups     = [""]
+      resources      = ["serviceaccounts/token"]
+      resource_names = ["cert-manager"]
+      verbs          = ["create"]
+    }
+  }
+
+  resource "kubernetes_role_binding" "cert_manager_tokenrequest" {
+    metadata {
+      name      = "cert-manager-tokenrequest"
+      namespace = kubernetes_namespace.cert_manager.id
+    }
+    role_ref {
+      api_group = "rbac.authorization.k8s.io"
+      kind      = "Role"
+      name      = kubernetes_role.cert_manager_tokenrequest.metadata.0.name
+    }
+    subject {
+      kind      = "ServiceAccount"
+      name      = "cert-manager"
+      namespace = kubernetes_namespace.cert_manager.id
+    }
+  }
