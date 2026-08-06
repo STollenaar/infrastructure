@@ -110,12 +110,8 @@ resource "kubernetes_deployment" "external_dns_public" {
 
         container {
           name = "external-dns-public"
-          # Pinned: do not upgrade to v0.21.0+ without reworking DNS discovery.
-          # v0.21.0 rewrote the crd source onto controller-runtime, hardcoding its
-          # own externaldns.k8s.io/v1alpha1 DNSEndpoint type and silently ignoring
-          # --crd-source-apiversion. It cannot read the externaldns.nginx.org/v1
-          # DNSEndpoints that NGINX Ingress Controller emits, and crashloops on a
-          # failed restmapping instead. v0.20.0 still honors the flag.
+          # Held at v0.20.x by the allowedVersions rule in .github/renovate.json;
+          # see that rule's description for why v0.21.0+ breaks DNS discovery.
           image = "registry.k8s.io/external-dns/external-dns:v0.20.0"
 
           # Hosts opt in via VirtualServer.spec.externalDNS.enable, which replaces
@@ -174,12 +170,8 @@ resource "kubernetes_deployment" "external_dns_public" {
 
         container {
           name = "aws-provider"
-          # Pinned: do not upgrade to v0.21.0+ without reworking DNS discovery.
-          # v0.21.0 rewrote the crd source onto controller-runtime, hardcoding its
-          # own externaldns.k8s.io/v1alpha1 DNSEndpoint type and silently ignoring
-          # --crd-source-apiversion. It cannot read the externaldns.nginx.org/v1
-          # DNSEndpoints that NGINX Ingress Controller emits, and crashloops on a
-          # failed restmapping instead. v0.20.0 still honors the flag.
+          # Held at v0.20.x by the allowedVersions rule in .github/renovate.json;
+          # see that rule's description for why v0.21.0+ breaks DNS discovery.
           image = "registry.k8s.io/external-dns/external-dns:v0.20.0"
 
           args = [

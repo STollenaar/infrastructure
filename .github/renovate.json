@@ -38,7 +38,17 @@
                 "^(gh|ls)cr\\.io\\/linuxserver\\/"
             ],
             "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-ls(?<revision>\\d+)$"
-    }
+        },
+        {
+            "description": "Pin external-dns to v0.20.x. v0.21.0 rewrote the crd source onto controller-runtime, hardcoding its own externaldns.k8s.io/v1alpha1 DNSEndpoint type and silently ignoring --crd-source-apiversion. It cannot read the externaldns.nginx.org/v1 DNSEndpoints that NGINX Ingress Controller emits, and crashloops on a failed restmapping instead. Lift this only together with a rework of DNS discovery.",
+            "matchDatasources": [
+                "docker"
+            ],
+            "matchPackageNames": [
+                "registry.k8s.io/external-dns/external-dns"
+            ],
+            "allowedVersions": "<0.21.0"
+        }
     ],
     "schedule": [
         "at any time"
