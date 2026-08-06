@@ -72,7 +72,7 @@ resource "kubernetes_deployment" "ollama" {
 
         container {
           name  = "ollama"
-          image = "ollama/ollama:0.32.5"
+          image = "ollama/ollama:0.32.6"
           args  = ["serve"]
 
           env {
@@ -138,7 +138,7 @@ resource "kubernetes_job" "ollama_model_creation" {
       spec {
         container {
           name  = "ollama"
-          image = "ollama/ollama:0.32.5"
+          image = "ollama/ollama:0.32.6"
 
           command = [
             "/bin/sh",
