@@ -73,6 +73,10 @@ resource "kubernetes_deployment" "radarr" {
             name       = "movies"
             mount_path = "/movies"
           }
+                    volume_mount {
+            name       = "anime"
+            mount_path = "/anime"
+          }
           volume_mount {
             name       = "import"
             mount_path = "/import"
@@ -104,6 +108,12 @@ resource "kubernetes_deployment" "radarr" {
           name = "movies"
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim.jellyfin_movies.metadata.0.name
+          }
+        }
+        volume {
+          name = "anime"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.jellyfin_anime_movies.metadata.0.name
           }
         }
         volume {

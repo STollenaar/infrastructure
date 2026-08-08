@@ -71,6 +71,10 @@ resource "kubernetes_deployment" "sonarr" {
             mount_path = "/tv"
           }
           volume_mount {
+            name       = "anime"
+            mount_path = "/anime"
+          }
+          volume_mount {
             name       = "import"
             mount_path = "/import"
           }
@@ -95,6 +99,12 @@ resource "kubernetes_deployment" "sonarr" {
           name = "tv"
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim.jellyfin_shows.metadata.0.name
+          }
+        }
+        volume {
+          name = "anime"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.jellyfin_anime_shows.metadata.0.name
           }
         }
         volume {

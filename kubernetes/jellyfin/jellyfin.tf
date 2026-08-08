@@ -48,9 +48,11 @@ resource "kubernetes_deployment" "jellyfin" {
         }
         runtime_class_name = "nvidia"
         init_container {
-          name    = "seed-livetv"
-          image   = "busybox:1.38"
-          command = ["sh", "-c", "[ -e /config/config/livetv.xml ] || cp /seed/livetv.xml /config/config/livetv.xml"]
+          name  = "seed-livetv"
+          image = "busybox:1.38"
+          # encoding.xml is copied unconditionally: transcode settings are owned by
+          # this repo, so changes made in the Jellyfin UI are reverted on restart.
+          command = ["sh", "-c", "[ -e /config/config/livetv.xml ] || cp /seed/livetv.xml /config/config/livetv.xml; cp /seed-encoding/encoding.xml /config/config/encoding.xml"]
           security_context {
             run_as_user  = 1000
             run_as_group = 1000
@@ -62,6 +64,10 @@ resource "kubernetes_deployment" "jellyfin" {
           volume_mount {
             name       = "livetv"
             mount_path = "/seed"
+          }
+          volume_mount {
+            name       = "encoding"
+            mount_path = "/seed-encoding"
           }
         }
         container {
@@ -132,6 +138,17 @@ resource "kubernetes_deployment" "jellyfin" {
             name       = "tv"
             mount_path = "/data/tv"
           }
+          volume_mount {
+            name       = "anime-shows"
+            mount_path = "/data/anime-shows"
+          }
+          # Transcode scratch space. Kept off the NFS cache PVC (segments are written
+          # and re-read continuously) and off the node's overlayfs, where an unbounded
+          # transcode can push the whole node into disk pressure.
+          volume_mount {
+            name       = "transcodes"
+            mount_path = "/transcodes"
+          }
         }
         volume {
           name = "cache"
@@ -167,6 +184,28 @@ resource "kubernetes_deployment" "jellyfin" {
           name = "tv"
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim.jellyfin_shows.metadata.0.name
+          }
+        }
+        volume {
+          name = "anime-shows"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.jellyfin_anime_shows.metadata.0.name
+          }
+        }
+        volume {
+          name = "transcodes"
+          empty_dir {
+            size_limit = "20Gi"
+          }
+        }
+        volume {
+          name = "encoding"
+          config_map {
+            name = kubernetes_config_map.jellyfin_encoding.metadata.0.name
+            items {
+              key  = "encoding.xml"
+              path = "encoding.xml"
+            }
           }
         }
         volume {
@@ -340,6 +379,38 @@ resource "kubernetes_persistent_volume_claim" "jellyfin_shows" {
   }
 }
 
+resource "kubernetes_persistent_volume_claim" "jellyfin_anime_shows" {
+  metadata {
+    name      = "jellyfin-data-anime-shows"
+    namespace = kubernetes_namespace.jellyfin.id
+  }
+  spec {
+    access_modes       = ["ReadWriteOnce"]
+    storage_class_name = "nfs-csi-main"
+    resources {
+      requests = {
+        storage = "100Gi"
+      }
+    }
+  }
+}
+
+resource "kubernetes_persistent_volume_claim" "jellyfin_anime_movies" {
+  metadata {
+    name      = "jellyfin-data-anime-movies"
+    namespace = kubernetes_namespace.jellyfin.id
+  }
+  spec {
+    access_modes       = ["ReadWriteOnce"]
+    storage_class_name = "nfs-csi-main"
+    resources {
+      requests = {
+        storage = "100Gi"
+      }
+    }
+  }
+}
+
 resource "kubernetes_service" "jellyfin_web" {
   metadata {
     name      = "jellyfin-web"
@@ -469,10 +540,13 @@ resource "kubernetes_config_map" "jellyfin_env" {
     "TZ"        = local.timezone
 
     NVIDIA_VISIBLE_DEVICES = "all"
-    JELLYFIN_CACHE_DIR     = "/config/cache"
-    JELLYFIN_CONFIG_DIR    = "/config/config"
-    JELLYFIN_DATA_DIR      = "/config/data"
-    JELLYFIN_LOG_DIR       = "/config/log"
+    # video/compute are what inject libnvidia-encode and libnvcuvid; without them
+    # nvidia-smi still works but ffmpeg loses NVENC/NVDEC and falls back to CPU.
+    NVIDIA_DRIVER_CAPABILITIES = "compute,video,utility"
+    JELLYFIN_CACHE_DIR         = "/config/cache"
+    JELLYFIN_CONFIG_DIR        = "/config/config"
+    JELLYFIN_DATA_DIR          = "/config/data"
+    JELLYFIN_LOG_DIR           = "/config/log"
   }
 }
 
@@ -483,6 +557,16 @@ resource "kubernetes_config_map" "jellyfin_restore_db" {
   }
   data = {
     "system.xml" = file("${path.module}/conf/jellyfin_system.xml")
+  }
+}
+
+resource "kubernetes_config_map" "jellyfin_encoding" {
+  metadata {
+    name      = "jellyfin-encoding"
+    namespace = kubernetes_namespace.jellyfin.id
+  }
+  data = {
+    "encoding.xml" = file("${path.module}/conf/jellyfin_encoding.xml")
   }
 }
 
