@@ -131,7 +131,16 @@ data "aws_iam_policy_document" "extenral_dns_role_policy" {
     condition {
       test     = "ForAllValues:StringLike"
       variable = "route53:ChangeResourceRecordSetsNormalizedRecordNames"
-      values   = ["jellyfin.spicedelver.me", "a-jellyfin.spicedelver.me", "jellyswarrm.spicedelver.me", "a-jellyswarrm.spicedelver.me"]
+      values = [
+        "jellyfin.spicedelver.me",
+        "a-jellyfin.spicedelver.me",
+        "jellyswarrm.spicedelver.me",
+        "a-jellyswarrm.spicedelver.me",
+        "jellyseerr.spicedelver.me",
+        "a-jellyseerr.spicedelver.me",
+        "assistant.spicedelver.me",
+        "a-assistant.spicedelver.me"
+      ]
     }
 
     condition {
@@ -143,7 +152,7 @@ data "aws_iam_policy_document" "extenral_dns_role_policy" {
     condition {
       test     = "ForAllValues:StringLike"
       variable = "route53:ChangeResourceRecordSetsRecordTypes"
-      values   = ["A", "AAAA", "MX", "TXT"]    
+      values   = ["A", "AAAA", "MX", "TXT"]
     }
   }
 
