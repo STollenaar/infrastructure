@@ -150,6 +150,41 @@ resource "kubernetes_manifest" "homeassistant_virtualserver" {
   }
 }
 
+resource "kubernetes_manifest" "homeassistant_virtualserver_public" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "homeassistant-public"
+      namespace = kubernetes_namespace_v1.homeassistant.id
+    }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "assistant.spicedelver.me"
+      tls = {
+        secret = "assistant-public-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
+        }
+      }
+      upstreams = [{
+        name    = "homeassistant"
+        service = kubernetes_service_v1.homeassistant.metadata.0.name
+        port    = 8123
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "homeassistant"
+        }
+      }]
+    }
+  }
+}
+
 resource "kubernetes_config_map_v1" "homeassistant" {
   metadata {
     name      = "homeassistant"

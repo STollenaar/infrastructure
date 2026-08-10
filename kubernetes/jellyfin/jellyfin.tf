@@ -142,12 +142,24 @@ resource "kubernetes_deployment" "jellyfin" {
             name       = "anime-shows"
             mount_path = "/data/anime-shows"
           }
-          # Transcode scratch space. Kept off the NFS cache PVC (segments are written
-          # and re-read continuously) and off the node's overlayfs, where an unbounded
-          # transcode can push the whole node into disk pressure.
+          # Transcode scratch. Deliberately not on the NFS PVCs (~114 MB/s, sharing a
+          # 1GbE link with the source reads of the same transcode) and not on the node
+          # SSD, which is at 59% of its rated endurance with only ~5 TB of writes left
+          # - an hour of transcoding writes ~27 GB at the bitrates this server serves.
           volume_mount {
             name       = "transcodes"
             mount_path = "/transcodes"
+          }
+        }
+        volume {
+          name = "transcodes"
+          # tmpfs: no flash wear, faster than the SSD, no NFS contention. Counts
+          # against node memory (43Gi total, ~8Gi in use), and overrunning the limit
+          # evicts only this pod. Holds a full movie once RemoteClientBitrateLimit is
+          # capped; segments are ~9 GB/h at 20 Mbps versus ~27 GB/h uncapped.
+          empty_dir {
+            medium     = "Memory"
+            size_limit = "16Gi"
           }
         }
         volume {
@@ -190,12 +202,6 @@ resource "kubernetes_deployment" "jellyfin" {
           name = "anime-shows"
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim.jellyfin_anime_shows.metadata.0.name
-          }
-        }
-        volume {
-          name = "transcodes"
-          empty_dir {
-            size_limit = "20Gi"
           }
         }
         volume {
