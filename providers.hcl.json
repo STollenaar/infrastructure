@@ -1,5 +1,6 @@
 {
     "provider": {
+        "archive": {},
         "aws": {
             "region": "ca-central-1"
         },
