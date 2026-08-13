@@ -140,6 +140,9 @@ resource "kubernetes_deployment_v1" "spaceengineers" {
       }
     }
   }
+  lifecycle {
+    ignore_changes = [spec.0.replicas]
+  }
 }
 
 # Game files downloaded by steamcmd (several GB) and the steam cache live on
