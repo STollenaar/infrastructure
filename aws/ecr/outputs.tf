@@ -22,3 +22,8 @@ output "pennymoon_repo" {
   value     = aws_ecr_repository.registries["pennymoon"]
   sensitive = true
 }
+
+output "factorio_archipelago_repo" {
+  value     = aws_ecr_repository.registries["factorio-archipelago"]
+  sensitive = true
+}

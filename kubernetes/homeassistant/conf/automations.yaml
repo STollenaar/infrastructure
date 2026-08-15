@@ -1,0 +1,76 @@
+- id: '1767207705103'
+  alias: Bedroom heat on
+  description: ''
+  triggers:
+  - trigger: time
+    at: '20:30:00'
+  conditions: []
+  actions:
+  - device_id: 7db3a7b0a76f0f01840a0dd4dafa56c1
+    domain: climate
+    entity_id: ea2393d40327b52d50683a73355df4aa
+    type: set_hvac_mode
+    hvac_mode: heat
+  mode: single
+- id: '1767207737778'
+  alias: bedroom heat off
+  description: ''
+  triggers:
+  - trigger: time
+    at: 09:00:00
+  conditions: []
+  actions:
+  - device_id: 7db3a7b0a76f0f01840a0dd4dafa56c1
+    domain: climate
+    entity_id: ea2393d40327b52d50683a73355df4aa
+    type: set_hvac_mode
+    hvac_mode: 'off'
+  mode: single
+- id: '1767207861458'
+  alias: Living Areas Heat Off
+  description: ''
+  triggers:
+  - trigger: time
+    at: '22:30:00'
+  conditions: []
+  actions:
+  - device_id: 9c4df84cebeead4c533865d28b255135
+    domain: climate
+    entity_id: 813e5c1921d576bade3569c2d1ae1d23
+    type: set_hvac_mode
+    hvac_mode: 'off'
+  - device_id: 9b6f3b63bc1d36ce169ecac27bd0dbf1
+    domain: climate
+    entity_id: 727ba9a09224e7780379ea1138901f0d
+    type: set_hvac_mode
+    hvac_mode: 'off'
+  - device_id: 94c12c53982281cd06440c875f6d522b
+    domain: climate
+    entity_id: 3471681bbf060b8e548c1e0ea4dac0da
+    type: set_hvac_mode
+    hvac_mode: 'off'
+  mode: single
+- id: '1767207916474'
+  alias: Livving Areas Heat On
+  description: ''
+  triggers:
+  - trigger: time
+    at: 06:00:00
+  conditions: []
+  actions:
+  - device_id: 9c4df84cebeead4c533865d28b255135
+    domain: climate
+    entity_id: 813e5c1921d576bade3569c2d1ae1d23
+    type: set_hvac_mode
+    hvac_mode: heat
+  - device_id: 9b6f3b63bc1d36ce169ecac27bd0dbf1
+    domain: climate
+    entity_id: 727ba9a09224e7780379ea1138901f0d
+    type: set_hvac_mode
+    hvac_mode: heat
+  - device_id: 94c12c53982281cd06440c875f6d522b
+    domain: climate
+    entity_id: 3471681bbf060b8e548c1e0ea4dac0da
+    type: set_hvac_mode
+    hvac_mode: heat
+  mode: single

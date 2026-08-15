@@ -1,0 +1,37 @@
+# Loads default set of integrations. Do not remove.
+default_config:
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 127.0.0.1
+    - 192.168.0.0/16
+    - 10.244.0.0/16
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+# Alexa Smart Home skill, proxied by the homeassistant-alexa Lambda in
+# us-east-1 (see aws/lambda/lambda.tf). Registers /api/alexa/smart_home.
+alexa:
+  smart_home:
+    filter:
+      include_domains:
+        - light
+        - switch
+        - climate
+        - media_player
+        - scene
+      # tplink/kasa plugs expose config switches (entity_category: config)
+      # alongside the plug itself; alexa_devices adds do-not-disturb toggles.
+      # Keep Alexa to the actual plug state.
+      exclude_entity_globs:
+        - switch.*_auto_off_enabled
+        - switch.*_auto_update_enabled
+        - switch.*_led
+        - switch.*_do_not_disturb

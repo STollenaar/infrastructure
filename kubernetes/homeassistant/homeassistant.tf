@@ -1,3 +1,15 @@
+locals {
+  # YAML config files in conf/, rendered into the homeassistant ConfigMap and
+  # mounted individually into /config on top of the PVC.
+  homeassistant_conf = fileset("${path.module}/conf", "*.yaml")
+
+  # subPath mounts do not track ConfigMap updates, so changing a file in conf/
+  # has to roll the pod. Hashing the contents into a pod annotation does that.
+  homeassistant_conf_hash = sha256(join("", [
+    for f in sort(tolist(local.homeassistant_conf)) : file("${path.module}/conf/${f}")
+  ]))
+}
+
 resource "kubernetes_deployment_v1" "homeassistant" {
   metadata {
     name      = "homeassistant"
@@ -24,6 +36,9 @@ resource "kubernetes_deployment_v1" "homeassistant" {
       metadata {
         labels = {
           app = "homeassistant"
+        }
+        annotations = {
+          "checksum/conf" = local.homeassistant_conf_hash
         }
       }
 
@@ -55,6 +70,19 @@ resource "kubernetes_deployment_v1" "homeassistant" {
             name       = "config"
           }
 
+          # Each conf/ file is layered onto the PVC as its own subPath mount so
+          # the rest of /config (database, .storage, secrets.yaml) stays
+          # writable. These files are read-only to Home Assistant.
+          dynamic "volume_mount" {
+            for_each = local.homeassistant_conf
+            content {
+              name       = "conf"
+              mount_path = "/config/${volume_mount.value}"
+              sub_path   = volume_mount.value
+              read_only  = true
+            }
+          }
+
           # Zigbee dongle is provided by generic-device-plugin (devic.es/zigbee),
           # mounted at /dev/ttyUSB0 to match the ZHA integration config.
           # This replaces privileged + host_path passthrough.
@@ -69,6 +97,13 @@ resource "kubernetes_deployment_v1" "homeassistant" {
           name = "config"
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim_v1.ha_data.metadata[0].name
+          }
+        }
+
+        volume {
+          name = "conf"
+          config_map {
+            name = kubernetes_config_map_v1.homeassistant.metadata[0].name
           }
         }
       }
@@ -189,30 +224,15 @@ resource "kubernetes_manifest" "homeassistant_virtualserver_public" {
   }
 }
 
+# Home Assistant's YAML config, sourced from conf/. Adding a .yaml file there
+# is enough -- it gets picked up here and mounted into /config automatically.
 resource "kubernetes_config_map_v1" "homeassistant" {
   metadata {
     name      = "homeassistant"
     namespace = kubernetes_namespace_v1.homeassistant.id
   }
+
   data = {
-    "configuration.yaml" = <<EOF
-        # Loads default set of integrations. Do not remove.
-        default_config:
-
-        http:
-        use_x_forwarded_for: true
-        trusted_proxies:
-        - 127.0.0.1
-        - 192.168.0.0/16 
-        - 10.244.0.0/16
-
-        # Load frontend themes from the themes folder
-        frontend:
-        themes: !include_dir_merge_named themes
-
-        automation: !include automations.yaml
-        script: !include scripts.yaml
-        scene: !include scenes.yaml
-    EOF
+    for f in local.homeassistant_conf : f => file("${path.module}/conf/${f}")
   }
 }

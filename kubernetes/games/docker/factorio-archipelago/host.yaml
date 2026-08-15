@@ -1,0 +1,10 @@
+# Archipelago settings for the Factorio bridge container.
+#
+# worlds/factorio/Client.py reads get_settings().factorio_options.executable at
+# import time and aborts if the path does not exist, so this must point at the
+# headless binary installed by the Dockerfile.
+factorio_options:
+  executable: "/opt/factorio/bin/x64/factorio"
+  filter_item_sends: false
+  filter_connection_changes: false
+  bridge_chat_out: true

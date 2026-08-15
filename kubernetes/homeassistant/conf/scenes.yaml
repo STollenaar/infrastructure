@@ -1,0 +1,3 @@
+# Scenes, included by configuration.yaml as `scene: !include scenes.yaml`.
+# A comment-only file parses to null, which Home Assistant accepts as "no
+# scenes" -- matching the empty file this replaced.

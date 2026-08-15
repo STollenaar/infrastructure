@@ -6,7 +6,8 @@ locals {
     "renovate",
     "external-ip",
     "stable-diffusion",
-    "pennymoon"
+    "pennymoon",
+    "factorio-archipelago"
   ]
 }
 

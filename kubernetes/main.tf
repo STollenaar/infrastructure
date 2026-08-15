@@ -17,6 +17,7 @@ module "games" {
   }
   ecr_repositories = {
     diplomacy_repo            = data.terraform_remote_state.ecr.outputs.diplomacy_repo.repository_url
+    factorio_archipelago_repo = data.terraform_remote_state.ecr.outputs.factorio_archipelago_repo.repository_url
   }
 }
 
