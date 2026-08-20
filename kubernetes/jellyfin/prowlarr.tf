@@ -190,7 +190,7 @@ resource "kubernetes_job_v1" "prowlarr_init" {
       spec {
         container {
           name    = "prowlarr-main"
-          image   = "postgres:18.4-bookworm"
+          image   = "postgres:18.6-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
             "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'prowlarr-main'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres prowlarr-main"
@@ -202,7 +202,7 @@ resource "kubernetes_job_v1" "prowlarr_init" {
         }
         container {
           name    = "prowlarr-logs"
-          image   = "postgres:18.4-bookworm"
+          image   = "postgres:18.6-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
             "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'prowlarr-logs'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres prowlarr-logs"

@@ -225,7 +225,7 @@ resource "kubernetes_job_v1" "radarr_init" {
       spec {
         container {
           name    = "radarr-main"
-          image   = "postgres:18.4-bookworm"
+          image   = "postgres:18.6-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
             "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'radarr-main'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres radarr-main"
@@ -237,7 +237,7 @@ resource "kubernetes_job_v1" "radarr_init" {
         }
         container {
           name    = "radarr-logs"
-          image   = "postgres:18.4-bookworm"
+          image   = "postgres:18.6-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
             "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'radarr-logs'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres radarr-logs"

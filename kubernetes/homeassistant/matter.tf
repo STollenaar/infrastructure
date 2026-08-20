@@ -156,7 +156,7 @@ resource "kubernetes_cron_job_v1" "matter_backup" {
 
             container {
               name  = "matter-backup"
-              image = "alpine:3.22"
+              image = "alpine:3.24"
 
               command = ["/bin/sh", "-c", <<-EOT
                 set -eu
