@@ -32,7 +32,7 @@ resource "kubernetes_deployment" "byparr" {
           name = kubernetes_manifest.jellyfin_external_secret.manifest.spec.target.name
         }
         container {
-          image = "ghcr.io/thephaseless/byparr:885a24cf160e8baf64b844fc20a91db99fea7826-amd64"
+          image = "ghcr.io/thephaseless/byparr:cb2a862386e92f141e8aa3b58f8532ef2fc36ed0-amd64"
           name  = "byparr"
           port {
             container_port = 8191
