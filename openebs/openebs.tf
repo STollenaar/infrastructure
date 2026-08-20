@@ -15,7 +15,7 @@ resource "helm_release" "local_pv" {
 
   repository = "https://openebs.github.io/dynamic-localpv-provisioner"
   chart      = "localpv-provisioner"
-  version    = "4.5.1"
+  version    = "4.6.0"
 
   max_history = 5
 
