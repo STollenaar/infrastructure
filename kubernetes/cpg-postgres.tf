@@ -36,7 +36,7 @@ resource "helm_release" "barman_cloud" {
 
   repository = "https://cloudnative-pg.github.io/charts"
   chart      = "plugin-barman-cloud"
-  version    = "0.7.1"
+  version    = "0.8.0"
 
   max_history = 5
 }

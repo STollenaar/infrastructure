@@ -19,7 +19,7 @@ resource "helm_release" "nginx_ingress" {
 
   chart       = "nginx-ingress"
   repository  = "https://helm.nginx.com/stable"
-  version     = "2.7.0"
+  version     = "2.7.1"
   max_history = 5
 
   values = [templatefile("${path.module}/conf/nginx-ingress-values.yaml", {
