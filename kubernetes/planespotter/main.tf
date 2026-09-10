@@ -1,18 +1,25 @@
 locals {
+  location              = split(";", data.aws_ssm_parameter.planes_location.value)
   planespotter_timezone = "America/StJohns"
 
   # Receiver location, used by readsb for range stats and by tar1090 to draw the
   # site marker. These are local-only: nothing is fed to any aggregator.
   # TODO: replace with the real antenna position.
-  planespotter_lat   = "47.59104"
-  planespotter_lon   = "-52.70167"
-  planespotter_alt_m = "58"
+  planespotter_lat   = local.location[0]
+  planespotter_lon   = local.location[1]
+  planespotter_alt_m = local.location[2]
 
-  # ULTRAFEEDER_CONFIG is deliberately left unset. Every entry in that variable is
-  # an adsb/mlat uplink to a third-party aggregator (adsb.fi, adsb.lol,
-  # airplanes.live, planespotters.net, adsbexchange, ...). Leaving it empty runs
-  # readsb + tar1090 purely locally and shares nothing. Same reason there is no
-  # UUID / MLAT_USER, and no fr24 or piaware sidecar from the reference compose.
+  # This setup shares received aircraft with third parties, by two separate
+  # routes:
+  #
+  #   - ULTRAFEEDER_CONFIG in ultrafeeder.tf: adsb + mlat uplinks to ten
+  #     aggregators (adsb.fi, adsb.lol, airplanes.live, planespotters.net,
+  #     theairtraffic, AVDelphi, hpradar, flyitalyadsb, adsbexchange, adsb.win).
+  #   - feeders.tf: fr24 and piaware, which feed Flightradar24 and FlightAware
+  #     off ultrafeeder's Beast output rather than through ULTRAFEEDER_CONFIG.
+  #
+  # The two are independent - emptying the feed list does not stop fr24/piaware,
+  # and deleting those Deployments does not stop the uplinks.
 
   planespotter_sdr_gain = "auto"
   planespotter_sdr_ppm  = "0"
