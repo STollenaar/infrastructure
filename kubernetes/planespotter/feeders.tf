@@ -6,12 +6,6 @@ locals {
   planespotter_mlathub_in_port = 31004
 }
 
-# Credentials live in Secrets rather than the ConfigMaps beside them: both are
-# account-linked and would otherwise sit in the clear in git and in `kubectl get
-# configmap`. The placeholders below want replacing the way the rest of this
-# repo does it - an SSM parameter read through data.tf, or a Vault-backed
-# ExternalSecret like planespotter's ecr-auth - rather than by pasting the real
-# values here.
 resource "kubernetes_secret_v1" "fr24" {
   metadata {
     name      = "fr24"
@@ -19,8 +13,6 @@ resource "kubernetes_secret_v1" "fr24" {
   }
 
   data = {
-    # Sharing key from https://www.flightradar24.com/share-your-data - run their
-    # signup once to have one issued against your location.
     # TODO: replace placeholder.
     FR24KEY = data.aws_ssm_parameter.flight_radar_key.value
 
