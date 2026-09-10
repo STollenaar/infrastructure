@@ -1,3 +1,12 @@
+locals {
+  # Serials written to each dongle's EEPROM so the device plugin can tell them
+  # apart. Factory RTL-SDRs all ship as "00000001", which is why these have to
+  # be set by hand before either resource advertises anything.
+  #   rtl_eeprom -d <index> -s <serial>
+  rtlsdr_meter_serial = "METER001"
+  rtlsdr_adsb_serial  = "ADSB0001"
+}
+
 resource "kubernetes_daemonset" "generic_device_plugin" {
   metadata {
     name      = "generic-device-plugin"
@@ -60,12 +69,24 @@ resource "kubernetes_daemonset" "generic_device_plugin" {
             ,
             "--device",
             <<-EOT
-            name: rtlsdr
+            name: rtlsdr-meter
             groups:
               - count: 1
                 usb:
                   - vendor: "0bda"
                     product: "2838"
+                    serial: "${local.rtlsdr_meter_serial}"
+            EOT
+            ,
+            "--device",
+            <<-EOT
+            name: rtlsdr-adsb
+            groups:
+              - count: 1
+                usb:
+                  - vendor: "0bda"
+                    product: "2838"
+                    serial: "${local.rtlsdr_adsb_serial}"
             EOT
           ]
 

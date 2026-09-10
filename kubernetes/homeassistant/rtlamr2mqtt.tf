@@ -17,6 +17,25 @@ locals {
   ]
 
   rtlamr2mqtt_config = {
+    general = {
+      # Which dongle rtlamr2mqtt opens, by librtlsdr enumeration order.
+      #
+      # The devic.es/rtlsdr-meter request is what guarantees this pod is handed
+      # the meter dongle's node, since that match is on EEPROM serial. This
+      # index is the second half: rtlamr2mqtt enumerates with pyusb on
+      # vendor:product and does not filter to devices it can actually open, so
+      # it sees both dongles and picks positionally.
+      #
+      # Verified on the running host - libusb orders 9-3 before 9-2, so:
+      #   index 0 = ADSB0001 (9-3)
+      #   index 1 = METER001 (9-2)  <- this one
+      #
+      # This is positional and therefore brittle. Re-check it with
+      # `rtl_test -d 99` after moving dongles between ports; and note that if
+      # the ADS-B dongle is unplugged entirely, only one device enumerates and
+      # index 1 goes out of range, which rtlamr2mqtt treats as fatal.
+      device_id = 1
+    }
     mqtt = {
       ha_autodiscovery       = true
       ha_autodiscovery_topic = "homeassistant"
@@ -110,17 +129,18 @@ resource "kubernetes_deployment" "rtlamr2mqtt" {
             read_only  = true
           }
 
-          # RTL-SDR (Realtek 0bda:2838) is provided by generic-device-plugin
-          # (devic.es/rtlsdr). This replaces privileged + /dev/bus/usb passthrough.
+          # The meter dongle (Realtek 0bda:2838 on USB 9-2) is provided by
+          # generic-device-plugin as devic.es/rtlsdr-meter, matched on its
+          # EEPROM serial so this pod can never be handed the ADS-B dongle.
           resources {
             requests = {
               cpu    = "100m"
               memory = "128Mi"
             }
             limits = {
-              cpu               = "500m"
-              memory            = "512Mi"
-              "devic.es/rtlsdr" = 1
+              cpu                     = "500m"
+              memory                  = "512Mi"
+              "devic.es/rtlsdr-meter" = 1
             }
           }
         }

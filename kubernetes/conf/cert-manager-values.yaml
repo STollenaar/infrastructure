@@ -297,7 +297,9 @@ extraArgs: []
 #  extraEnv:
 #  - name: SOME_VAR
 #    value: 'some value'
-extraEnv: []
+extraEnv:
+  - name: KUBE_FEATURE_WatchListClient
+    value: "false"
 
 # Resources to provide to the cert-manager controller pod.
 #
@@ -307,12 +309,19 @@ extraEnv: []
 #    memory: 32Mi
 #
 # For more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
+# Sized for this cluster's object count, not the chart's example values. The
+# controller caches Secrets cluster-wide (~29MB across ~216 Secrets, mostly Helm
+# release history), and a 60Mi ceiling put the Go GC in a spiral: RSS pinned just
+# under the limit, CPU at 124m against a 10m request, and every goroutine starved
+# - including the /livez server and the leader-election renewal, so the kubelet
+# killed it mid-startup before it finished starting its 18 controllers.
+# No CPU limit on purpose: throttling this during cache sync recreates the stall.
 resources:
   requests:
-    cpu: 10m
-    memory: 35Mi
+    cpu: 100m
+    memory: 128Mi
   limits:
-    memory: 60Mi
+    memory: 512Mi
 
 # Pod Security Context.
 # For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
@@ -482,13 +491,18 @@ topologySpreadConstraints: []
 # controller-manager. For more information see the following on the
 # [Kubernetes GitHub repository](https://github.com/kubernetes/kubernetes/blob/806b30170c61a38fedd54cc9ede4cd6275a1ad3b/cmd/kubeadm/app/util/staticpod/utils.go#L241-L245)
 # +docs:property
+# Startup here is slow (informer cache sync across a large Secret set), and the
+# default grace was short enough that the kubelet killed the controller before it
+# ever finished booting. The extra headroom lets a cold start complete; it should
+# not be needed once the memory limit above stops the GC stall, but a restart
+# loop during cache sync is exactly the failure this guards against.
 livenessProbe:
   enabled: true
-  initialDelaySeconds: 10
+  initialDelaySeconds: 60
   periodSeconds: 10
   timeoutSeconds: 15
   successThreshold: 1
-  failureThreshold: 8
+  failureThreshold: 12
 
 # enableServiceLinks indicates whether information about services should be
 # injected into the pod's environment variables, matching the syntax of Docker

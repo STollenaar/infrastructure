@@ -33,3 +33,13 @@ module "ollama" {
     name = kubernetes_manifest.vault_backend.manifest.metadata.name
   }
 }
+
+module "planespotter" {
+  source = "./planespotter"
+
+  rtlsdr_adsb_serial = local.rtlsdr_adsb_serial
+  vault_backend = {
+    kind = kubernetes_manifest.vault_backend.manifest.kind
+    name = kubernetes_manifest.vault_backend.manifest.metadata.name
+  }
+}
