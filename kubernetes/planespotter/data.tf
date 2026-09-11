@@ -13,3 +13,11 @@ data "aws_ssm_parameter" "flight_aware_feeder_id" {
 data "aws_ssm_parameter" "planes_location" {
   name = "/planes/location"
 }
+
+data "aws_ssm_parameter" "adsb_win" {
+  name = "/adsbwin/uuid"
+}
+
+data "aws_ssm_parameter" "adsb_exchange" {
+  name = "/adsbexchange/uuid"
+}

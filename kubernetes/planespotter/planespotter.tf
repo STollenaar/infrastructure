@@ -4,8 +4,6 @@ resource "kubernetes_config_map_v1" "planespotter" {
     namespace = kubernetes_namespace_v1.planespotter.id
   }
   data = {
-    # Base URL of the ultrafeeder tar1090 instance; planespotter appends
-    # /data/aircraft.json to it. Same namespace, so this resolves in-cluster.
     PLANESPOTTER_TAR1090_URL         = "http://${kubernetes_service_v1.ultrafeeder.metadata.0.name}.${kubernetes_namespace_v1.planespotter.id}.svc.cluster.local"
     PLANESPOTTER_DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1527411298105692404/JlSTa0ePmpdimr1yB6GIgFS6x1qVevQ87eWaxsFiANgSoYSEKir59LWW1CDXB-DTdOKD"
 

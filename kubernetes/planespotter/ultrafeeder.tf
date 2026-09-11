@@ -41,17 +41,10 @@ locals {
     "mlat,mlat.adsb.win,31090,39013,uuid=${local.planespotter_adsbwin_uuid}",
   ]
 
-  # Station identity sent with the feeds. The UUID is what ties these uplinks to
-  # your account/stats pages at each aggregator, so it is a stable identifier
-  # worth treating like the other credentials here: replace these the way
-  # piaware's FEEDER_ID is done, via an SSM parameter in data.tf, rather than by
-  # committing the real values.
-  # TODO: replace placeholders. Generate the main one with `uuidgen`; adsb.win
-  # issues theirs at https://adsb.win.
-  planespotter_uuid         = "REPLACE_ME"
-  planespotter_adsbwin_uuid = "REPLACE_ME"
+  planespotter_uuid         = data.aws_ssm_parameter.adsb_exchange.value
+  planespotter_adsbwin_uuid = data.aws_ssm_parameter.adsb_win.value
 
-  planespotter_mlat_user = "planespotter"
+  planespotter_station_name = "guitargun"
 }
 
 resource "kubernetes_config_map_v1" "ultrafeeder" {
@@ -83,7 +76,7 @@ resource "kubernetes_config_map_v1" "ultrafeeder" {
 
     # tar1090 web UI.
     UPDATE_TAR1090                            = "true"
-    TAR1090_PAGETITLE                         = "planespotter"
+    TAR1090_PAGETITLE                         = local.planespotter_station_name
     TAR1090_MESSAGERATEINTITLE                = "true"
     TAR1090_PLANECOUNTINTITLE                 = "true"
     TAR1090_ENABLE_AC_DB                      = "true"
@@ -98,8 +91,7 @@ resource "kubernetes_config_map_v1" "ultrafeeder" {
     # aggregators is what we opt out of (see ULTRAFEEDER_CONFIG in main.tf).
     TAR1090_USEROUTEAPI = "true"
 
-    # Username shown against your MLAT contributions on the aggregators' maps.
-    MLAT_USER = local.planespotter_mlat_user
+    MLAT_USER = local.planespotter_station_name
 
     # Feed MLAT-derived positions back into readsb's SBS output so they show on
     # tar1090 next to directly received aircraft. Ultrafeeder logs a warning
@@ -110,11 +102,6 @@ resource "kubernetes_config_map_v1" "ultrafeeder" {
 
     GRAPHS1090_DARKMODE = "true"
 
-    # There is no thermal sensor to read: /sys/class/thermal is empty on this
-    # node and there is no hwmon, because Proxmox does not expose host
-    # temperatures to guests. The panel can never plot anything, so hide it.
-    # Note this only hides the chart - collectd still loads its table plugin
-    # and will still log that the thermal zone is missing.
     GRAPHS1090_DISABLE_CHART_TEMP = "true"
   }
 }
@@ -138,7 +125,7 @@ resource "kubernetes_config_map_v1" "ident" {
   }
 
   data = {
-    IDENT_STATION_NAME = "planespotter"
+    IDENT_STATION_NAME = local.planespotter_station_name
 
     # HeyWhatsThat panorama id, used to draw the theoretical horizon. Generate
     # one at https://heywhatsthat.com for the receiver location and paste the id
@@ -161,8 +148,6 @@ resource "kubernetes_deployment_v1" "ultrafeeder" {
   spec {
     replicas = 1
 
-    # Single RTL-SDR and ReadWriteOnce volumes: the old pod has to release both
-    # before a new one can start.
     strategy {
       type = "Recreate"
     }
@@ -190,9 +175,6 @@ resource "kubernetes_deployment_v1" "ultrafeeder" {
           name  = "ultrafeeder"
           image = "ghcr.io/sdr-enthusiasts/docker-adsb-ultrafeeder:latest-build-956"
 
-          # Every setting lives in the ConfigMap; a change there rolls the pod
-          # via the checksum annotation above, since env_from is only read at
-          # container start.
           env_from {
             config_map_ref {
               name = kubernetes_config_map_v1.ultrafeeder.metadata.0.name
@@ -209,11 +191,6 @@ resource "kubernetes_deployment_v1" "ultrafeeder" {
             name           = "http"
           }
 
-
-          # Holds the ADS-B dongle for the life of the pod, which is fine now
-          # that it has one of its own - the meter has METER001 and this has
-          # ADSB0001, so neither can starve the other. Requesting the device
-          # also pins this pod to the node the dongle is plugged into.
           resources {
             requests = {
               cpu    = "250m"
@@ -265,11 +242,6 @@ resource "kubernetes_deployment_v1" "ultrafeeder" {
           }
         }
 
-        # Ident reads readsb's aircraft.json straight off the filesystem - it
-        # has no HTTP source option and defaults to /run/readsb - so it has to
-        # share ultrafeeder's tmpfs. That makes it a sidecar rather than its own
-        # Deployment, which is also what the reference compose does with a
-        # shared volume. Read-only: it is a viewer, not a feeder.
         container {
           name  = "ident"
           image = "ghcr.io/ident-1090/ident:v0.5.1"
@@ -324,8 +296,6 @@ resource "kubernetes_deployment_v1" "ultrafeeder" {
           }
         }
 
-        # tmpfs in the reference compose; readsb rewrites these JSON blobs every
-        # second and they must not hit disk.
         volume {
           name = "receiver-json"
           empty_dir {
@@ -344,14 +314,6 @@ resource "kubernetes_deployment_v1" "ultrafeeder" {
   }
 }
 
-# collectd's df plugin (graphs1090's disk-usage chart) calls setmntent on
-# /etc/mtab, and the ultrafeeder image ships no such file - so it fails every
-# cycle and backs off. Nothing to do with Talos; it is a gap in the image.
-#
-# df is loaded with no <Plugin df> block, so it simply charts whatever mtab
-# lists, and it statvfs's each mount point directly - the device names here are
-# cosmetic, the usage figures come from the live filesystem. Listing the paths
-# we actually care about is enough to make the chart real.
 resource "kubernetes_config_map_v1" "ultrafeeder_mtab" {
   metadata {
     name      = "ultrafeeder-mtab"
@@ -440,8 +402,41 @@ resource "kubernetes_service_v1" "ultrafeeder" {
   }
 }
 
-# Internal host only: external-dns is not enabled, matching the other
-# home.spicedelver.me services.
+resource "kubernetes_manifest" "ident_virtualserver" {
+  manifest = {
+    apiVersion = "k8s.nginx.org/v1"
+    kind       = "VirtualServer"
+    metadata = {
+      name      = "ident"
+      namespace = kubernetes_namespace_v1.planespotter.id
+    }
+    spec = {
+      ingressClassName = "nginx"
+      host             = "ident.home.spicedelver.me"
+      tls = {
+        secret = "ident-tls"
+        "cert-manager" = {
+          "cluster-issuer" = "letsencrypt-prod"
+        }
+        redirect = {
+          enable = true
+        }
+      }
+      upstreams = [{
+        name    = "ident"
+        service = kubernetes_service_v1.ultrafeeder.metadata.0.name
+        port    = 8080
+      }]
+      routes = [{
+        path = "/"
+        action = {
+          pass = "ident"
+        }
+      }]
+    }
+  }
+}
+
 resource "kubernetes_manifest" "ultrafeeder_virtualserver" {
   manifest = {
     apiVersion = "k8s.nginx.org/v1"
