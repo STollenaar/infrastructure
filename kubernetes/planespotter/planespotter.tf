@@ -46,7 +46,7 @@ resource "kubernetes_deployment_v1" "planespotter" {
         }
         container {
           name  = "planespotter"
-          image = "405934267152.dkr.ecr.ca-central-1.amazonaws.com/discordbots:planespotter-0.0.2"
+          image = "405934267152.dkr.ecr.ca-central-1.amazonaws.com/discordbots:planespotter-0.0.3"
           env_from {
             config_map_ref {
               name = kubernetes_config_map_v1.planespotter.metadata.0.name

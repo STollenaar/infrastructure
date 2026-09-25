@@ -119,20 +119,37 @@ resource "kubernetes_config_map_v1" "decluttarr_config" {
         max_concurrent_searches: 3
 
       jobs:
+        # Marks non-media/sample/unavailable files as "do not download" in qBittorrent;
+        # blocklists + removes the torrent when nothing wanted is left (e.g. .exe/.lnk-only fakes)
         remove_bad_files:
+          keep_archives: false
         remove_failed_downloads:
+        # Blocklists + removes completed downloads the *arrs refuse to import.
+        # Patterns are fnmatch (case-sensitive, exact unless wildcards are used).
+        # Deliberately excluded (need manual action, not removal): "Unknown Series/Movie",
+        # "Unable to parse file", "matched to series by ID", "Not enough free space", TBA titles.
         remove_failed_imports:
           message_patterns:
+            # Not an upgrade over what's already on disk
             - "Not a Custom Format upgrade for existing*"
             - "Not an upgrade for existing*"
+            - "Not a quality revision upgrade for existing*"
+            - "*file already imported at*"
+            # Malicious / fake releases
             - "*Found potentially dangerous file with extension*"
+            - "*Found executable file with extension*"
             - "Invalid video file*"
             - "No files found are eligible for import*"
+            - "No audio tracks detected*"
+            - "Sample"
+            - "Unable to determine if file is a sample*"
+            # Season packs missing episodes (everything importable is already imported)
+            - "One or more episodes expected in this release were not imported or missing from the release*"
         remove_metadata_missing:
         remove_missing_files:
         remove_orphans:
         remove_stalled:
-            max_strikes: 3
+          max_strikes: 3
         remove_unmonitored:
         search_unmet_cutoff:
         search_missing:
