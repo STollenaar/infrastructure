@@ -176,3 +176,18 @@ resource "helm_release" "loki" {
   values = [templatefile("${path.module}/conf/loki-values.yaml", {})]
 }
 
+# Ships container logs from every node into Loki. Without this Loki stays empty.
+resource "helm_release" "alloy" {
+  name      = "alloy"
+  namespace = kubernetes_namespace.monitoring.id
+
+  repository = "https://grafana.github.io/helm-charts"
+  chart      = "alloy"
+  version    = "1.12.1"
+
+  depends_on = [helm_release.loki]
+
+  max_history = 5
+
+  values = [templatefile("${path.module}/conf/alloy-values.yaml", {})]
+}
