@@ -29,7 +29,7 @@ resource "kubernetes_deployment" "decluttarr" {
       spec {
         container {
           name  = "decluttarr"
-          image = "ghcr.io/manimatter/decluttarr:v2.1.0"
+          image = "ghcr.io/manimatter/decluttarr:v2.2.0"
 
           env {
             name  = "TZ"
