@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NetworkConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <BaseUrl />
+  <EnableHttps>false</EnableHttps>
+  <RequireHttps>false</RequireHttps>
+  <CertificatePath />
+  <CertificatePassword />
+  <InternalHttpPort>8096</InternalHttpPort>
+  <InternalHttpsPort>8920</InternalHttpsPort>
+  <PublicHttpPort>8096</PublicHttpPort>
+  <PublicHttpsPort>8920</PublicHttpsPort>
+  <AutoDiscovery>true</AutoDiscovery>
+  <EnableUPnP>false</EnableUPnP>
+  <EnableIPv4>true</EnableIPv4>
+  <EnableIPv6>false</EnableIPv6>
+  <EnableRemoteAccess>true</EnableRemoteAccess>
+  <!--
+    Every client reaches Jellyfin through the nginx ingress, so without these two
+    the request source is always an ingress pod IP. That lands inside the pod CIDR,
+    Jellyfin logs IsInLocalNetwork=True for everyone, and RemoteClientBitrateLimit
+    is skipped - it transcodes at the source bitrate instead (35 Mbps for a BluRay
+    remux), which no TV can pull down smoothly.
+
+    KnownProxies lets Jellyfin trust X-Forwarded-For and see the real client IP.
+    LocalNetworkSubnets is deliberately the pod CIDR only, NOT the 192.168.5.0/24
+    LAN: that makes real playback devices count as remote so the bitrate cap in
+    system.xml actually applies to them.
+  -->
+  <LocalNetworkSubnets>
+    <string>10.244.0.0/16</string>
+  </LocalNetworkSubnets>
+  <LocalNetworkAddresses />
+  <KnownProxies>
+    <string>10.244.0.0/16</string>
+  </KnownProxies>
+  <IgnoreVirtualInterfaces>true</IgnoreVirtualInterfaces>
+  <VirtualInterfaceNames>
+    <string>veth</string>
+  </VirtualInterfaceNames>
+  <EnablePublishedServerUriByRequest>false</EnablePublishedServerUriByRequest>
+  <PublishedServerUriBySubnet />
+  <RemoteIPFilter />
+  <IsRemoteIPFilterBlacklist>false</IsRemoteIPFilterBlacklist>
+</NetworkConfiguration>

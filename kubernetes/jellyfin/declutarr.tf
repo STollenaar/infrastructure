@@ -108,7 +108,9 @@ resource "kubernetes_config_map_v1" "decluttarr_config" {
       general:
         log_level: INFO
         test_run: false
-        timer: 10
+        # 2 min, not 10: 'remove_bad_files' only inspects torrents while they are in a
+        # downloading state, so a ~1GB fake that finishes inside one cycle is never seen.
+        timer: 2
         ignored_download_clients:
           - emulerr
         protected_tag: "Don't Kill"

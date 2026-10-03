@@ -52,7 +52,7 @@ resource "kubernetes_deployment" "jellyfin" {
           image = "busybox:1.38"
           # encoding.xml is copied unconditionally: transcode settings are owned by
           # this repo, so changes made in the Jellyfin UI are reverted on restart.
-          command = ["sh", "-c", "[ -e /config/config/livetv.xml ] || cp /seed/livetv.xml /config/config/livetv.xml; cp /seed-encoding/encoding.xml /config/config/encoding.xml"]
+          command = ["sh", "-c", "[ -e /config/config/livetv.xml ] || cp /seed/livetv.xml /config/config/livetv.xml; [ -e /config/config/network.xml ] || cp /seed-network/network.xml /config/config/network.xml; cp /seed-encoding/encoding.xml /config/config/encoding.xml"]
           security_context {
             run_as_user  = 1000
             run_as_group = 1000
@@ -68,6 +68,10 @@ resource "kubernetes_deployment" "jellyfin" {
           volume_mount {
             name       = "encoding"
             mount_path = "/seed-encoding"
+          }
+          volume_mount {
+            name       = "network"
+            mount_path = "/seed-network"
           }
         }
         container {
@@ -221,6 +225,16 @@ resource "kubernetes_deployment" "jellyfin" {
             items {
               key  = "system.xml"
               path = "system.xml"
+            }
+          }
+        }
+        volume {
+          name = "network"
+          config_map {
+            name = kubernetes_config_map.jellyfin_network.metadata.0.name
+            items {
+              key  = "network.xml"
+              path = "network.xml"
             }
           }
         }
@@ -563,6 +577,16 @@ resource "kubernetes_config_map" "jellyfin_restore_db" {
   }
   data = {
     "system.xml" = file("${path.module}/conf/jellyfin_system.xml")
+  }
+}
+
+resource "kubernetes_config_map" "jellyfin_network" {
+  metadata {
+    name      = "jellyfin-network"
+    namespace = kubernetes_namespace.jellyfin.id
+  }
+  data = {
+    "network.xml" = file("${path.module}/conf/jellyfin_network.xml")
   }
 }
 

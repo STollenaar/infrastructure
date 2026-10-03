@@ -136,7 +136,9 @@
     <UICulture>en-US</UICulture>
     <SaveMetadataHidden>false</SaveMetadataHidden>
     <ContentTypes />
-    <RemoteClientBitrateLimit>0</RemoteClientBitrateLimit>
+    <!-- 20 Mbps. Only bites when the client counts as remote, which is why
+         network.xml keeps LocalNetworkSubnets to the pod CIDR only. -->
+    <RemoteClientBitrateLimit>20000000</RemoteClientBitrateLimit>
     <EnableFolderView>false</EnableFolderView>
     <EnableGroupingIntoCollections>false</EnableGroupingIntoCollections>
     <DisplaySpecialsWithinSeasons>true</DisplaySpecialsWithinSeasons>
