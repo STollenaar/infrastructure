@@ -31,7 +31,7 @@ resource "kubernetes_deployment_v1" "uptime_kuma" {
       spec {
         container {
           name  = "uptime-kuma"
-          image = "louislam/uptime-kuma:2.5.5"
+          image = "louislam/uptime-kuma:2.5.6"
           port {
             container_port = 3001
           }
