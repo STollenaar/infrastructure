@@ -244,7 +244,7 @@ resource "kubernetes_deployment_v1" "ultrafeeder" {
 
         container {
           name  = "ident"
-          image = "ghcr.io/ident-1090/ident:v0.5.1"
+          image = "ghcr.io/ident-1090/ident:v0.5.3"
 
           env_from {
             config_map_ref {
