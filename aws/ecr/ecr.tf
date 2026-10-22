@@ -7,7 +7,10 @@ locals {
     "external-ip",
     "stable-diffusion",
     "pennymoon",
-    "factorio-archipelago"
+    "factorio-archipelago",
+    # ollama/ollama + mesa-vulkan-drivers; the official image ships the Vulkan
+    # loader but no ICD, so it cannot see an Intel GPU.
+    "ollama-intel"
   ]
 }
 

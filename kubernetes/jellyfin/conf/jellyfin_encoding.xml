@@ -11,10 +11,10 @@
   <ThrottleDelaySeconds>180</ThrottleDelaySeconds>
   <EnableSegmentDeletion>true</EnableSegmentDeletion>
   <SegmentKeepSeconds>720</SegmentKeepSeconds>
-  <HardwareAccelerationType>nvenc</HardwareAccelerationType>
+  <HardwareAccelerationType>qsv</HardwareAccelerationType>
   <EncoderAppPathDisplay>/usr/lib/jellyfin-ffmpeg/ffmpeg</EncoderAppPathDisplay>
   <VaapiDevice>/dev/dri/renderD128</VaapiDevice>
-  <QsvDevice />
+  <QsvDevice>/dev/dri/renderD128</QsvDevice>
   <EnableTonemapping>false</EnableTonemapping>
   <EnableVppTonemapping>false</EnableVppTonemapping>
   <EnableVideoToolboxTonemapping>false</EnableVideoToolboxTonemapping>
@@ -35,24 +35,28 @@
   <EnableDecodingColorDepth10Vp9>true</EnableDecodingColorDepth10Vp9>
   <EnableDecodingColorDepth10HevcRext>false</EnableDecodingColorDepth10HevcRext>
   <EnableDecodingColorDepth12HevcRext>false</EnableDecodingColorDepth12HevcRext>
-  <EnableEnhancedNvdecDecoder>true</EnableEnhancedNvdecDecoder>
+  <EnableEnhancedNvdecDecoder>false</EnableEnhancedNvdecDecoder>
   <PreferSystemNativeHwDecoder>true</PreferSystemNativeHwDecoder>
   <EnableIntelLowPowerH264HwEncoder>false</EnableIntelLowPowerH264HwEncoder>
   <EnableIntelLowPowerHevcHwEncoder>false</EnableIntelLowPowerHevcHwEncoder>
   <EnableHardwareEncoding>true</EnableHardwareEncoding>
-  <AllowHevcEncoding>false</AllowHevcEncoding>
-  <AllowAv1Encoding>false</AllowAv1Encoding>
+  <AllowHevcEncoding>true</AllowHevcEncoding>
+  <AllowAv1Encoding>true</AllowAv1Encoding>
   <EnableSubtitleExtraction>true</EnableSubtitleExtraction>
   <!--
-    GTX 980 is 2nd-gen Maxwell (GM204): NVDEC covers h264, mpeg2 and vc1 only.
-    HEVC and VP9 have no hardware decoder on this chip, so they are deliberately
-    left out - listing them makes ffmpeg fail the hwaccel and fall back mid-stream
-    instead of decoding on the CPU up front.
+    Arc B-series (Battlemage, Xe2). The media engine gained hevc/vp9/av1 over the
+    GTX 980 but dropped the legacy fixed-function decoders, so mpeg2video and vc1
+    are deliberately NOT listed: as before, listing a codec the chip cannot decode
+    makes ffmpeg fail the hwaccel and fall back mid-stream rather than going to the
+    CPU up front. Worth re-checking against `ffmpeg -hwaccels`/vainfo on the real
+    card, and note this is a regression for any VC-1 source (BluRay remuxes), which
+    will now decode on a CPU that reports no AVX.
   -->
   <HardwareDecodingCodecs>
     <string>h264</string>
-    <string>mpeg2video</string>
-    <string>vc1</string>
+    <string>hevc</string>
+    <string>vp9</string>
+    <string>av1</string>
   </HardwareDecodingCodecs>
   <AllowOnDemandMetadataBasedKeyframeExtractionForExtensions>
     <string>mkv</string>

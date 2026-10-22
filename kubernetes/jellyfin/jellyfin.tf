@@ -46,7 +46,10 @@ resource "kubernetes_deployment" "jellyfin" {
         security_context {
           fs_group = 1000
         }
-        runtime_class_name = "nvidia"
+        # No runtime_class_name: that only selected the NVIDIA container runtime to
+        # inject the CUDA/NVENC userspace. jellyfin-ffmpeg already bundles Intel's
+        # media driver, so the stock runtime plus /dev/dri from the device plugin is
+        # all QSV needs.
         init_container {
           name  = "seed-livetv"
           image = "busybox:1.38"
@@ -103,6 +106,20 @@ resource "kubernetes_deployment" "jellyfin" {
           env_from {
             config_map_ref {
               name = kubernetes_config_map.jellyfin_env.metadata.0.name
+            }
+          }
+
+          # Under NVIDIA nothing was requested here - the runtime handed over the
+          # whole card via NVIDIA_VISIBLE_DEVICES=all. The Intel plugin instead
+          # treats the GPU as a countable resource and mounts /dev/dri only for pods
+          # that ask, so without this QSV has no device to open. Counts against
+          # sharedDevNum in openebs/intel-gpu.tf.
+          resources {
+            limits = {
+              "gpu.intel.com/xe" = 1
+            }
+            requests = {
+              "gpu.intel.com/xe" = 1
             }
           }
 
@@ -559,14 +576,13 @@ resource "kubernetes_config_map" "jellyfin_env" {
     "LOG_LEVEL" = "debug"
     "TZ"        = local.timezone
 
-    NVIDIA_VISIBLE_DEVICES = "all"
-    # video/compute are what inject libnvidia-encode and libnvcuvid; without them
-    # nvidia-smi still works but ffmpeg loses NVENC/NVDEC and falls back to CPU.
-    NVIDIA_DRIVER_CAPABILITIES = "compute,video,utility"
-    JELLYFIN_CACHE_DIR         = "/config/cache"
-    JELLYFIN_CONFIG_DIR        = "/config/config"
-    JELLYFIN_DATA_DIR          = "/config/data"
-    JELLYFIN_LOG_DIR           = "/config/log"
+    # The NVIDIA_* pair that used to live here only steered the NVIDIA container
+    # runtime's library injection. Intel has no equivalent knob: the device plugin
+    # mounts /dev/dri and jellyfin-ffmpeg finds it on its own.
+    JELLYFIN_CACHE_DIR  = "/config/cache"
+    JELLYFIN_CONFIG_DIR = "/config/config"
+    JELLYFIN_DATA_DIR   = "/config/data"
+    JELLYFIN_LOG_DIR    = "/config/log"
   }
 }
 

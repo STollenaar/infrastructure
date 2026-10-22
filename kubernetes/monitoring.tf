@@ -93,7 +93,24 @@ resource "kubernetes_manifest" "grafana_virtualserver" {
   }
 }
 
+# Disabled rather than deleted, so it is one line away from coming back if the Arc
+# card gets rolled back to the GTX 980. It scrapes nvidia-smi, so it can only fail
+# against an Intel GPU.
+#
+# The Intel replacement is XPU Manager (intel/xpumanager on DockerHub), which does
+# list Arc B-series as supported hardware and ships a Prometheus exporter. It is NOT
+# wired up here because Intel publishes no Helm chart for it and no Kubernetes
+# manifests in the repo, so the exporter's port, metrics path and image tag are all
+# unverified - guessing them would just produce a DaemonSet that silently never
+# scrapes. Deploying it also wants the gpu.intel.com/monitoring resource that
+# openebs/intel-gpu.tf now enables.
+#
+# Still pointing at the old exporter and worth revisiting alongside it:
+#   - kubernetes/conf/prometheus-operator-values.yaml  (nvidia-gpu-exporter scrape job)
+#   - kubernetes/conf/grafana/nvidia-gpu-exporter.json (dashboard)
 resource "helm_release" "nvidia_gpu_exporter" {
+  count = 0
+
   name       = "nvidia-gpu-exporter"
   repository = "https://utkuozdemir.org/helm-charts"
   chart      = "nvidia-gpu-exporter"

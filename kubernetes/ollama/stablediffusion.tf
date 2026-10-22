@@ -67,7 +67,7 @@ resource "kubernetes_deployment_v1" "stable_diffusion" {
             required_during_scheduling_ignored_during_execution {
               node_selector_term {
                 match_expressions {
-                  key      = "nvidia.com/gpu.present"
+                  key      = "intel.com/gpu.present"
                   operator = "In"
                   values   = ["true"]
                 }
@@ -76,7 +76,12 @@ resource "kubernetes_deployment_v1" "stable_diffusion" {
           }
         }
 
-        runtime_class_name = "nvidia"
+        # Intel needs no custom runtime; the device plugin passes /dev/dri through.
+        #
+        # NOTE: the image itself is still a CUDA build. sd-server is
+        # stable-diffusion.cpp, which does have a Vulkan backend, but
+        # ECR stable-diffusion:master-467-0e52afc was not built with it, so this pod
+        # will fall back to CPU until the image is rebuilt with Vulkan enabled.
         image_pull_secrets {
           name = kubernetes_manifest.ollama_external_secret.manifest.spec.target.name
         }
