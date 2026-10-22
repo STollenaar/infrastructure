@@ -42,7 +42,7 @@ resource "helm_release" "prometheus_operator" {
 
   chart       = "kube-prometheus-stack"
   repository  = "https://prometheus-community.github.io/helm-charts"
-  version     = "92.9.0"
+  version     = "92.11.0"
   namespace   = kubernetes_namespace.monitoring.id
   timeout     = 300
   wait        = false
@@ -169,7 +169,7 @@ resource "helm_release" "loki" {
 
   repository = "https://grafana.github.io/helm-charts"
   chart      = "loki"
-  version    = "7.3.0"
+  version    = "7.5.0"
 
   max_history = 5
 
@@ -183,7 +183,7 @@ resource "helm_release" "alloy" {
 
   repository = "https://grafana.github.io/helm-charts"
   chart      = "alloy"
-  version    = "1.13.1"
+  version    = "1.14.2"
 
   depends_on = [helm_release.loki]
 
