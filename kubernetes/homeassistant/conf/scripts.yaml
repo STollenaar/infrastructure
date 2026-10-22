@@ -1,3 +1,44 @@
 # Scripts, included by configuration.yaml as `script: !include scripts.yaml`.
-# A comment-only file parses to null, which Home Assistant accepts as "no
-# scripts" -- matching the empty file this replaced.
+#
+# Scripts in this file are exposed to Alexa via the `script` domain in
+# configuration.yaml's smart_home filter. Home Assistant maps a script onto an
+# Alexa SceneController, so the `alias` is the utterance: an alias of
+# "Jellyfin" answers to "Alexa, turn on Jellyfin".
+#
+# The adb_command actions need the `androidtv` integration pointed at the Fire
+# TV. That integration is config-flow only (no YAML), so it is set up in the HA
+# UI and lives in .storage on the PVC, not in this repo. See ../README.md for
+# the one-time ADB pairing steps and how to confirm the Jellyfin package name.
+
+jellyfin:
+  alias: Jellyfin
+  icon: mdi:jellyfish
+  mode: single
+  sequence:
+    # Fire TV built-ins accept ADB while asleep but will not foreground an app,
+    # so wake the panel first and give it a moment before launching.
+    - action: media_player.turn_on
+      target:
+        entity_id: media_player.fire_tv
+    - wait_template: "{{ is_state('media_player.fire_tv', 'idle') or is_state('media_player.fire_tv', 'playing') or is_state('media_player.fire_tv', 'standby') }}"
+      timeout: "00:00:10"
+      continue_on_timeout: true
+    # `monkey` launches by package name via the LAUNCHER intent, which survives
+    # Jellyfin renaming its startup activity between releases. Verify the
+    # package with: adb shell pm list packages | grep jellyfin
+    - action: androidtv.adb_command
+      target:
+        entity_id: media_player.fire_tv
+      data:
+        command: "monkey -p org.jellyfin.androidtv -c android.intent.category.LAUNCHER 1"
+
+fire_tv_home:
+  alias: Fire TV Home
+  icon: mdi:television
+  mode: single
+  sequence:
+    - action: androidtv.adb_command
+      target:
+        entity_id: media_player.fire_tv
+      data:
+        command: HOME

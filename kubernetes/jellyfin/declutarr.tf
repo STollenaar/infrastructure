@@ -121,8 +121,15 @@ resource "kubernetes_config_map_v1" "decluttarr_config" {
         max_concurrent_searches: 3
 
       jobs:
-        # Marks non-media/sample/unavailable files as "do not download" in qBittorrent;
-        # blocklists + removes the torrent when nothing wanted is left (e.g. .exe/.lnk-only fakes)
+        # Marks non-media/sample/unavailable files as "do not download" in qBittorrent,
+        # then blocklists + removes the torrent when nothing wanted is left. Removal and
+        # blocklisting are not configurable: RemoveBadFiles sets blocklist = True itself.
+        #
+        # Note it only inspects files with priority > 0, and qBittorrent's
+        # Session\ExcludedFileNames (see conf/qbittorrent.conf) already parks .exe/.lnk
+        # and friends at priority 0 on add. So for those fakes this job now finds nothing
+        # left to stop, and the remove + blocklist happens via remove_failed_imports
+        # below ("No files found are eligible for import"). Same outcome, different job.
         remove_bad_files:
           keep_archives: false
         remove_failed_downloads:
@@ -150,8 +157,11 @@ resource "kubernetes_config_map_v1" "decluttarr_config" {
         remove_metadata_missing:
         remove_missing_files:
         remove_orphans:
-        remove_stalled:
-          max_strikes: 3
+        # Owned by the blocklist-pruner CronJob instead (blocklist_pruner.tf), which
+        # can do "stalled 3 days, blocked 18 days" - decluttarr can express neither
+        # half, and a stall block created here would be indistinguishable from a
+        # bad-format one, so it could never be expired safely. Leave this off.
+        remove_stalled: false
         remove_unmonitored:
         search_unmet_cutoff:
         search_missing:

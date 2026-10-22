@@ -27,6 +27,10 @@ alexa:
         - climate
         - media_player
         - scene
+        # Scripts map onto Alexa scenes, so a script's alias becomes its
+        # utterance -- this is what exposes "turn on Jellyfin". See
+        # scripts.yaml.
+        - script
       # tplink/kasa plugs expose config switches (entity_category: config)
       # alongside the plug itself; alexa_devices adds do-not-disturb toggles.
       # Keep Alexa to the actual plug state.
