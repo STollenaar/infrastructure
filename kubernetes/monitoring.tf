@@ -183,7 +183,7 @@ resource "helm_release" "alloy" {
 
   repository = "https://grafana.github.io/helm-charts"
   chart      = "alloy"
-  version    = "1.14.2"
+  version    = "1.14.3"
 
   depends_on = [helm_release.loki]
 
