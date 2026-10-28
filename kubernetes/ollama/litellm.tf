@@ -148,7 +148,7 @@ resource "kubernetes_manifest" "litellm_virtualserver" {
     }
     spec = {
       ingressClassName = "nginx"
-      host             = "ollama.home.spicedelver.me"
+      host             = "llm.home.spicedelver.me"
       tls = {
         secret = "ollama-tls"
         "cert-manager" = {
@@ -162,6 +162,13 @@ resource "kubernetes_manifest" "litellm_virtualserver" {
         name    = "litellm"
         service = kubernetes_service.litellm.metadata.0.name
         port    = 4000
+        # nginx's 60s default cut requests off mid-generation with a 504: the 27B
+        # runs at ~8 tok/s on Vulkan and thinks before answering, so a reply can
+        # take minutes.
+        "read-timeout" = "600s"
+        "send-timeout" = "600s"
+        # Pass streamed tokens straight through instead of collecting them first.
+        buffering = false
       }]
       routes = [{
         path = "/"

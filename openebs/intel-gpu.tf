@@ -35,14 +35,20 @@ resource "helm_release" "intel_gpu_plugin" {
 
   max_history = 5
 
+  # The chart defaults to intel.feature.node.kubernetes.io/gpu, which depends on
+  # its NodeFeatureRule being matched by NFD. Target the label Talos sets on the
+  # gpu-worker instead so placement does not hinge on feature discovery. This goes
+  # through values rather than set: set coerces "true" to a bool (the CRD wants a
+  # string), and merges into the chart's map, so the default key has to be nulled
+  # out explicitly or the pod would still require the NFD label.
+  values = [yamlencode({
+    nodeSelector = {
+      "intel.feature.node.kubernetes.io/gpu" = null
+      "intel.com/gpu.present"                = "true"
+    }
+  })]
+
   set = [
-    {
-      # The chart defaults to intel.feature.node.kubernetes.io/gpu, which depends on
-      # its NodeFeatureRule being matched by NFD. Target the label Talos sets on the
-      # gpu-worker instead so placement does not hinge on feature discovery.
-      name  = "nodeSelector.intel\\.com/gpu\\.present"
-      value = "true"
-    },
     {
       # Exposes gpu.intel.com/monitoring, which a GPU metrics exporter must request
       # to read the card's counters.

@@ -23,11 +23,25 @@ locals {
   # unified-vulkan bundles llama-swap + a Vulkan llama-server + mesa's ICDs.
   llama_image = "ghcr.io/mostlygeek/llama-swap:unified-vulkan"
 
-  # Quants verified to exist in these repos. Both are pulled on first use by
+  # Quants verified to exist in these repos. Each is pulled on first use by
   # llama-server's -hf flag and cached on the PVC, so nothing has to be staged by hand.
+  # Sized for the 24 GB Arc Pro B60; llama-swap keeps one loaded at a time.
   llama_models = {
-    "mistral"     = "bartowski/Mistral-7B-Instruct-v0.3-GGUF:Q4_K_M"
-    "llama3.2-3b" = "bartowski/Llama-3.2-3B-Instruct-GGUF:Q4_K_M"
+    # General chat / instructions. Dense 27B (Aug 2026); UD-Q4_K_XL is 16.35 GiB,
+    # leaving room for 32K context. Reasoning left on the template default.
+    "qwen3.8-27b" = {
+      repo = "unsloth/Qwen3.8-27B-GGUF:UD-Q4_K_XL"
+      ctx  = 32768
+      args = []
+    }
+    # Summarisation. Small and fast enough to chew through chat logs; Q6_K is
+    # 6.95 GiB and near-lossless. Thinking is turned off: it only adds latency
+    # and stray text to what should be a straight JSON answer.
+    "qwen3.5-9b" = {
+      repo = "unsloth/Qwen3.5-9B-GGUF:Q6_K"
+      ctx  = 32768
+      args = ["--reasoning off"]
+    }
   }
 }
 
@@ -61,19 +75,21 @@ resource "kubernetes_config_map_v1" "llama_swap_config" {
       logRequests        = true
 
       models = {
-        for name, repo in local.llama_models : name => {
+        for name, m in local.llama_models : name => {
           proxy = "http://127.0.0.1:$${PORT}"
-          cmd = join(" ", [
+          cmd = join(" ", concat([
             "llama-server",
             "--host 127.0.0.1",
             "--port $${PORT}",
-            "-hf ${repo}",
-            # Offload everything the card will take; Arc has far more VRAM than the
-            # 4 GB GTX 980 this replaced.
+            "-hf ${m.repo}",
+            # These repos ship a vision projector that -hf would otherwise pull and
+            # load; nothing here sends images, so skip the extra ~0.9 GB of VRAM.
+            "--no-mmproj",
+            # Offload everything the card will take.
             "--n-gpu-layers 999",
-            "--ctx-size 8192",
+            "--ctx-size ${m.ctx}",
             "--jinja",
-          ])
+          ], m.args))
         }
       }
     })
@@ -151,7 +167,8 @@ resource "kubernetes_deployment" "llama_swap" {
 
           resources {
             limits = {
-              memory             = "12Gi"
+              # Room for the 16 GiB 27B GGUF passing through host memory on load.
+              memory             = "20Gi"
               "gpu.intel.com/xe" = 1
             }
             requests = {
@@ -179,8 +196,10 @@ resource "kubernetes_deployment" "llama_swap" {
         volume {
           name = "cache"
           persistent_volume_claim {
-            # Reuses the cache ollama was using. 10Gi is tight for several GGUFs -
-            # the two Q4_K_M quants above are roughly 4.4 GB and 2 GB.
+            # Reuses the NFS cache ollama was using. Reads top out at ~117 MB/s (the
+            # 1 GbE link), so a cold load of the 16 GB 27B takes ~150 s before the
+            # first token - on pod start and on every swap between models. Node-local
+            # storage (~2.5 GB/s) would fix that once the node has the disk space.
             claim_name = kubernetes_persistent_volume_claim.ollama_pvc.metadata.0.name
           }
         }

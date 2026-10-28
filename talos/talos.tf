@@ -76,19 +76,27 @@ data "talos_image_factory_extensions_versions" "this" {
   }
 }
 
-# "xe" is a short string. If the provider ever treats filters.names as a substring
-# match rather than an exact one it would also pull in anything else containing it
-# (xen-guest-agent, for one), and the node would silently install extra extensions.
-# Fail the plan instead of finding out from a booted machine.
+# filters.names is a substring match, so "xe" also returns xen-guest-agent, which
+# crash-loops on a non-Xen host ("Cannot identify hypervisor"). Keep only the
+# extensions whose short name (after "siderolabs/") is exactly one we asked for.
+locals {
+  gpu_extension_names = [
+    for e in data.talos_image_factory_extensions_versions.this.extensions_info : e.name
+    if contains(local.gpu_extensions, element(split("/", e.name), length(split("/", e.name)) - 1))
+  ]
+}
+
+# A check block only warns, which is how xen-guest-agent got through before. This
+# one now guards the case where an exact name is missing from the factory.
 check "gpu_extensions_resolved" {
   assert {
-    condition = length(data.talos_image_factory_extensions_versions.this.extensions_info) == length(local.gpu_extensions)
+    condition = length(local.gpu_extension_names) == length(local.gpu_extensions)
     error_message = format(
       "expected %d GPU extension(s) %v, factory matched %d: %v",
       length(local.gpu_extensions),
       local.gpu_extensions,
-      length(data.talos_image_factory_extensions_versions.this.extensions_info),
-      data.talos_image_factory_extensions_versions.this.extensions_info.*.name,
+      length(local.gpu_extension_names),
+      local.gpu_extension_names,
     )
   }
 }
@@ -98,7 +106,7 @@ resource "talos_image_factory_schematic" "this" {
     {
       customization = {
         systemExtensions = {
-          officialExtensions = data.talos_image_factory_extensions_versions.this.extensions_info.*.name
+          officialExtensions = local.gpu_extension_names
         }
       }
     }
