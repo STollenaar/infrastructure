@@ -1,41 +1,30 @@
 # Backed by llama-swap -> llama.cpp (see ../../llama-swap.tf), previously ollama.
 #
 # The model_name values are the public contract: callers reach this proxy through
-# ollama.home.spicedelver.me and ask for these strings, so they are kept exactly as
-# they were even though the provider underneath changed.
+# its VirtualServer host (litellm.tf) and ask for these strings.
 #
-# Provider is now `openai/` because llama-server exposes an OpenAI-compatible API.
+# Provider is `openai/` because llama-server exposes an OpenAI-compatible API.
 # The model id after the slash must match a key in llama-swap's models map - that is
 # what llama-swap uses to decide which llama-server to spin up. api_key is required
 # by the OpenAI client but unused by llama-server.
 model_list:
-  - model_name: mistral
+  # General chat / instructions.
+  - model_name: qwen3.8-27b
     litellm_params:
-      model: openai/mistral
+      model: openai/qwen3.8-27b
       api_base: os.environ/LLAMA_SWAP_BASE_URL
       api_key: "none"
 
-  # NOTE: behaviour change. Under ollama this was a Modelfile (conf/ollama/
-  # mistral-summary.modelfile) that baked a summarisation SYSTEM prompt into the
-  # model, so callers got it for free. llama-server has no equivalent: its only
-  # prompt knobs are --chat-template/--chat-template-file/--chat-template-kwargs,
-  # verified against `llama-server --help` in the image, and none of them inject a
-  # system message.
+  # Summarisation (thinking disabled on the backend).
   #
-  # So this entry now serves plain mistral, and the summarisation prompt has to be
-  # re-homed - either sent by the caller as a system message, or baked into a custom
-  # Jinja chat template passed to this model's llama-swap entry. The prompt text is
-  # still in conf/ollama/mistral-summary.modelfile, kept for that purpose.
-  - model_name: mistral-summary
+  # NOTE: the old mistral-summary model was an ollama Modelfile
+  # (conf/ollama/mistral-summary.modelfile) that baked a summarisation SYSTEM prompt
+  # in. llama-server has no equivalent - its only prompt knobs are --chat-template/
+  # --chat-template-file/--chat-template-kwargs, none of which inject a system
+  # message - so callers have to send that prompt themselves. The text is still in
+  # the modelfile.
+  - model_name: qwen3.5-9b
     litellm_params:
-      model: openai/mistral
-      api_base: os.environ/LLAMA_SWAP_BASE_URL
-      api_key: "none"
-
-  # Public name keeps the ollama-style tag; the llama-swap key cannot contain a colon
-  # cleanly, so it is llama3.2-3b on the backend.
-  - model_name: llama3.2:3b
-    litellm_params:
-      model: openai/llama3.2-3b
+      model: openai/qwen3.5-9b
       api_base: os.environ/LLAMA_SWAP_BASE_URL
       api_key: "none"

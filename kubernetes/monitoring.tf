@@ -95,15 +95,7 @@ resource "kubernetes_manifest" "grafana_virtualserver" {
 
 # Disabled rather than deleted, so it is one line away from coming back if the Arc
 # card gets rolled back to the GTX 980. It scrapes nvidia-smi, so it can only fail
-# against an Intel GPU.
-#
-# The Intel replacement is XPU Manager (intel/xpumanager on DockerHub), which does
-# list Arc B-series as supported hardware and ships a Prometheus exporter. It is NOT
-# wired up here because Intel publishes no Helm chart for it and no Kubernetes
-# manifests in the repo, so the exporter's port, metrics path and image tag are all
-# unverified - guessing them would just produce a DaemonSet that silently never
-# scrapes. Deploying it also wants the gpu.intel.com/monitoring resource that
-# openebs/intel-gpu.tf now enables.
+# against an Intel GPU. The Intel replacement is helm_release.xpumd below.
 #
 # Still pointing at the old exporter and worth revisiting alongside it:
 #   - kubernetes/conf/prometheus-operator-values.yaml  (nvidia-gpu-exporter scrape job)
@@ -177,6 +169,66 @@ resource "kubernetes_config_map_v1" "nvidia_gpu_exporter_dashboard" {
   }
   data = {
     "nvidia-gpu-exporter.json" = file("${path.module}/conf/grafana/nvidia-gpu-exporter.json")
+  }
+}
+
+# Intel GPU metrics for the Arc card on the gpu-worker. This is the XPUM 2.x daemon
+# (Go, OpenTelemetry-based), not the old intel/xpumanager image on DockerHub: that
+# one stopped at v1.2.27, predates Battlemage, and its xpum_* REST exporter was
+# retired in 2.0. Metrics come out as OTel hardware conventions (hw_gpu_info,
+# hw_power_watts, ...) - see conf/grafana/intel-gpu.json.
+resource "helm_release" "xpumd" {
+  name       = "xpumd"
+  namespace  = kubernetes_namespace.monitoring.id
+  repository = "oci://ghcr.io/intel/xpumanager/charts"
+  chart      = "xpumd"
+  version    = "2.3.0"
+
+  max_history = 5
+
+  values = [yamlencode({
+    image = {
+      # The chart's appVersion is "latest", so pin the image explicitly.
+      tag        = "v2.3.0"
+      pullPolicy = "IfNotPresent"
+    }
+    # Request gpu.intel.com/monitoring from the device plugin (enableMonitoring in
+    # openebs/intel-gpu.tf). The chart default is DRA, which this cluster doesn't run.
+    gpuAccess = "plugin"
+    nodeSelector = {
+      "intel.com/gpu.present" = "true"
+    }
+    prometheus = {
+      monitor = true
+      # Must match the Prometheus CR's serviceMonitorSelector.
+      release = helm_release.prometheus_operator.name
+    }
+    config = {
+      service = {
+        pipelines = {
+          # The chart defines the prometheus exporter but leaves it out of the
+          # metrics pipeline, so without this /metrics serves nothing.
+          metrics = {
+            receivers  = ["intel_xpu"]
+            processors = ["intel_xpu_status"]
+            exporters  = ["intel_xpu_info", "prometheus"]
+          }
+        }
+      }
+    }
+  })]
+}
+
+resource "kubernetes_config_map_v1" "intel_gpu_dashboard" {
+  metadata {
+    name      = "intel-gpu-dashboard"
+    namespace = kubernetes_namespace.monitoring.id
+    labels = {
+      grafana_dashboard = "1"
+    }
+  }
+  data = {
+    "intel-gpu.json" = file("${path.module}/conf/grafana/intel-gpu.json")
   }
 }
 
