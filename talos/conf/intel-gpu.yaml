@@ -1,0 +1,18 @@
+machine:
+  install:
+    image: ${image}
+  nodeLabels:
+    intel.com/gpu.present: "true"
+  kernel:
+    modules:
+      # Xe2 (Battlemage, Lunar Lake and later) is driven by xe, not i915. Both
+      # extensions claim overlapping PCI IDs on Alchemist, so only one is loaded.
+      - name: xe
+      # Intel Management Engine. Talos lists the mei extension as a prerequisite
+      # for discrete Arc cards: the GSC sub-driver loads the card's firmware over
+      # it. mei_me/mei_gsc bind themselves to the devices xe and the PCI bus
+      # create, so they are not listed here.
+      - name: mei
+  sysctls:
+    # Carried over from the old nvidia patch; unrelated to the GPU vendor.
+    net.core.bpf_jit_harden: 1

@@ -43,8 +43,13 @@ resource "kubernetes_deployment" "tdarr" {
             }
           }
         }
-        runtime_class_name = "nvidia"
-
+        # No runtime_class_name: the NVIDIA runtime injected the CUDA/NVENC
+        # userspace. Nothing equivalent is needed for Intel.
+        #
+        # No gpu.intel.com/xe request either, because transcodegpuWorkers and
+        # healthcheckgpuWorkers are both 0 - tdarr does no GPU work today, so
+        # claiming a slot would just take one away from jellyfin/ollama. Add the
+        # resource block here if GPU workers are ever turned on.
         container {
           image = "ghcr.io/haveagitgat/tdarr:3.01.00"
           name  = "tdarr-server"
@@ -340,24 +345,22 @@ resource "kubernetes_config_map" "tdarr_server_env" {
     "PUID" = 1000
     "PGID" = 1000
 
-    UMASK_SET                  = "002"
-    serverIP                   = "0.0.0.0"
-    serverPort                 = 8266
-    webUIPort                  = 8265
-    internalNode               = true
-    inContainer                = true
-    ffmpegVersion              = 7
-    nodeName                   = "MainNode"
-    auth                       = false
-    openBrowser                = true
-    startPaused                = true
-    maxLogSizeMB               = 10
-    transcodegpuWorkers        = 0
-    transcodecpuWorkers        = 1
-    healthcheckgpuWorkers      = 0
-    healthcheckcpuWorkers      = 0
-    NVIDIA_DRIVER_CAPABILITIES = "all"
-    NVIDIA_VISIBLE_DEVICES     = "all"
+    UMASK_SET             = "002"
+    serverIP              = "0.0.0.0"
+    serverPort            = 8266
+    webUIPort             = 8265
+    internalNode          = true
+    inContainer           = true
+    ffmpegVersion         = 7
+    nodeName              = "MainNode"
+    auth                  = false
+    openBrowser           = true
+    startPaused           = true
+    maxLogSizeMB          = 10
+    transcodegpuWorkers   = 0
+    transcodecpuWorkers   = 1
+    healthcheckgpuWorkers = 0
+    healthcheckcpuWorkers = 0
   }
 }
 

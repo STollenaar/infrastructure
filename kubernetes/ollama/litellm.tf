@@ -62,6 +62,14 @@ resource "kubernetes_deployment" "litellm" {
             container_port = 4000
           }
 
+          # llama-swap's OpenAI-compatible endpoint. The /v1 suffix matters: LiteLLM's
+          # openai provider appends /chat/completions to api_base.
+          env {
+            name  = "LLAMA_SWAP_BASE_URL"
+            value = "http://${kubernetes_service.llama_swap.metadata.0.name}.${kubernetes_namespace.ollama.id}.svc.cluster.local:8080/v1"
+          }
+          # Left in place so conf/litellm/config.yaml can be pointed back at ollama
+          # by swapping the api_base references, without redeploying litellm.
           env {
             name  = "OLLAMA_BASE_URL"
             value = "http://${kubernetes_service.ollama.metadata.0.name}.${kubernetes_namespace.ollama.id}.svc.cluster.local:11434"

@@ -2,6 +2,15 @@ locals {
   talos_version      = "1.13.5"
   kubernetes_version = "1.36.1"
 
+  # Extensions baked into the gpu-worker's installer image. "xe" is the Xe2 KMD
+  # (Battlemage); "mei" is required for discrete Arc cards to load their firmware;
+  # "intel-ucode" is CPU microcode and unrelated to the GPU.
+  gpu_extensions = [
+    "xe",
+    "mei",
+    "intel-ucode",
+  ]
+
   control_plane_nodes = { for v in var.nodes : v.name => v if v.role == "controlplane" }
   worker_nodes        = { for v in var.nodes : v.name => v if strcontains(v.role, "worker") }
 }
@@ -30,7 +39,7 @@ data "talos_machine_configuration" "config" {
         file("${path.module}/conf/controlplane-scheduling.yaml")
       ] : [],
       var.nodes[index(var.nodes.*.name, each.key)].role == "gpu-worker" ? [
-        templatefile("${path.module}/conf/nvidia-kernel.yaml", {
+        templatefile("${path.module}/conf/intel-gpu.yaml", {
           image = "factory.talos.dev/metal-installer/${talos_image_factory_schematic.this.id}:v${local.talos_version}"
         }),
       ] : [],
@@ -54,14 +63,33 @@ resource "local_file" "talosconfig" {
   content  = data.talos_client_configuration.config.talos_config
 }
 
+# Intel Arc B-series (Battlemage, Xe2). Note there is deliberately no
+# container-toolkit equivalent here: unlike NVIDIA, Intel ships no Talos extension
+# that injects a userspace runtime into containers. The host supplies only the KMD
+# and firmware; the Vulkan/Level-Zero/VA-API userspace lives in each image, and
+# /dev/dri is handed out by the Intel GPU device plugin (see openebs/intel-gpu.tf).
 data "talos_image_factory_extensions_versions" "this" {
   # get the latest talos version
   talos_version = local.talos_version
   filters = {
-    names = [
-      "nonfree-kmod-nvidia-lts",
-      "nvidia-container-toolkit-lts",
-    ]
+    names = local.gpu_extensions
+  }
+}
+
+# "xe" is a short string. If the provider ever treats filters.names as a substring
+# match rather than an exact one it would also pull in anything else containing it
+# (xen-guest-agent, for one), and the node would silently install extra extensions.
+# Fail the plan instead of finding out from a booted machine.
+check "gpu_extensions_resolved" {
+  assert {
+    condition = length(data.talos_image_factory_extensions_versions.this.extensions_info) == length(local.gpu_extensions)
+    error_message = format(
+      "expected %d GPU extension(s) %v, factory matched %d: %v",
+      length(local.gpu_extensions),
+      local.gpu_extensions,
+      length(data.talos_image_factory_extensions_versions.this.extensions_info),
+      data.talos_image_factory_extensions_versions.this.extensions_info.*.name,
+    )
   }
 }
 
