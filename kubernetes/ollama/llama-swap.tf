@@ -43,6 +43,55 @@ locals {
       args = ["--reasoning off"]
     }
   }
+
+  # Image generation (the qwen-image-2.1-turbo model below): Qwen-Image 2.1 Turbo
+  # (Sep 2026), an 8-step distill of Qwen-Image 2.1, with its Qwen3-VL text encoder
+  # and VAE as recommended on the unsloth model card. ~13 GiB in total.
+  sd_files = {
+    diffusion = {
+      name = "qwen-image-2.1-turbo-Q8_0.gguf"
+      src  = "unsloth/Qwen-Image-2.1-Turbo-GGUF/resolve/main/qwen-image-2.1-turbo-Q8_0.gguf"
+    }
+    vae = {
+      name = "qwen_image_2.1_vae_bf16.safetensors"
+      src  = "unsloth/Qwen-Image-2.1-FP8/resolve/main/vae/qwen_image_2.1_vae_bf16.safetensors"
+    }
+    llm = {
+      name = "Qwen3-VL-8B-Instruct-UD-Q4_K_XL.gguf"
+      src  = "unsloth/Qwen3-VL-8B-Instruct-GGUF/resolve/main/Qwen3-VL-8B-Instruct-UD-Q4_K_XL.gguf"
+    }
+  }
+
+  # sd-server cannot pull from Hugging Face itself (unlike llama-server's -hf), so
+  # an init container fetches these onto the sd-models PVC if they are not there
+  # yet. Re-runs are no-ops.
+  sd_fetch_script = join("\n", concat(
+    [for f in local.sd_files : "[ -s /models/${f.name} ] || { curl -fL --retry 3 -o /models/${f.name}.part https://huggingface.co/${f.src} && mv /models/${f.name}.part /models/${f.name}; }"],
+    # sd-server scans its model roots for LoRAs / upscalers when these are not
+    # given; point them at empty dirs so it doesn't walk the filesystem.
+    ["mkdir -p /models/loras /models/upscalers"],
+  ))
+}
+
+# Weights for the qwen-image-2.1-turbo model. Predates llama-swap hosting sd-server
+# (it belonged to a standalone stable-diffusion deployment), hence the name/label.
+resource "kubernetes_persistent_volume_claim_v1" "sd_models_pvc" {
+  metadata {
+    name      = "sd-models"
+    namespace = kubernetes_namespace.ollama.id
+    labels = {
+      app = "stable-diffusion"
+    }
+  }
+
+  spec {
+    access_modes = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        storage = "20Gi"
+      }
+    }
+  }
 }
 
 resource "kubernetes_config_map_v1" "llama_swap_config" {
@@ -74,7 +123,7 @@ resource "kubernetes_config_map_v1" "llama_swap_config" {
       healthCheckTimeout = 900
       logRequests        = true
 
-      models = {
+      models = merge({
         for name, m in local.llama_models : name => {
           proxy = "http://127.0.0.1:$${PORT}"
           cmd = join(" ", concat([
@@ -91,8 +140,36 @@ resource "kubernetes_config_map_v1" "llama_swap_config" {
             "--jinja",
           ], m.args))
         }
-      }
-    })
+        }, {
+        # Image generation runs here rather than as its own deployment so that
+        # llama-swap is the single scheduler for the card. Its default routing runs
+        # one model at a time, and the FIFO scheduler parks a request that would
+        # evict a model still serving one until that model drains - so a chat and an
+        # image request arriving together are served one after the other instead of
+        # both trying to fit in VRAM. That is what lets the weights live on the GPU
+        # (no --offload-to-cpu). sd-server ships in the unified-vulkan image.
+        "qwen-image-2.1-turbo" = {
+          proxy = "http://127.0.0.1:$${PORT}"
+          # sd-server has no /health; /v1/models answers once the model is loaded.
+          checkEndpoint = "/v1/models"
+          # sd-server serves its one model under this fixed id.
+          useModelName = "sd-cpp-local"
+          cmd = join(" ", [
+            "sd-server",
+            "--listen-ip 127.0.0.1",
+            "--listen-port $${PORT}",
+            "--diffusion-model /models/${local.sd_files.diffusion.name}",
+            "--vae /models/${local.sd_files.vae.name}",
+            "--llm /models/${local.sd_files.llm.name}",
+            "--lora-model-dir /models/loras",
+            "--hires-upscalers-dir /models/upscalers",
+            # Turbo is distilled for 8 steps at CFG 1.
+            "--steps 8",
+            "--cfg-scale 1.0",
+            "--sampling-method euler",
+          ])
+        }
+    }) })
   }
 }
 
@@ -144,6 +221,20 @@ resource "kubernetes_deployment" "llama_swap" {
           }
         }
 
+        # Stage the image-generation weights for the qwen-image-2.1-turbo entry;
+        # sd-server cannot pull from Hugging Face itself. Re-runs are no-ops.
+        init_container {
+          name    = "fetch-sd-models"
+          image   = "curlimages/curl:8.11.1"
+          command = ["/bin/sh", "-ec"]
+          args    = [local.sd_fetch_script]
+
+          volume_mount {
+            name       = "sd-models"
+            mount_path = "/models"
+          }
+        }
+
         container {
           name  = "llama-swap"
           image = local.llama_image
@@ -184,6 +275,17 @@ resource "kubernetes_deployment" "llama_swap" {
           volume_mount {
             name       = "cache"
             mount_path = "/cache"
+          }
+          volume_mount {
+            name       = "sd-models"
+            mount_path = "/models"
+          }
+        }
+
+        volume {
+          name = "sd-models"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim_v1.sd_models_pvc.metadata.0.name
           }
         }
 

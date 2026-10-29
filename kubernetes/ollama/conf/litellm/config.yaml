@@ -28,3 +28,18 @@ model_list:
       model: openai/qwen3.5-9b
       api_base: os.environ/LLAMA_SWAP_BASE_URL
       api_key: "none"
+
+  # Image generation: Qwen-Image 2.1 Turbo on sd-server, run by llama-swap like the
+  # chat models so requests for the GPU are queued one at a time. Call it with
+  # POST /v1/images/generations, not chat.
+  - model_name: qwen-image-2.1-turbo
+    litellm_params:
+      model: openai/qwen-image-2.1-turbo
+      api_base: os.environ/LLAMA_SWAP_BASE_URL
+      api_key: "none"
+    model_info:
+      mode: image_generation
+
+general_settings:
+  store_model_in_db: true
+  store_prompts_in_spend_logs: true
