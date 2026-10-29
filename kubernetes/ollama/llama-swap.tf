@@ -42,6 +42,15 @@ locals {
       ctx  = 32768
       args = ["--reasoning off"]
     }
+    # Gemma 4 26B-A4B: MoE with ~4B active parameters per token, so it generates
+    # much faster than the dense 27B on this card. UD-Q4_K_XL is 15.84 GiB. Used for
+    # structured (JSON-schema) extraction over batches of articles; the 32K context
+    # leaves headroom over the ~16K those prompts need.
+    "gemma4-26b" = {
+      repo = "unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_XL"
+      ctx  = 32768
+      args = []
+    }
   }
 
   # Image generation (the qwen-image-2.1-turbo model below): Qwen-Image 2.1 Turbo

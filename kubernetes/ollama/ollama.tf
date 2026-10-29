@@ -20,7 +20,7 @@ resource "kubernetes_persistent_volume_claim" "ollama_pvc" {
     access_modes = ["ReadWriteOnce"]
     resources {
       requests = {
-        storage = "40Gi"
+        storage = "60Gi"
       }
     }
   }

@@ -39,6 +39,15 @@ model_list:
       api_key: "none"
     model_info:
       mode: image_generation
+  # Gemma 4 26B-A4B, for structured (JSON-schema) extraction. The openai provider
+  # forwards response_format to llama-server, which turns a json_schema into a
+  # grammar, so the output is constrained to the schema. Context is set on the
+  # llama-swap side (32K; each call sends ~8 articles, ~16K tokens).
+  - model_name: local/gemma4-26b
+    litellm_params:
+      model: openai/gemma4-26b
+      api_base: os.environ/LLAMA_SWAP_BASE_URL
+      api_key: "none"
 
 general_settings:
   store_model_in_db: true
