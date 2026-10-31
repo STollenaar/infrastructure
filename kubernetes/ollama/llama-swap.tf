@@ -234,7 +234,7 @@ resource "kubernetes_deployment" "llama_swap" {
         # sd-server cannot pull from Hugging Face itself. Re-runs are no-ops.
         init_container {
           name    = "fetch-sd-models"
-          image   = "curlimages/curl:8.11.1"
+          image   = "curlimages/curl:8.23.0"
           command = ["/bin/sh", "-ec"]
           args    = [local.sd_fetch_script]
 
