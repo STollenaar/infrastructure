@@ -5,7 +5,7 @@ resource "helm_release" "cilium" {
   # Community chart. Back from cilium-enterprise 1.17.7, which was only there for
   # Hubble Timescape. Kept on the same minor (1.17) for the switch: Cilium supports
   # moving one minor at a time, so 1.18 and then 1.19 are separate follow-up bumps.
-  version    = "1.17.18"
+  version    = "1.20.4"
   chart      = "cilium"
   repository = "https://helm.cilium.io/"
 
