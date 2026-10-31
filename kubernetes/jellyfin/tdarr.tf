@@ -51,7 +51,7 @@ resource "kubernetes_deployment" "tdarr" {
         # claiming a slot would just take one away from jellyfin/ollama. Add the
         # resource block here if GPU workers are ever turned on.
         container {
-          image = "ghcr.io/haveagitgat/tdarr:3.01.00"
+          image = "ghcr.io/haveagitgat/tdarr:3.04.00"
           name  = "tdarr-server"
           env_from {
             config_map_ref {
@@ -181,7 +181,7 @@ resource "kubernetes_deployment" "tdarr_node" {
         }
 
         container {
-          image = "ghcr.io/haveagitgat/tdarr_node:3.01.00"
+          image = "ghcr.io/haveagitgat/tdarr_node:3.04.00"
           name  = "tdarr-node"
           env_from {
             config_map_ref {
