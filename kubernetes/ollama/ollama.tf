@@ -224,7 +224,7 @@ resource "kubernetes_job" "ollama_model_creation" {
     ignore_changes = [
       spec.0.template.0.spec.0.container.0.image
     ]
-  }
+  } 
 }
 
 resource "kubernetes_config_map" "ollama_models" {

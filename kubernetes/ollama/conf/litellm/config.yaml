@@ -7,13 +7,26 @@
 # The model id after the slash must match a key in llama-swap's models map - that is
 # what llama-swap uses to decide which llama-server to spin up. api_key is required
 # by the OpenAI client but unused by llama-server.
+#
+# Costs (model_info) are the electricity used, not a market price, so the LiteLLM
+# spend view shows what local inference actually costs to run:
+#   ~170 W for the box while generating (B60 card ~110 W measured by xpumd + host)
+#   x $0.15/kWh (assumed rate; adjust to your bill)  =>  ~$7.1e-6 per second of GPU
+#   per-token cost = that / throughput (tokens/s).
+# Throughput for qwen3.8-27b is measured on this card (Vulkan); the others are
+# estimates scaled from it by size / active parameters - refine them from the
+# llama-swap UI timings once they have run.
 model_list:
   # General chat / instructions.
+  # Measured: ~230 tok/s prompt, ~8 tok/s generation (thinking tokens bill as output).
   - model_name: qwen3.8-27b
     litellm_params:
       model: openai/qwen3.8-27b
       api_base: os.environ/LLAMA_SWAP_BASE_URL
       api_key: "none"
+    model_info:
+      input_cost_per_token: 3.1e-8
+      output_cost_per_token: 8.9e-7
 
   # Summarisation (thinking disabled on the backend).
   #
@@ -23,11 +36,15 @@ model_list:
   # --chat-template-file/--chat-template-kwargs, none of which inject a system
   # message - so callers have to send that prompt themselves. The text is still in
   # the modelfile.
+  # Estimated: ~700 tok/s prompt, ~18 tok/s generation (6.95 GiB vs the 27B's 16.35).
   - model_name: qwen3.5-9b
     litellm_params:
       model: openai/qwen3.5-9b
       api_base: os.environ/LLAMA_SWAP_BASE_URL
       api_key: "none"
+    model_info:
+      input_cost_per_token: 1.0e-8
+      output_cost_per_token: 3.9e-7
 
   # Image generation: Qwen-Image 2.1 Turbo on sd-server, run by llama-swap like the
   # chat models so requests for the GPU are queued one at a time. Call it with
@@ -39,15 +56,23 @@ model_list:
       api_key: "none"
     model_info:
       mode: image_generation
+      # Estimated ~60 s of GPU per image with the weights in VRAM (160 s was
+      # measured with --offload-to-cpu streaming them from NFS).
+      output_cost_per_image: 4.3e-4
+
   # Gemma 4 26B-A4B, for structured (JSON-schema) extraction. The openai provider
   # forwards response_format to llama-server, which turns a json_schema into a
   # grammar, so the output is constrained to the schema. Context is set on the
   # llama-swap side (32K; each call sends ~8 articles, ~16K tokens).
-  - model_name: local/gemma4-26b
+  # Estimated: ~400 tok/s prompt, ~25 tok/s generation (MoE, ~4B active parameters).
+  - model_name: gemma4-26b
     litellm_params:
       model: openai/gemma4-26b
       api_base: os.environ/LLAMA_SWAP_BASE_URL
       api_key: "none"
+    model_info:
+      input_cost_per_token: 1.8e-8
+      output_cost_per_token: 2.8e-7
 
 general_settings:
   store_model_in_db: true
