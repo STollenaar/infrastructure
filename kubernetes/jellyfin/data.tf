@@ -21,3 +21,7 @@ data "aws_ssm_parameter" "backblaze_access_key" {
 data "aws_ssm_parameter" "backblaze_access_secret_key" {
   name = "/backblaze/access_secret_key"
 }
+
+data "aws_ssm_parameter" "media_qc_api_key" {
+    name = "/ollama/media_qc_api_key"
+}

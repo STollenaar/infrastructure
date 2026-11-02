@@ -6,3 +6,4 @@ talosconfig
 talos/talos-iso-cgi.yaml
 talos/talos-e5t-zk5.yaml
 talos/talos-7zr-i5q.yaml
+**/__pycache__/

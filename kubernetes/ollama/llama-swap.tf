@@ -46,10 +46,14 @@ locals {
     # much faster than the dense 27B on this card. UD-Q4_K_XL is 15.84 GiB. Used for
     # structured (JSON-schema) extraction over batches of articles; the 32K context
     # leaves headroom over the ~16K those prompts need.
+    # vision = true keeps its projector (mmproj-F16, ~1 GB VRAM) so it can read
+    # images: media-qc (../jellyfin/media_qc.tf) sends it movie frames to check for
+    # watermarks.
     "gemma4-26b" = {
-      repo = "unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_XL"
-      ctx  = 32768
-      args = []
+      repo   = "unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_XL"
+      ctx    = 32768
+      args   = []
+      vision = true
     }
   }
 
@@ -140,13 +144,16 @@ resource "kubernetes_config_map_v1" "llama_swap_config" {
             "--host 127.0.0.1",
             "--port $${PORT}",
             "-hf ${m.repo}",
+            ],
             # These repos ship a vision projector that -hf would otherwise pull and
-            # load; nothing here sends images, so skip the extra ~0.9 GB of VRAM.
-            "--no-mmproj",
-            # Offload everything the card will take.
-            "--n-gpu-layers 999",
-            "--ctx-size ${m.ctx}",
-            "--jinja",
+            # load. Only models marked vision = true get images, so the rest skip
+            # the extra ~0.9 GB of VRAM.
+            try(m.vision, false) ? [] : ["--no-mmproj"],
+            [
+              # Offload everything the card will take.
+              "--n-gpu-layers 999",
+              "--ctx-size ${m.ctx}",
+              "--jinja",
           ], m.args))
         }
         }, {

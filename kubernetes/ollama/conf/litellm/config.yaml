@@ -65,12 +65,15 @@ model_list:
   # grammar, so the output is constrained to the schema. Context is set on the
   # llama-swap side (32K; each call sends ~8 articles, ~16K tokens).
   # Estimated: ~400 tok/s prompt, ~25 tok/s generation (MoE, ~4B active parameters).
+  # Also takes images (llama-swap loads its vision projector): media-qc sends it
+  # movie frames to look for uploader watermarks.
   - model_name: gemma4-26b
     litellm_params:
       model: openai/gemma4-26b
       api_base: os.environ/LLAMA_SWAP_BASE_URL
       api_key: "none"
     model_info:
+      supports_vision: true
       input_cost_per_token: 1.8e-8
       output_cost_per_token: 2.8e-7
 
