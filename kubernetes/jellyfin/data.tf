@@ -22,6 +22,10 @@ data "aws_ssm_parameter" "backblaze_access_secret_key" {
   name = "/backblaze/access_secret_key"
 }
 
+data "aws_ssm_parameter" "media_qc_notify_webhook_url" {
+  name = "/jellyfin/media_qc_notify_webhook_url"
+}
+
 data "aws_ssm_parameter" "media_qc_api_key" {
-    name = "/ollama/media_qc_api_key"
+  name = "/ollama/media_qc_api_key"
 }

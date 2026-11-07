@@ -138,7 +138,6 @@ resource "kubernetes_deployment" "rtlamr2mqtt" {
               memory = "128Mi"
             }
             limits = {
-              cpu                     = "500m"
               memory                  = "512Mi"
               "devic.es/rtlsdr-meter" = 1
             }

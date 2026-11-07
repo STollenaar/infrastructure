@@ -21,3 +21,7 @@ data "aws_ssm_parameter" "adsb_win" {
 data "aws_ssm_parameter" "adsb_exchange" {
   name = "/adsbexchange/uuid"
 }
+
+data "aws_ssm_parameter" "discord_webhook" {
+  name = "/planes/discord_webhook"
+}

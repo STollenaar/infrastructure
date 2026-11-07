@@ -77,6 +77,48 @@ model_list:
       input_cost_per_token: 1.8e-8
       output_cost_per_token: 2.8e-7
 
+# A2A agents. LiteLLM fetches each card from <url>/.well-known/agent-card.json and
+# proxies JSON-RPC to it at /a2a/<agent_name> (or /v1/a2a/<agent_name>).
+agents:
+  # Proposes heating changes from thermostat usage and the weather; applies them only
+  # after approval on the phone. See ../../heating_agent.tf.
+  - agent_name: heating-agent
+    agent_card_params:
+      protocolVersion: "0.3.0"
+      name: heating-agent
+      description: >-
+        Watches thermostat electricity use and the weather in Home Assistant and
+        proposes heating changes. Nothing changes until the homeowner approves.
+        Commands: report, scan, apply <id>, skip <id>, or a question.
+      url: http://heating-agent.ollama.svc.cluster.local:8080/
+      version: "1.0.0"
+      preferredTransport: JSONRPC
+      capabilities:
+        streaming: false
+      defaultInputModes: [text/plain]
+      defaultOutputModes: [text/plain]
+      skills:
+        - id: report
+          name: Heating report
+          description: Latest usage and weather analysis plus pending proposals.
+          tags: [heating, energy]
+        - id: scan
+          name: Scan now
+          description: Run a new analysis; proposals arrive as a phone notification.
+          tags: [heating]
+        - id: decide
+          name: Apply or skip
+          description: Apply or skip a pending proposal by id.
+          tags: [heating]
+        - id: ask
+          name: Ask
+          description: Questions about heating use, answered from the latest snapshot.
+          tags: [heating]
+
 general_settings:
   store_model_in_db: true
   store_prompts_in_spend_logs: true
+  # LiteLLM refuses outbound URLs that resolve to private addresses (SSRF guard),
+  # which includes in-cluster services. Allow only the agents above, by host:port.
+  user_url_allowed_hosts:
+    - heating-agent.ollama.svc.cluster.local:8080

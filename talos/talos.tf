@@ -34,6 +34,7 @@ data "talos_machine_configuration" "config" {
             hostname = each.key
             endpoint = var.nodes[index(var.nodes.*.name, each.key)].endpoint
         }),
+        file("${path.module}/conf/selinux-off.yaml"),
       ],
       var.nodes[index(var.nodes.*.name, each.key)].role == "controlplane" ? [
         file("${path.module}/conf/controlplane-scheduling.yaml")

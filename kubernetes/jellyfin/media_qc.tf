@@ -129,7 +129,7 @@ resource "kubernetes_deployment" "media_qc" {
           }
           env {
             name  = "FRAME_COUNT"
-            value = "10"
+            value = "30"
           }
           # Below this the model's watermark/subtitle/camcorder answer is ignored.
           env {
@@ -238,6 +238,9 @@ resource "kubernetes_secret_v1" "media_qc" {
   data = {
     WEBHOOK_TOKEN = random_password.media_qc_webhook_token.result
     LITELLM_KEY   = data.aws_ssm_parameter.media_qc_api_key.value
+    # Gets one message per batch of newly flagged movies (Discord webhook URL or any
+    # endpoint that takes a JSON POST). Test it with POST /api/notify-test.
+    NOTIFY_WEBHOOK_URL = data.aws_ssm_parameter.media_qc_notify_webhook_url.value
   }
 }
 

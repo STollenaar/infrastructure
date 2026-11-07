@@ -5,7 +5,7 @@ resource "kubernetes_config_map_v1" "planespotter" {
   }
   data = {
     PLANESPOTTER_TAR1090_URL         = "http://${kubernetes_service_v1.ultrafeeder.metadata.0.name}.${kubernetes_namespace_v1.planespotter.id}.svc.cluster.local"
-    PLANESPOTTER_DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1527411298105692404/JlSTa0ePmpdimr1yB6GIgFS6x1qVevQ87eWaxsFiANgSoYSEKir59LWW1CDXB-DTdOKD"
+    PLANESPOTTER_DISCORD_WEBHOOK_URL = data.aws_ssm_parameter.discord_webhook.value
 
     # Optional values with defaults
     PLANESPOTTER_HTTP_ADDR              = ":8080"
@@ -46,7 +46,7 @@ resource "kubernetes_deployment_v1" "planespotter" {
         }
         container {
           name  = "planespotter"
-          image = "405934267152.dkr.ecr.ca-central-1.amazonaws.com/discordbots:planespotter-0.0.8"
+          image = "405934267152.dkr.ecr.ca-central-1.amazonaws.com/discordbots:planespotter-0.0.9"
           env_from {
             config_map_ref {
               name = kubernetes_config_map_v1.planespotter.metadata.0.name

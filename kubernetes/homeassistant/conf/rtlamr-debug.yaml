@@ -1,0 +1,41 @@
+# One-off test of the meter dongle (METER001). Not managed by Terraform.
+# Runs rtl_tcp + rtlamr for SCM and prints everything it hears to the console.
+#
+# The dongle can only be opened by one process, so stop the meter reader first:
+#   kubectl -n homeassistant scale deploy rtlamr2mqtt --replicas=0
+#   kubectl apply -f rtlamr-debug.yaml
+#   kubectl -n homeassistant logs -f rtlamr-debug
+# Afterwards:
+#   kubectl -n homeassistant delete pod rtlamr-debug
+#   kubectl -n homeassistant scale deploy rtlamr2mqtt --replicas=1
+#
+# Device index 1 is METER001 (0 is the ADS-B dongle). Selecting by serial
+# (-d METER001) makes librtlsdr open device 0 instead, so use the index.
+# Our meter is ID 27568271.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rtlamr-debug
+  namespace: homeassistant
+  labels:
+    app: rtlamr-debug
+spec:
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: talos-iso-cgi
+  containers:
+    - name: debug
+      image: allangood/rtlamr2mqtt:2026.10.15
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          rtl_tcp -d 1 &
+          sleep 3
+          exec rtlamr -server=127.0.0.1:1234 -msgtype=scm
+      resources:
+        requests:
+          cpu: "1"
+          memory: 256Mi
+        limits:
+          devic.es/rtlsdr-meter: "1"
+          memory: 512Mi

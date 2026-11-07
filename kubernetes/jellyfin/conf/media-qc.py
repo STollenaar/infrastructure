@@ -71,6 +71,12 @@ MAX_ATTEMPTS = int(env("MAX_ATTEMPTS", "3"))
 LLM_TIMEOUT = int(env("LLM_TIMEOUT", "900"))  # a cold model swap alone can take minutes
 DATA_DIR = env("DATA_DIR", "/data")
 PORT = int(env("PORT", "8080"))
+# Where to announce movies waiting for review. Empty turns notifications off.
+NOTIFY_WEBHOOK_URL = env("NOTIFY_WEBHOOK_URL", "").strip()
+# Newly flagged movies are collected for this long and sent as one message, so a
+# backfill sends a summary instead of one message per movie.
+NOTIFY_INTERVAL_MINUTES = int(env("NOTIFY_INTERVAL_MINUTES", "5"))
+PUBLIC_URL = env("PUBLIC_URL", "https://media-qc.home.spicedelver.me").rstrip("/")
 
 FRAMES_DIR = os.path.join(DATA_DIR, "frames")
 EN = {"en", "eng", "english"}
@@ -104,12 +110,13 @@ create table if not exists scans (
     language      jsonb,
     vision        jsonb,
     error         text,
-    review        text,                        -- null | kept | rejected
+    review        text,                        -- null | kept | false_flag | rejected
     review_note   text,
     reviewed_at   timestamptz
 );
 create index if not exists scans_queue_idx on scans (priority, run_after, id) where status = 'pending';
 create table if not exists settings (key text primary key, value text not null);
+alter table scans add column if not exists notified_at timestamptz;
 """
 
 
@@ -138,7 +145,7 @@ def enqueue(conn, movie_file_id: int, movie_id: int, title: str | None, source: 
                values (%s, %s, %s, 'webhook', 0, now() + make_interval(mins => %s))
                on conflict (movie_file_id) do update
                  set status = 'pending', source = 'webhook', priority = 0, attempts = 0,
-                     run_after = excluded.run_after, review = null, error = null
+                     run_after = excluded.run_after, review = null, error = null, notified_at = null
                  where scans.status <> 'running'
                returning id""",
             (movie_file_id, movie_id, title, WEBHOOK_DELAY_MINUTES),
@@ -386,16 +393,23 @@ def ask_vision(scan_id: int, frames: list[dict]) -> dict:
         "model": VISION_MODEL,
         "messages": [{"role": "user", "content": content}],
         "temperature": 0,
-        "max_tokens": 1024,
+        "max_tokens": 2048,
+        # Gemma 4 thinks by default, and on busy frames that reasoning could fill
+        # max_tokens before the JSON answer started, leaving content empty. The
+        # schema-constrained answer is just as good without it, and ~130 tokens long.
+        "chat_template_kwargs": {"enable_thinking": False},
         "response_format": {"type": "json_schema",
                             "json_schema": {"name": "frame_check", "strict": True, "schema": VISION_SCHEMA}},
     }
     resp = http_json("POST", f"{LITELLM_URL}/v1/chat/completions",
                      {"Authorization": f"Bearer {LITELLM_KEY}"}, body, timeout=LLM_TIMEOUT)
-    text = resp["choices"][0]["message"]["content"] or ""
+    choice = resp["choices"][0]
+    text = choice["message"]["content"] or ""
     # Tolerate a fenced block in case the backend ignores response_format.
     match = re.search(r"\{.*\}", text, re.S)
     if not match:
+        if choice.get("finish_reason") == "length":
+            raise ValueError(f"vision model hit max_tokens ({body['max_tokens']}) before answering")
         raise ValueError(f"vision model returned no JSON: {text[:300]!r}")
     return json.loads(match.group(0))
 
@@ -516,6 +530,66 @@ def worker() -> None:
             conn.execute("listen media_qc")
 
 
+# ------------------------------------------------------------------- notifier
+
+def send_notification(new: list[dict], waiting: int) -> None:
+    """POST one message about newly flagged movies to NOTIFY_WEBHOOK_URL.
+
+    Discord webhook URLs get Discord's format; anything else (Home Assistant,
+    Slack, ntfy, n8n...) gets a JSON body with the same text under both "text"
+    and "content", plus the items themselves.
+    """
+    lines = [f"{len(new)} movie{'s' if len(new) != 1 else ''} flagged for review"
+             + (f" ({waiting} waiting in total)" if waiting != len(new) else "")]
+    for s in new[:10]:
+        reasons = "; ".join(f"{r['kind']}: {r['detail']}" for r in s["reasons"])
+        lines.append(f"- {s['title']}: {reasons[:150]}")
+    if len(new) > 10:
+        lines.append(f"...and {len(new) - 10} more")
+    lines.append(PUBLIC_URL)
+    text = "\n".join(lines)
+
+    if re.match(r"https://(discord|discordapp)\.com/api/webhooks/", NOTIFY_WEBHOOK_URL):
+        body = {"username": "Media QC", "content": text[:2000]}
+    else:
+        body = {
+            "event": "review_ready",
+            "text": text,
+            "content": text,
+            "waiting": waiting,
+            "review_url": PUBLIC_URL,
+            "items": [{"id": s["id"], "title": s["title"], "reasons": s["reasons"]} for s in new],
+        }
+    # Discord (Cloudflare) refuses urllib's default User-Agent.
+    http_json("POST", NOTIFY_WEBHOOK_URL, {"User-Agent": "media-qc/1.0"}, body, timeout=30)
+
+
+def notify_pending() -> int:
+    with db() as conn:
+        new = conn.execute("select id, title, reasons from scans where status = 'done' and verdict = 'flagged' "
+                           "and review is null and notified_at is null order by finished_at").fetchall()
+        if not new:
+            return 0
+        waiting = conn.execute("select count(*) as n from scans where status = 'done' and verdict = 'flagged' "
+                               "and review is null").fetchone()["n"]
+        send_notification(new, waiting)
+        conn.execute("update scans set notified_at = now() where id = any(%s)", ([s["id"] for s in new],))
+    log(f"notified about {len(new)} flagged movies")
+    return len(new)
+
+
+def notifier() -> None:
+    if not NOTIFY_WEBHOOK_URL:
+        log("NOTIFY_WEBHOOK_URL is not set; review notifications are off")
+        return
+    while True:
+        time.sleep(NOTIFY_INTERVAL_MINUTES * 60)
+        try:
+            notify_pending()
+        except Exception as e:  # leave notified_at unset so the next round retries
+            log(f"review notification failed: {e}")
+
+
 # ------------------------------------------------------------------------- http
 
 PAGE_CSS = """
@@ -546,8 +620,13 @@ def render_page() -> str:
         is_paused = paused(conn)
         review = conn.execute("select * from scans where status = 'done' and verdict = 'flagged' and review is null "
                               "order by finished_at desc").fetchall()
+        # Pending rows with attempts > 0 failed once and are waiting to retry.
         recent = conn.execute("select * from scans where status in ('done','error','running') "
-                              "order by coalesce(finished_at, started_at) desc nulls last limit 60").fetchall()
+                              "or (status = 'pending' and attempts > 0) "
+                              # The scan in progress first; it can carry a finished_at
+                              # from an earlier attempt, which would sort it lower.
+                              "order by status = 'running' desc, "
+                              "coalesce(finished_at, started_at) desc nulls last limit 60").fetchall()
 
     parts = [f"<!doctype html><html><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Media QC</title><style>{PAGE_CSS}</style></head><body><main>",
@@ -586,7 +665,9 @@ def render_page() -> str:
                              f"title='frame {f['n']} at {fmt_time(f['t'])}'></a>")
             parts.append("</div>")
         parts.append(
-            f"<form method=post action=/scans/{s['id']}/keep><button>Keep</button></form> "
+            f"<form method=post action=/scans/{s['id']}/keep><button title='The problem is real, but keep this file'>Keep</button></form> "
+            f"<form method=post action=/scans/{s['id']}/false-flag><button title='The check was wrong; the file is fine'>"
+            "False flag</button></form> "
             f"<form method=post action=/scans/{s['id']}/rescan><button>Rescan</button></form> "
             f"<form method=post action=/scans/{s['id']}/reject onsubmit=\"return confirm('Blocklist this release, "
             f"delete the file and search for another?')\"><button class=bad>Reject &amp; re-download</button></form>"
@@ -598,9 +679,15 @@ def render_page() -> str:
             result = f"<span class=flagged>error</span> <span class=muted>{esc(s['error'])}</span>"
         elif s["status"] == "running":
             result = "scanning..."
+        elif s["status"] == "pending":
+            result = (f"<span class=flagged>failed, retrying at {esc(s['run_after'].strftime('%H:%M'))}</span> "
+                      f"<span class=muted>(attempt {s['attempts']} of {MAX_ATTEMPTS}) {esc(s['error'])}</span>")
         elif s["verdict"] == "flagged":
             kinds = ", ".join(r["kind"] for r in s["reasons"])
-            result = f"<span class=flagged>flagged</span> {esc(kinds)}" + (f" &middot; {esc(s['review'])}" if s["review"] else "")
+            if s["review"] == "false_flag":
+                result = f"<span class=ok>false flag</span> <span class=muted>{esc(kinds)}</span>"
+            else:
+                result = f"<span class=flagged>flagged</span> {esc(kinds)}" + (f" &middot; {esc(s['review'])}" if s["review"] else "")
             if s["review_note"]:
                 result += f"<div class=muted>{esc(s['review_note'])}</div>"
         else:
@@ -654,6 +741,12 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if url.path == "/hooks/radarr":
                 return self.radarr_hook(url, raw)
+            if url.path == "/api/notify-test":
+                if not NOTIFY_WEBHOOK_URL:
+                    return self.send(400, "NOTIFY_WEBHOOK_URL is not set")
+                send_notification([{"id": 0, "title": "Test notification",
+                                    "reasons": [{"kind": "test", "detail": "media-qc can reach this webhook"}]}], 1)
+                return self.send(200, "sent")
             if url.path == "/api/backfill":
                 return self.backfill()
             if url.path in ("/api/pause", "/api/resume"):
@@ -662,7 +755,7 @@ class Handler(BaseHTTPRequestHandler):
                                  "set value = excluded.value", ("true" if url.path.endswith("pause") else "false",))
                     conn.execute("notify media_qc")
                 return self.back()
-            m = re.fullmatch(r"/scans/(\d+)/(keep|reject|rescan)", url.path)
+            m = re.fullmatch(r"/scans/(\d+)/(keep|false-flag|reject|rescan)", url.path)
             if m:
                 return self.review(int(m.group(1)), m.group(2))
             self.send(404, "not found")
@@ -702,9 +795,15 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(404, "no such scan")
             if action == "keep":
                 conn.execute("update scans set review = 'kept', reviewed_at = now() where id = %s", (scan_id,))
+            elif action == "false-flag":
+                # Frames are kept on purpose: false flags are the examples to tune
+                # the prompt or MIN_CONFIDENCE against.
+                conn.execute("update scans set review = 'false_flag', reviewed_at = now() where id = %s", (scan_id,))
+                log(f"marked {s['title']} as a false flag: {[r['kind'] for r in s['reasons']]}")
             elif action == "rescan":
                 conn.execute("update scans set status = 'pending', priority = 0, run_after = now(), attempts = 0, "
-                             "review = null, review_note = null, error = null, source = 'rescan' "
+                             "review = null, review_note = null, error = null, notified_at = null, "
+                             "source = 'rescan' "
                              "where id = %s and status <> 'running'", (scan_id,))
                 conn.execute("notify media_qc")
             else:
@@ -723,6 +822,7 @@ def main() -> None:
     threading.Thread(target=server.serve_forever, daemon=True).start()
     log(f"listening on :{PORT}")
     threading.Thread(target=ensure_webhook_forever, daemon=True).start()
+    threading.Thread(target=notifier, daemon=True).start()
     worker()
 
 

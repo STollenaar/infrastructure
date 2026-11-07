@@ -1,0 +1,13 @@
+# Turn SELinux off. Talos runs it in permissive mode, where it blocks nothing but
+# logs an AVC denial for every write to NFS (network_fs_t) and unlabeled host
+# volumes - thousands an hour on talos-iso-cgi. Enforcing would break those
+# workloads, so permissive only ever produced noise.
+#
+# Kernel args are written to the bootloader on install/upgrade, not on a config
+# apply: after applying, run `talosctl upgrade` (same version) on each node and it
+# takes effect on that reboot. Works with GRUB, which these nodes boot with; a UKI
+# (systemd-boot) install would need this in the image factory schematic instead.
+machine:
+  install:
+    extraKernelArgs:
+      - selinux=0
