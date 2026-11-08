@@ -242,6 +242,26 @@ def clear_notification() -> None:
             log(f"clearing notify.{service} failed: {e}")
 
 
+# Phone notifications only live on the phone. These put the same text in Home
+# Assistant's notification bell, so it is visible when HA is opened.
+def ha_notice(notice_id: str, title: str, message: str) -> None:
+    try:
+        ha_service("persistent_notification", "create", {"notification_id": notice_id, "title": title, "message": message})
+    except Exception as e:
+        log(f"persistent_notification {notice_id} failed: {e}")
+
+
+def ha_notice_dismiss(notice_id: str) -> None:
+    try:
+        ha_service("persistent_notification", "dismiss", {"notification_id": notice_id})
+    except Exception as e:
+        log(f"dismissing persistent_notification {notice_id} failed: {e}")
+
+
+def proposal_notice_id(batch_id: str) -> str:
+    return f"{NOTIFY_TAG}-{batch_id}"
+
+
 # ---------------------------------------------------------------- data collection
 
 
@@ -682,6 +702,7 @@ def scan(reason: str) -> str:
             STATE["last_report"] = report
             STATE["last_snapshot"] = snapshot
             # A new analysis replaces anything still waiting.
+            superseded = list(STATE["pending"])
             for old in list(STATE["pending"].values()):
                 record_decision(old, "superseded")
             STATE["pending"].clear()
@@ -700,9 +721,20 @@ def scan(reason: str) -> str:
             save_state()
 
         log(report.replace("\n", " | "))
+        for old_id in superseded:
+            ha_notice_dismiss(proposal_notice_id(old_id))
         if batch:
             lines = [f"{describe(c)} - {c['reason']}" for c in batch["changes"]]
             title = "Cold snap: heating proposal" if w["cold_snap"] else "Heating proposal"
+            ha_notice(
+                proposal_notice_id(batch["id"]),
+                title,
+                "\n".join(f"- {l}" for l in lines)
+                + f"\n\n{result.get('summary', '')}\n\n"
+                + f"Expires in {PROPOSAL_TTL_MINUTES} min (id `{batch['id']}`). "
+                + "Apply or skip it with the buttons on the phone notification. "
+                + "Dismissing this notice does not skip it.",
+            )
             notify(
                 "\n".join(lines) + f"\n\n{result.get('summary', '')}\nExpires in {PROPOSAL_TTL_MINUTES} min. (id {batch['id']})",
                 title=title,
@@ -742,6 +774,8 @@ def apply_batch(batch_id: str) -> str:
     text = "\n".join(results)
     log(f"applied {batch_id}: {text}")
     notify(text, title="Heating changes applied")
+    ha_notice_dismiss(proposal_notice_id(batch_id))
+    ha_notice(f"{NOTIFY_TAG}-applied", "Heating changes applied", "\n".join(f"- {r}" for r in results))
     return text
 
 
@@ -753,6 +787,7 @@ def skip_batch(batch_id: str, outcome: str = "skipped") -> str:
         return f"No pending proposal {batch_id}."
     record_decision(batch, outcome)
     log(f"{outcome} {batch_id}")
+    ha_notice_dismiss(proposal_notice_id(batch_id))
     if outcome == "expired":
         clear_notification()
     return f"Proposal {batch_id} {outcome}; nothing was changed."

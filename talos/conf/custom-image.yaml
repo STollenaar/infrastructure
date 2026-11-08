@@ -1,3 +1,11 @@
-machine:
-  install:
-    image: ${image}
+# Installer image and install disk. Replaces the deprecated .machine.install.
+# The provider doesn't pass an install disk to the generator, so the disk
+# selector (the old `disk: /dev/sda`) has to be set here.
+apiVersion: v1alpha1
+kind: UnattendedInstallConfig
+installer:
+  image: ${image}
+provisioning:
+  diskSelector:
+    match: disk.dev_path == "/dev/sda"
+  wipe: false

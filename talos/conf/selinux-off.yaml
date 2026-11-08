@@ -3,11 +3,12 @@
 # volumes - thousands an hour on talos-iso-cgi. Enforcing would break those
 # workloads, so permissive only ever produced noise.
 #
-# Kernel args are written to the bootloader on install/upgrade, not on a config
-# apply: after applying, run `talosctl upgrade` (same version) on each node and it
-# takes effect on that reboot. Works with GRUB, which these nodes boot with; a UKI
-# (systemd-boot) install would need this in the image factory schematic instead.
-machine:
-  install:
-    extraKernelArgs:
-      - selinux=0
+# This is an Image Factory schematic fragment, not a machine config patch.
+# Talos 1.14 deprecates .machine.install.extraKernelArgs. With the
+# UnattendedInstallConfig document, GRUB boots with the kernel command line baked
+# into the image (grubUseUKICmdline), which rejects extraKernelArgs. talos.tf
+# merges this into every node's schematic, so the arg ships with the installer
+# image and takes effect on the next `talosctl upgrade`.
+customization:
+  extraKernelArgs:
+    - selinux=0

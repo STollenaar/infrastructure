@@ -1,0 +1,31 @@
+# Kubelet stays on the deprecated .machine.kubelet block on purpose.
+#
+# Talos 1.14 moves kubelet settings to the KubeletConfig document, but that
+# document has no equivalent of extraMounts, and it can't be combined with any
+# .machine.kubelet field. The openebs-hostpath PVs live in /var/openebs/local,
+# which the kubelet only sees through the extraMount below. So the generated
+# KubeletConfig is deleted and the legacy block carries everything it would have.
+#
+# To move off this: put the hostpath under a UserVolumeConfig (/var/mnt/<name>,
+# which the kubelet mounts by default), migrate the PVs, then replace this file
+# with a KubeletConfig document.
+machine:
+  kubelet:
+    image: ghcr.io/siderolabs/kubelet:v${kubernetes_version}
+    defaultRuntimeSeccompProfileEnabled: true
+    disableManifestsDirectory: true
+    extraMounts:
+      # Default Hostpath directory
+      - destination: /var/openebs/local
+        type: bind
+        source: /var/openebs/local
+        options:
+          - rbind
+          - rshared
+          - rw
+    extraArgs:
+      rotate-server-certificates: true
+---
+apiVersion: v1alpha1
+kind: KubeletConfig
+$patch: delete

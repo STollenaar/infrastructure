@@ -1,2 +1,7 @@
-cluster:
-  allowSchedulingOnControlPlanes: false
+# Keep workloads off the control planes. Replaces the deprecated
+# `.cluster.allowSchedulingOnControlPlanes: false`. The generated KubeNodeConfig
+# already carries this taint; it's stated here so it can't silently go away.
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+taints:
+  node-role.kubernetes.io/control-plane: NoSchedule

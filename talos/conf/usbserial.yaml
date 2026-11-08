@@ -1,6 +1,11 @@
-machine:
-  kernel:
-    modules:
-      - name: usbserial
-      - name: cp210x
-      - name: cdc_acm
+apiVersion: v1alpha1
+kind: KernelModuleConfig
+name: usbserial
+---
+apiVersion: v1alpha1
+kind: KernelModuleConfig
+name: cp210x
+---
+apiVersion: v1alpha1
+kind: KernelModuleConfig
+name: cdc_acm

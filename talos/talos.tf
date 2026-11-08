@@ -1,6 +1,6 @@
 locals {
-  talos_version      = "1.13.5"
-  kubernetes_version = "1.36.1"
+  talos_version      = "1.14.5"
+  kubernetes_version = "1.37.1"
 
   # Extensions baked into the gpu-worker's installer image. "xe" is the Xe2 KMD
   # (Battlemage); "mei" is required for discrete Arc cards to load their firmware;
@@ -10,6 +10,15 @@ locals {
     "mei",
     "intel-ucode",
   ]
+
+  # Kernel args now ship in the Image Factory schematic (see conf/selinux-off.yaml).
+  schematic_customization = yamldecode(file("${path.module}/conf/selinux-off.yaml")).customization
+
+  # ghcr.io/siderolabs/installer is no longer published from Talos 1.14, so every
+  # node installs from an Image Factory schematic.
+  installer_images = {
+    for v in var.nodes : v.name => "factory.talos.dev/metal-installer/${v.role == "gpu-worker" ? talos_image_factory_schematic.this.id : talos_image_factory_schematic.base.id}"
+  }
 
   control_plane_nodes = { for v in var.nodes : v.name => v if v.role == "controlplane" }
   worker_nodes        = { for v in var.nodes : v.name => v if strcontains(v.role, "worker") }
@@ -32,19 +41,22 @@ data "talos_machine_configuration" "config" {
         templatefile(
           "${path.module}/conf/install-hostname.yaml", {
             hostname = each.key
-            endpoint = var.nodes[index(var.nodes.*.name, each.key)].endpoint
+            endpoint = each.value.endpoint
         }),
-        file("${path.module}/conf/selinux-off.yaml"),
+        templatefile("${path.module}/conf/kubelet.yaml", {
+          kubernetes_version = local.kubernetes_version
+        }),
+        templatefile("${path.module}/conf/custom-image.yaml", {
+          image = "${local.installer_images[each.key]}:v${local.talos_version}"
+        }),
+        file("${path.module}/conf/cni-none.yaml"),
+        file("${path.module}/conf/security-profile.yaml"),
       ],
-      var.nodes[index(var.nodes.*.name, each.key)].role == "controlplane" ? [
+      each.value.role == "controlplane" ? [
         file("${path.module}/conf/controlplane-scheduling.yaml")
       ] : [],
-      var.nodes[index(var.nodes.*.name, each.key)].role == "gpu-worker" ? [
-        templatefile("${path.module}/conf/intel-gpu.yaml", {
-          image = "factory.talos.dev/metal-installer/${talos_image_factory_schematic.this.id}:v${local.talos_version}"
-        }),
-      ] : [],
-      var.nodes[index(var.nodes.*.name, each.key)].role == "gpu-worker" ? [
+      each.value.role == "gpu-worker" ? [
+        file("${path.module}/conf/intel-gpu.yaml"),
         file("${path.module}/conf/usbserial.yaml"),
       ] : [],
     )
@@ -65,8 +77,8 @@ resource "local_file" "talosconfig" {
 }
 
 # Intel Arc B-series (Battlemage, Xe2). Note there is deliberately no
-# container-toolkit equivalent here: unlike NVIDIA, Intel ships no Talos extension
-# that injects a userspace runtime into containers. The host supplies only the KMD
+# container-toolkit extension here: Intel ships no Talos extension that injects a
+# userspace runtime into containers. The host supplies only the KMD
 # and firmware; the Vulkan/Level-Zero/VA-API userspace lives in each image, and
 # /dev/dri is handed out by the Intel GPU device plugin (see openebs/intel-gpu.tf).
 data "talos_image_factory_extensions_versions" "this" {
@@ -105,11 +117,24 @@ check "gpu_extensions_resolved" {
 resource "talos_image_factory_schematic" "this" {
   schematic = yamlencode(
     {
-      customization = {
+      customization = merge(local.schematic_customization, {
+        # The Arc card is compute-only. Without this, xe takes over the VGA console
+        # and the Proxmox console freezes after boot. It has to be a kernel arg:
+        # udev autoloads xe before Talos applies KernelModuleConfig parameters.
+        extraKernelArgs = concat(local.schematic_customization.extraKernelArgs, ["xe.probe_display=0"])
         systemExtensions = {
           officialExtensions = local.gpu_extension_names
         }
-      }
+      })
+    }
+  )
+}
+
+# Schematic for the nodes without a GPU: no extensions, only the kernel args.
+resource "talos_image_factory_schematic" "base" {
+  schematic = yamlencode(
+    {
+      customization = local.schematic_customization
     }
   )
 }
@@ -137,7 +162,7 @@ resource "null_resource" "upgrade_node" {
 
   triggers = {
     talos_version = local.talos_version
-    schematic_id  = each.value.role == "gpu-worker" ? "factory.talos.dev/metal-installer/${talos_image_factory_schematic.this.id}" : "ghcr.io/siderolabs/installer"
+    schematic_id  = local.installer_images[each.key]
   }
 
   provisioner "local-exec" {

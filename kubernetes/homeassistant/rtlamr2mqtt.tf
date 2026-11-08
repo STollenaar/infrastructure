@@ -153,5 +153,10 @@ resource "kubernetes_deployment" "rtlamr2mqtt" {
       }
     }
   }
+  lifecycle {
+    ignore_changes = [
+      spec.0.replicas
+    ]
+  }
 }
 

@@ -1,18 +1,29 @@
-machine:
-  install:
-    image: ${image}
-  nodeLabels:
-    intel.com/gpu.present: "true"
-  kernel:
-    modules:
-      # Xe2 (Battlemage, Lunar Lake and later) is driven by xe, not i915. Both
-      # extensions claim overlapping PCI IDs on Alchemist, so only one is loaded.
-      - name: xe
-      # Intel Management Engine. Talos lists the mei extension as a prerequisite
-      # for discrete Arc cards: the GSC sub-driver loads the card's firmware over
-      # it. mei_me/mei_gsc bind themselves to the devices xe and the PCI bus
-      # create, so they are not listed here.
-      - name: mei
-  sysctls:
-    # Carried over from the old nvidia patch; unrelated to the GPU vendor.
-    net.core.bpf_jit_harden: 1
+# The installer image is set for every node by custom-image.yaml, using the GPU
+# schematic for this node.
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+labels:
+  intel.com/gpu.present: "true"
+---
+# Xe2 (Battlemage, Lunar Lake and later) is driven by xe, not i915. Both
+# extensions claim overlapping PCI IDs on Alchemist, so only one is loaded.
+#
+# xe.probe_display=0 is set as a kernel arg in the GPU schematic (talos.tf), not
+# here: udev autoloads xe before Talos applies module parameters.
+apiVersion: v1alpha1
+kind: KernelModuleConfig
+name: xe
+---
+# Intel Management Engine. Talos lists the mei extension as a prerequisite
+# for discrete Arc cards: the GSC sub-driver loads the card's firmware over
+# it. mei_me/mei_gsc bind themselves to the devices xe and the PCI bus
+# create, so they are not listed here.
+apiVersion: v1alpha1
+kind: KernelModuleConfig
+name: mei
+---
+# Harden the BPF JIT; unrelated to the GPU itself.
+apiVersion: v1alpha1
+kind: SysctlConfig
+params:
+  net.core.bpf_jit_harden: "1"

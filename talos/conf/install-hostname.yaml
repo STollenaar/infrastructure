@@ -1,33 +1,30 @@
-machine:
-  network:
-    hostname: ${hostname}
-    nameservers:
-      - 192.168.5.1
-      - 142.166.166.166
-      - 1.1.1.1
-      - 8.8.8.8
-    interfaces:
-      - addresses:
-          - ${endpoint}/24
-        interface: ens18
-        routes:
-          - network: 0.0.0.0/0 # The route's network (destination).
-            gateway: 192.168.5.1
-        dhcp: false
-        mtu: 1500
-  kubelet:
-    extraMounts:
-          #Default Hostpath directory
-        - destination: /var/openebs/local
-          type: bind
-          source: /var/openebs/local
-          options:
-            - rbind
-            - rshared
-            - rw
-    extraArgs:
-      rotate-server-certificates: true
-cluster:
-  network:
-    cni:
-      name: none      
+# Static network setup for a node (Talos 1.12+ multi-doc network config).
+# Replaces the deprecated .machine.network.{hostname,nameservers,interfaces}.
+
+# The generated config ships a HostnameConfig with `auto: stable`; a static
+# hostname is only valid alongside `auto: off`, so both are set here.
+apiVersion: v1alpha1
+kind: HostnameConfig
+auto: "off"
+hostname: ${hostname}
+---
+# Merges into the generated ResolverConfig, which carries the hostDNS settings.
+apiVersion: v1alpha1
+kind: ResolverConfig
+nameservers:
+  - address: 192.168.5.1
+  - address: 142.166.166.166
+  - address: 1.1.1.1
+  - address: 8.8.8.8
+---
+# A link configured here is skipped by the default DHCP operator, which is what
+# the old `dhcp: false` did.
+apiVersion: v1alpha1
+kind: LinkConfig
+name: ens18
+mtu: 1500
+addresses:
+  - address: ${endpoint}/24
+routes:
+  # No destination means a default route; 0.0.0.0/0 is rejected by validation.
+  - gateway: 192.168.5.1

@@ -1,0 +1,8 @@
+# No built-in CNI: Cilium is installed separately (openebs/cilium.tf).
+# Replaces the deprecated `.cluster.network.cni.name: none`. With the 1.14
+# documents, Flannel is deployed only when a KubeFlannelCNIConfig exists, and the
+# generator adds one to control planes, so it's deleted here. On workers the
+# document doesn't exist and the delete is a no-op.
+apiVersion: v1alpha1
+kind: KubeFlannelCNIConfig
+$patch: delete

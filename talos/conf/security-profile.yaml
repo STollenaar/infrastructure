@@ -1,0 +1,9 @@
+# Talos 1.14 config generation turns on workload isolation (kubelet, CRI and pods
+# in a sandboxd PID/mount namespace) for new clusters. Upgraded clusters keep it
+# off unless they opt in. This cluster regenerates its config with the 1.14
+# contract, so it's pinned off here to keep the upgrade from changing runtime
+# behaviour (hostPath/openebs mounts through kubelet extraMounts, in-tree volumes).
+# Flip to true as a separate, tested change.
+apiVersion: v1alpha1
+kind: SecurityProfileConfig
+workloadIsolation: false
