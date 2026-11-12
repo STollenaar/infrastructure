@@ -57,7 +57,7 @@ resource "kubernetes_cron_job_v1" "blocklist_pruner" {
 
             container {
               name    = "blocklist-pruner"
-              image   = "python:3.13-alpine"
+              image   = "python:3.15-alpine"
               command = ["python3", "/opt/blocklist-pruner.py"]
 
               env {

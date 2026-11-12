@@ -64,7 +64,7 @@ resource "kubernetes_deployment" "media_qc" {
 
         container {
           name    = "media-qc"
-          image   = "python:3.13-alpine"
+          image   = "python:3.15-alpine"
           command = ["/bin/sh", "-ec"]
           args = [
             "apk add --no-cache ffmpeg >/dev/null && pip install --no-cache-dir --root-user-action=ignore -q 'psycopg[binary]==3.2.9' && exec python3 -u /opt/media-qc/media-qc.py"
@@ -300,7 +300,7 @@ resource "kubernetes_job_v1" "media_qc_backfill" {
         restart_policy = "OnFailure"
         container {
           name  = "backfill"
-          image = "curlimages/curl:8.11.1"
+          image = "curlimages/curl:8.23.0"
           # The service installs its packages on start, so give it a few minutes.
           args = [
             "-fsS", "--retry", "30", "--retry-delay", "10", "--retry-all-errors",
