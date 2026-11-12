@@ -22,8 +22,8 @@ locals {
   # are placeholders: read the real values off the heater labels. The report's
   # median_kwh_per_hour_without_heating vs the meter shows if they are far off.
   heating_agent_heater_watts = {
-    "climate.stelpro_maestrostat"   = 1500 # Living Room
-    "climate.stelpro_maestrostat_2" = 1500 # Kitchen
+    "climate.stelpro_maestrostat"   = 1000 # Living Room
+    "climate.stelpro_maestrostat_2" = 1250 # Kitchen
     "climate.stelpro_st218"         = 1000 # Bedroom
     "climate.stelpro_st218_2"       = 1000 # Office
   }

@@ -99,6 +99,7 @@ resource "kubernetes_persistent_volume_claim_v1" "sd_models_pvc" {
 
   spec {
     access_modes = ["ReadWriteOnce"]
+    storage_class_name = "openebs-hostpath"
     resources {
       requests = {
         storage = "20Gi"
