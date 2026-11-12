@@ -67,7 +67,7 @@ resource "kubernetes_deployment" "media_qc" {
           image   = "python:3.15-alpine"
           command = ["/bin/sh", "-ec"]
           args = [
-            "apk add --no-cache ffmpeg >/dev/null && pip install --no-cache-dir --root-user-action=ignore -q 'psycopg[binary]==3.2.9' && exec python3 -u /opt/media-qc/media-qc.py"
+            "apk add --no-cache ffmpeg >/dev/null && pip install --no-cache-dir --root-user-action=ignore -q 'psycopg[binary]==3.3.9' && exec python3 -u /opt/media-qc/media-qc.py"
           ]
 
           port {
