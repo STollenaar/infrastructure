@@ -119,7 +119,7 @@ resource "kubernetes_deployment" "rtlamr2mqtt" {
         # Needed for direct USB access on most clusters
         container {
           name  = "rtlamr2mqtt"
-          image = "allangood/rtlamr2mqtt:2026.10.15"
+          image = "allangood/rtlamr2mqtt:2026.11.8"
 
           # Mount config file
           volume_mount {

@@ -65,7 +65,7 @@ resource "kubernetes_deployment" "heating_agent" {
       spec {
         container {
           name    = "heating-agent"
-          image   = "python:3.13-alpine"
+          image   = "python:3.15-alpine"
           command = ["/bin/sh", "-ec"]
           # tzdata: alpine has no zoneinfo database.
           args = [
