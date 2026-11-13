@@ -51,7 +51,7 @@ resource "kubernetes_deployment" "media_qc" {
       spec {
         init_container {
           name    = "create-db"
-          image   = "postgres:18.6-bookworm"
+          image   = "postgres:18.7-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
             "psql -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'media_qc'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.jellyfin.id}.svc.cluster.local -U postgres media_qc"
