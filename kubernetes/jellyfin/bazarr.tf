@@ -44,14 +44,16 @@ resource "kubernetes_deployment" "bazarr" {
             mount_path = "/config"
           }
 
+          # Same paths as Radarr (/movies) and Sonarr (/tv): Bazarr opens the paths
+          # they report as-is, so a mismatch here means it never finds a file.
           volume_mount {
             name       = "movies"
-            mount_path = "/media/movies"
+            mount_path = "/movies"
           }
 
           volume_mount {
             name       = "shows"
-            mount_path = "/media/shows"
+            mount_path = "/tv"
           }
         }
 

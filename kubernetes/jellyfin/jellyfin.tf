@@ -176,8 +176,10 @@ resource "kubernetes_deployment" "jellyfin" {
           name = "transcodes"
           # tmpfs: no flash wear, faster than the SSD, no NFS contention. Counts
           # against node memory (43Gi total, ~8Gi in use), and overrunning the limit
-          # evicts only this pod. Holds a full movie once RemoteClientBitrateLimit is
-          # capped; segments are ~9 GB/h at 20 Mbps versus ~27 GB/h uncapped.
+          # evicts only this pod. Segments are ~8 GB/h at the 20 Mbps cap, so a long
+          # movie does NOT fit: the GPU encodes at ~15x realtime and would write the
+          # whole film ahead. EnableThrottling in encoding.xml pauses ffmpeg once it
+          # is ThrottleDelaySeconds ahead, and segment deletion trims what's behind.
           empty_dir {
             medium     = "Memory"
             size_limit = "16Gi"
