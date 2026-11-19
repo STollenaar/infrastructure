@@ -182,7 +182,7 @@ resource "helm_release" "xpumd" {
   namespace  = kubernetes_namespace.monitoring.id
   repository = "oci://ghcr.io/intel/xpumanager/charts"
   chart      = "xpumd"
-  version    = "2.3.0"
+  version    = "2.4.0"
 
   max_history = 5
 
