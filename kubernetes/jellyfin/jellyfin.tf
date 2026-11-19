@@ -25,6 +25,11 @@ resource "kubernetes_deployment" "jellyfin" {
         labels = {
           "app" = "jellyfin"
         }
+        annotations = {
+          # encoding.xml is only copied in when the pod starts (seed-livetv init
+          # container), so roll the pod whenever it changes.
+          "checksum/encoding" = sha256(kubernetes_config_map.jellyfin_encoding.data["encoding.xml"])
+        }
       }
 
       spec {
@@ -79,7 +84,9 @@ resource "kubernetes_deployment" "jellyfin" {
         }
         container {
           name  = "epg"
-          image = "ghcr.io/iptv-org/epg:master"
+          # iptv-org/epg publishes no version tags, only master. The digest pins the
+          # build; Renovate updates it in the "terraform providers" PR.
+          image = "ghcr.io/iptv-org/epg:master@sha256:4bfbd9a45bccf82ce7158c6b7dbe21ac6fdb1bfc124df7b20f3ff0ebe241a327"
           port {
             name           = "epg"
             container_port = 3000
@@ -101,7 +108,7 @@ resource "kubernetes_deployment" "jellyfin" {
           }
         }
         container {
-          image = "jellyfin/jellyfin:10.11.11"
+          image = "jellyfin/jellyfin:12.4"
           name  = "jellyfin"
           env_from {
             config_map_ref {
