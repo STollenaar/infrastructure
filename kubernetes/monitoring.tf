@@ -188,8 +188,10 @@ resource "helm_release" "xpumd" {
 
   values = [yamlencode({
     image = {
-      # The chart's appVersion is "latest", so pin the image explicitly.
-      tag        = "v2.3.0"
+      # No tag: it defaults to the chart's appVersion (v2.4.0 for chart 2.4.0).
+      # The chart's built-in config is written for that daemon version, so a
+      # pinned tag goes stale on the next chart bump and the daemon rejects the
+      # config (chart 2.4.0 + image v2.3.0 crash-looped on unknown keys).
       pullPolicy = "IfNotPresent"
     }
     # Request gpu.intel.com/monitoring from the device plugin (enableMonitoring in

@@ -13,9 +13,14 @@
 # Letting Terraform upgrade this release in place instead would swap the chart
 # without ever installing the CRDs, and every VirtualServer would fail to plan.
 resource "helm_release" "nginx_ingress" {
-  depends_on = [kubernetes_manifest.metallb_ip_pool, helm_release.cert_manager]
-  name       = "nginx-ingress"
-  namespace  = "default"
+  depends_on = [
+    kubernetes_manifest.metallb_ip_pool,
+    helm_release.cert_manager,
+    # controller.externalDNSGroupVersion needs this CRD; NIC exits at start without it.
+    kubernetes_manifest.external_dns_dnsendpoint_crd,
+  ]
+  name      = "nginx-ingress"
+  namespace = "default"
 
   chart       = "nginx-ingress"
   repository  = "https://helm.nginx.com/stable"

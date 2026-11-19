@@ -1,6 +1,8 @@
 controller:
   # Serves VirtualServer / VirtualServerRoute / TransportServer / Policy.
   enableCustomResources: true
+  # The upstream DNSEndpoint group, the only one external-dns v0.21.0+ reads. Its
+  # CRD is not in this chart; external_dns.tf installs it.
   externalDNSGroupVersion: externaldns.k8s.io/v1alpha1
   # Lets VirtualServer.spec.tls.cert-manager drive certificate issuance, so hosts
   # keep working the way the old cert-manager.io/cluster-issuer annotation did.

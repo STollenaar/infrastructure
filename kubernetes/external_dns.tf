@@ -1,3 +1,12 @@
+# external-dns v0.21.0+ only reads the upstream externaldns.k8s.io/v1alpha1
+# DNSEndpoint. The NGINX Ingress Controller chart writes that group
+# (controller.externalDNSGroupVersion in conf/nginx-ingress-values.yaml) but does
+# not ship its CRD, and NIC refuses to start without it, so it is installed here
+# ahead of the controller.
+resource "kubernetes_manifest" "external_dns_dnsendpoint_crd" {
+  manifest = yamldecode(file("${path.module}/conf/external-dns-dnsendpoints-crd.yaml"))
+}
+
 resource "kubernetes_namespace_v1" "external_dns" {
   metadata {
     name = "external-dns"
@@ -34,13 +43,13 @@ resource "kubernetes_cluster_role" "external_dns" {
   # DNSEndpoint resources, which are what external-dns now reads instead of
   # Ingress objects.
   rule {
-    api_groups = ["externaldns.nginx.org"]
+    api_groups = ["externaldns.k8s.io"]
     resources  = ["dnsendpoints"]
     verbs      = ["get", "watch", "list"]
   }
 
   rule {
-    api_groups = ["externaldns.nginx.org"]
+    api_groups = ["externaldns.k8s.io"]
     resources  = ["dnsendpoints/status"]
     verbs      = ["update"]
   }
@@ -70,6 +79,9 @@ resource "kubernetes_cluster_role_binding" "external_dns_viewer" {
 
 # Deployment
 resource "kubernetes_deployment" "external_dns_public" {
+  # --policy is the default "sync": an empty DNSEndpoint list deletes every
+  # record. Start only once NIC is running and writing the upstream group.
+  depends_on = [helm_release.nginx_ingress]
   metadata {
     name      = "external-dns-public"
     namespace = kubernetes_namespace_v1.external_dns.id
@@ -109,16 +121,13 @@ resource "kubernetes_deployment" "external_dns_public" {
         service_account_name = kubernetes_service_account_v1.external_dns_public.metadata.0.name
 
         container {
-          name = "external-dns-public"
-          # Held at v0.20.x by the allowedVersions rule in .github/renovate.json;
-          # see that rule's description for why v0.21.0+ breaks DNS discovery.
-          image = "registry.k8s.io/external-dns/external-dns:v0.20.0"
+          name  = "external-dns-public"
+          image = "registry.k8s.io/external-dns/external-dns:v0.24.0"
 
           # Hosts opt in via VirtualServer.spec.externalDNS.enable, which replaces
           # the old external-dns.alpha.kubernetes.io/hostname annotation filter.
           args = [
             "--source=crd",
-            "--crd-source-apiversion=externaldns.nginx.org/v1",
             "--crd-source-kind=DNSEndpoint",
             "--provider=webhook",
             "--webhook-provider-url=http://127.0.0.1:8889",
@@ -169,16 +178,13 @@ resource "kubernetes_deployment" "external_dns_public" {
         }
 
         container {
-          name = "aws-provider"
-          # Held at v0.20.x by the allowedVersions rule in .github/renovate.json;
-          # see that rule's description for why v0.21.0+ breaks DNS discovery.
-          image = "registry.k8s.io/external-dns/external-dns:v0.20.0"
+          name  = "aws-provider"
+          image = "registry.k8s.io/external-dns/external-dns:v0.24.0"
 
           args = [
             "--webhook-server",
             "--provider=aws",
             "--source=crd",
-            "--crd-source-apiversion=externaldns.nginx.org/v1",
             "--crd-source-kind=DNSEndpoint",
             "--aws-zone-type=public",
             "--registry=txt",
