@@ -42,7 +42,7 @@ resource "kubernetes_deployment" "litellm" {
       spec {
         init_container {
           name    = "create-db"
-          image   = "postgres:18.7-bookworm"
+          image   = "postgres:19.0-bookworm"
           command = ["/bin/sh", "-c"]
           args = [
             "psql -h postgres-rw.${kubernetes_namespace.ollama.id}.svc.cluster.local -U postgres postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'litellm'\" | grep -q 1 || createdb -h postgres-rw.${kubernetes_namespace.ollama.id}.svc.cluster.local -U postgres litellm"
