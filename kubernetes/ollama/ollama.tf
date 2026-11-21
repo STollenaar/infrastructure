@@ -180,7 +180,7 @@ resource "kubernetes_job" "ollama_model_creation" {
       spec {
         container {
           name  = "ollama"
-          image = "ollama/ollama:0.40.16"
+          image = "ollama/ollama:0.40.17"
 
           command = [
             "/bin/sh",
