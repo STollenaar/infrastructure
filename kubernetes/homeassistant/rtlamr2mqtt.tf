@@ -26,15 +26,15 @@ locals {
       # vendor:product and does not filter to devices it can actually open, so
       # it sees both dongles and picks positionally.
       #
-      # Verified on the running host - libusb orders 9-3 before 9-2, so:
-      #   index 0 = ADSB0001 (9-3)
-      #   index 1 = METER001 (9-2)  <- this one
+      # Verified on the running host - libusb orders 5-3 before 5-2, so:
+      #   index 0 = METER001 (5-3)  <- this one
+      #   index 1 = ADSB0001 (5-2)
       #
       # This is positional and therefore brittle. Re-check it with
       # `rtl_test -d 99` after moving dongles between ports; and note that if
-      # the ADS-B dongle is unplugged entirely, only one device enumerates and
-      # index 1 goes out of range, which rtlamr2mqtt treats as fatal.
-      device_id = 1
+      # the dongles swap ports, the meter becomes index 1 and index 0 is the
+      # ADS-B dongle, which this pod cannot open (usb_open error -4).
+      device_id = 0
     }
     mqtt = {
       ha_autodiscovery       = true
@@ -129,7 +129,7 @@ resource "kubernetes_deployment" "rtlamr2mqtt" {
             read_only  = true
           }
 
-          # The meter dongle (Realtek 0bda:2838 on USB 9-2) is provided by
+          # The meter dongle (Realtek 0bda:2838 on USB 5-3) is provided by
           # generic-device-plugin as devic.es/rtlsdr-meter, matched on its
           # EEPROM serial so this pod can never be handed the ADS-B dongle.
           resources {
