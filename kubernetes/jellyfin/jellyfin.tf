@@ -86,7 +86,7 @@ resource "kubernetes_deployment" "jellyfin" {
           name  = "epg"
           # iptv-org/epg publishes no version tags, only master. The digest pins the
           # build; Renovate updates it in the "terraform providers" PR.
-          image = "ghcr.io/iptv-org/epg:master@sha256:f03b79e0e6e27d94e5234bd38a33fe4fc53234b12c73ad8bfd304a6f1eef8492"
+          image = "ghcr.io/iptv-org/epg:master@sha256:62b605cb61d6ea26c190080747034c1486c422af1a475a73aaab224f3dc96918"
           port {
             name           = "epg"
             container_port = 3000
