@@ -17,7 +17,7 @@ resource "helm_release" "intel_device_plugin_operator" {
   namespace  = "kube-system"
   repository = "https://intel.github.io/helm-charts"
   chart      = "intel-device-plugins-operator"
-  version    = "0.37.1"
+  version    = "0.37.2"
 
   max_history = 5
 }
@@ -31,7 +31,7 @@ resource "helm_release" "intel_gpu_plugin" {
   namespace  = "kube-system"
   repository = "https://intel.github.io/helm-charts"
   chart      = "intel-device-plugins-gpu"
-  version    = "0.37.1"
+  version    = "0.37.2"
 
   max_history = 5
 
